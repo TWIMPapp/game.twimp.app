@@ -3,7 +3,8 @@ import axios from 'axios';
 
 import MultiQuestion from '@/components/MultiQuestion';
 import Loading from '@/components/Loading';
-import ItemsDialog, { Item } from '@/components/ItemsDialog';
+import ItemsDialog from '@/components/ItemsDialog';
+import { InventoryItem } from '@/types/inventoryItem';
 
 // ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689
 
@@ -28,7 +29,7 @@ interface QueryParams {
 interface MultiQuestionResponse {
   correct: boolean;
   message: string;
-  items: Item[];
+  items: InventoryItem[];
 }
 
 interface MultiQuestionData {
@@ -73,7 +74,7 @@ const postData = async (answer: string, params: QueryParams): Promise<MultiQuest
 export default function Multi() {
   const [question, setQuestion] = useState<MultiQuestionData>();
   const [params, setParams] = useState<QueryParams>();
-  const [items, setItems] = useState<Item[]>();
+  const [items, setItems] = useState<InventoryItem[]>();
   const [message, setMessage] = useState<string>();
   const [open, setOpen] = useState<boolean>(false);
 

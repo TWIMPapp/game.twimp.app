@@ -7,12 +7,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { TransitionProps } from '@mui/material/transitions';
 import { forwardRef } from 'react';
-
-export interface Item {
-  title: string;
-  image: string;
-  sentiment: 'good' | 'bad' | 'hardtosay';
-}
+import { InventoryItem } from '@/types/inventoryItem';
 
 const sentimentBorderColour = (sentiment: 'good' | 'bad' | 'hardtosay'): string => {
   return {
@@ -37,7 +32,7 @@ const ItemsDialog = ({
   open,
   handleClose
 }: {
-  items?: Item[];
+  items?: InventoryItem[];
   message?: string;
   open: boolean;
   handleClose: () => void;
@@ -48,7 +43,7 @@ const ItemsDialog = ({
       <DialogContent>
         <DialogContentText>{message}</DialogContentText>
         <ul>
-          {items?.map((item: Item, index: number) => {
+          {items?.map((item: InventoryItem, index: number) => {
             return (
               <li
                 key={index}
