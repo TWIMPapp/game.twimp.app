@@ -5,6 +5,8 @@ import MultiQuestion from '@/components/MultiQuestion';
 import Loading from '@/components/Loading';
 import ItemsDialog from '@/components/ItemsDialog';
 import { InventoryItem } from '@/types/inventoryItem';
+import { Theme } from '@/types/theme.enum';
+import { QueryParams } from '@/types/queryParams';
 
 // ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689
 
@@ -16,15 +18,6 @@ import { InventoryItem } from '@/types/inventoryItem';
 
 const baseUrl =
   'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=trails';
-
-interface QueryParams {
-  user_id: string;
-  trail_ref: string;
-  trail_sequence: string;
-  path: string;
-  lat: string;
-  lng: string;
-}
 
 interface MultiQuestionResponse {
   correct: boolean;
@@ -85,16 +78,12 @@ export default function Multi() {
   const answerCallback = async (answer: string) => {
     const data = await postData(answer, params as QueryParams);
     if (data) {
-      console.log('####### DATA?', data);
       if (data.message) {
-        console.log('HAS MESSAGE');
         setMessage(data.message);
         setOpen(true);
       }
 
-      // if has items, show them
       if (data.items.length > 0) {
-        console.log('HAS ITEMS');
         setItems(data.items);
         setOpen(true);
       }
@@ -117,7 +106,7 @@ export default function Multi() {
   }, []);
 
   return (
-    <main id="game">
+    <>
       {question ? (
         <>
           <MultiQuestion
@@ -136,6 +125,6 @@ export default function Multi() {
       ) : (
         <Loading />
       )}
-    </main>
+    </>
   );
 }
