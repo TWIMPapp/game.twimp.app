@@ -3,16 +3,15 @@ import axios from 'axios';
 
 import MultiQuestion from '@/components/MultiQuestion';
 import Loading from '@/components/Loading';
+import ItemsDialog, { Item } from '@/components/ItemsDialog';
 
 // ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689
 
-// TODO: Be themeable
-// TODO: Add a "correct" state
-// TODO: Add a "wrong" state
-// TODO: Support true/false questions with right colours
-// TODO: Add stepn type stiff on items received/removed/neutral
-// TODO: Add error state for when the API is down
-// TODO: Add interceptors for the API to retry on failure (try 3 times, if failed, open support)
+// TODO: Be themeable (e.g. dark mode, rpg, etc)
+// TODO: Support true/false questions with right colours (theme?)
+
+// IMP: Add error state for when the API is down
+// IMP: Add interceptors for the API to retry on failure (try 3 times, if failed, open support)
 
 const baseUrl =
   'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=trails';
@@ -26,16 +25,10 @@ interface QueryParams {
   lng: string;
 }
 
-interface MultiResponseItems {
-  title: string;
-  image: string;
-  sentiment: 'good' | 'bad' | 'hardtosay';
-}
-
 interface MultiQuestionResponse {
   correct: boolean;
   message: string;
-  items: MultiResponseItems[];
+  items: Item[];
 }
 
 interface MultiQuestionData {
@@ -43,14 +36,6 @@ interface MultiQuestionData {
   hint?: string;
   answers: string[];
 }
-
-const sentimentBorderColour = (sentiment: 'good' | 'bad' | 'hardtosay'): string => {
-  return {
-    good: 'border-green-400',
-    bad: 'border-red-400',
-    hardtosay: 'border-yellow-400'
-  }[sentiment];
-};
 
 const stringifyQueryParams = (params: QueryParams): string => {
   return `&${Object.keys(params)
@@ -82,13 +67,38 @@ const postData = async (answer: string, params: QueryParams): Promise<MultiQuest
       console.error(error);
     });
 
-  console.log('#####', response?.data?.body);
   return response?.data?.body;
 };
 
 export default function Multi() {
   const [question, setQuestion] = useState<MultiQuestionData>();
   const [params, setParams] = useState<QueryParams>();
+  const [items, setItems] = useState<Item[]>();
+  const [message, setMessage] = useState<string>();
+  const [open, setOpen] = useState<boolean>(false);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const answerCallback = async (answer: string) => {
+    const data = await postData(answer, params as QueryParams);
+    if (data) {
+      console.log('####### DATA?', data);
+      if (data.message) {
+        console.log('HAS MESSAGE');
+        setMessage(data.message);
+        setOpen(true);
+      }
+
+      // if has items, show them
+      if (data.items.length > 0) {
+        console.log('HAS ITEMS');
+        setItems(data.items);
+        setOpen(true);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,12 +118,20 @@ export default function Multi() {
   return (
     <main id="game">
       {question ? (
-        <MultiQuestion
-          question={question.question}
-          hint={question.hint}
-          answers={question.answers}
-          callback={async (answer: string) => await postData(answer, params as QueryParams)}
-        />
+        <>
+          <MultiQuestion
+            question={question.question}
+            hint={question.hint}
+            answers={question.answers}
+            callback={answerCallback}
+          />
+          <ItemsDialog
+            items={items}
+            message={message}
+            open={open}
+            handleClose={handleClose}
+          ></ItemsDialog>
+        </>
       ) : (
         <Loading />
       )}

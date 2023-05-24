@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Hint from './Hint';
 import Question from './Question';
 
@@ -16,6 +17,17 @@ const MultiQuestion = ({
   answers: string[];
   callback: (answer: string) => any;
 }) => {
+  const [activeAnswer, setActiveAnswer] = useState<string | null>(null);
+
+  const handleClick = (answer: string) => {
+    callback(answer);
+    setActiveAnswer(answer);
+  };
+
+  const isActiveAnswer = (answer: string): boolean => {
+    return activeAnswer === answer;
+  };
+
   return (
     <div className="p-10">
       <Question question={question} />
@@ -26,8 +38,10 @@ const MultiQuestion = ({
           return (
             <button
               key={index}
-              className={`text-white p-4 font-semibold rounded shadow ${getColour(index)}`}
-              onClick={() => callback(answer)}
+              className={`text-white p-4 font-semibold rounded shadow ${getColour(
+                index
+              )} animate__animated ${isActiveAnswer(answer) ? 'animate__bounce' : ''}`}
+              onClick={() => handleClick(answer)}
             >
               {answer}
             </button>
