@@ -10,9 +10,8 @@ const baseUrl =
   'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=conversation';
 
 interface ChatResponse {
-  // correct: boolean;
-  // message: string;
-  // items: InventoryItem[];
+  ok: boolean;
+  message: MessageItem;
 }
 
 interface ChatData {
@@ -64,6 +63,7 @@ export default function Multi() {
     const newMessage: MessageItem = {
       text: message,
       id: Math.random().toString(36).substr(2, 9),
+      // TODO: get avatar from user
       avatar: 'https://i.pravatar.cc/40',
       createdAt: new Date(),
       sent: true
@@ -72,12 +72,9 @@ export default function Multi() {
     setSending(true);
 
     const data = await postData(message, params as QueryParams);
-    if (data) {
+    if (data?.message) {
       const returnedMessage: MessageItem = {
-        text: (data as any).message,
-        id: Math.random().toString(36).substr(2, 9),
-        avatar: 'https://i.pravatar.cc/40',
-        createdAt: new Date(),
+        ...data.message,
         sent: false
       };
       setMessages([...messages, newMessage, returnedMessage]);

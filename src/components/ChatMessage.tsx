@@ -6,8 +6,7 @@ const ChatMessage = ({ message }: { message: MessageItem }) => {
   return (
     <>
       <div className={`message ${sent ? 'sent' : 'received'}`}>
-        {/* TODO: Set default image of user */}
-        <img src={avatar || 'https://api.adorable.io/avatars/23/abott@adorable.png'} />
+        <img src={avatar} />
         <p>{text}</p>
       </div>
     </>
