@@ -8,10 +8,10 @@ import { InventoryItem } from '@/types/inventoryItem';
 import { Theme } from '@/types/theme.enum';
 import { QueryParams } from '@/types/queryParams';
 
-// ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689
+// ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689&theme=family
 
-// TODO: Be themeable (e.g. dark mode, rpg, etc)
-// TODO: Support true/false questions with right colours (theme?)
+// TODO: Be themeable (family, rpg) -- theme up
+// TODO: Support true/false questions with right colours
 
 // IMP: Add error state for when the API is down
 // IMP: Add interceptors for the API to retry on failure (try 3 times, if failed, open support)
@@ -97,6 +97,7 @@ export default function Multi() {
       ) as unknown as QueryParams;
       setParams(_params);
       const data = await getData(_params);
+      console.log(data);
       if (data) {
         setQuestion(data);
       }
