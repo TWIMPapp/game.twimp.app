@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body,
+html {
+  height: 100vh;
+}
+
+#game {
+  width: 100vw;
+  height: 100vh;
+
+  &.theme-family {
+  }
+
+  &.theme-rpg {
+  }
+
+  &.theme-horror {
+    #chat {
+      background-color: #282c34;
+    }
+
+    #chatform {
+      background-color: lighten(#282c34, 10%);
+
+      input {
+        color: #fff;
+        background-color: lighten(#282c34, 10%);
+      }
+
+      button {
+        background-color: lighten(#282c34, 20%);
+      }
+    }
+  }
+}
+
+#chat {
+  background-color: darken(#fff, 2%);
+  text-align: center;
+  padding: 10px;
+  height: 90vh;
+  margin-bottom: 10vh;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+
+  &::-webkit-scrollbar {
+    width: 0.25rem;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #1e1e24;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #6649b8;
+  }
+
+  p {
+    max-width: 500px;
+    margin-bottom: 12px;
+    line-height: 24px;
+    padding: 10px 20px;
+    border-radius: 25px;
+    position: relative;
+    color: white;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .message {
+    display: flex;
+    align-items: center;
+  }
+
+  .sent {
+    flex-direction: row-reverse;
+
+    p {
+      color: white;
+      background: #0b93f6;
+      align-self: flex-end;
+    }
+  }
+
+  .received {
+    p {
+      background: #e5e5ea;
+      color: black;
+    }
+  }
+
+  img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 2px 5px;
+  }
+}
+
+#chatform {
+  height: 10vh;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  max-width: 728px;
+  display: flex;
+  font-size: 1.5rem;
+
+  button {
+    width: 20%;
+    background-color: darken(#0b93f6, 10%);
+    border: none;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 1.25rem;
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+
+  input {
+    line-height: 1.5;
+    width: 100%;
+    font-size: 1.5rem;
+    background-color: darken(#fff, 20%);
+    color: black;
+    outline: none;
+    border: none;
+    padding: 0 10px;
+  }
+}
