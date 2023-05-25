@@ -1,9 +1,9 @@
 export enum Theme {
   FAMILY = 'family',
-  RPG = 'rpg'
+  RPG = 'rpg',
   // FANTASY = 'fantasy',
   // SCI_FI = 'sci-fi',
-  // HORROR = 'horror',
+  HORROR = 'horror'
   // HISTORICAL = 'historical',
   // WESTERN = 'western',
   // MODERN = 'modern',

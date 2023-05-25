@@ -103,7 +103,12 @@ export default function Multi() {
   return (
     <>
       {loaded ? (
-        <ChatRoom messages={messages} sending={sending} callback={messageCallback} />
+        <ChatRoom
+          messages={messages}
+          sending={sending}
+          theme={params?.theme}
+          callback={messageCallback}
+        />
       ) : (
         <Loading />
       )}

@@ -4,15 +4,15 @@ import { QueryParams } from '@/types/queryParams';
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
 
-import { Press_Start_2P, MedievalSharp } from 'next/font/google';
+import { Press_Start_2P, MedievalSharp, Creepster } from 'next/font/google';
 
-export const family = Press_Start_2P({
+const family = Press_Start_2P({
   subsets: ['cyrillic'],
   display: 'swap',
   weight: '400'
 });
 
-export const rpg = MedievalSharp({
+const rpg = MedievalSharp({
   subsets: ['latin'],
   display: 'swap',
   weight: '400'
@@ -34,7 +34,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <>
-      <style jsx global>{`
+      {/* <style jsx global>{`
         #game.theme-family {
           font-family: ${family.style.fontFamily};
         }
@@ -42,7 +42,7 @@ export default function App({ Component, pageProps }: AppProps) {
         #game.theme-rpg {
           font-family: ${rpg.style.fontFamily};
         }
-      `}</style>
+      `}</style> */}
       {params ? (
         <main id="game" className={`theme-${params.theme}`}>
           <Component {...pageProps} />
