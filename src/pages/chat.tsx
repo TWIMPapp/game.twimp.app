@@ -88,6 +88,7 @@ export default function Multi() {
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
       setParams(_params);
+      // TODO: Get initial message from conversation
       // const data = await getData(_params);
       // if (data) {
       setLoaded(true);
