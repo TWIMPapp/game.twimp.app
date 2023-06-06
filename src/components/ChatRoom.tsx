@@ -5,18 +5,12 @@ import { CircularProgress, Icon, LinearProgress } from '@mui/material';
 import { Theme } from '@/types/theme.enum';
 import { BatteryAlert, Bolt } from '@mui/icons-material';
 
-// TODO: Avatar support
-// TODO: Improve Ryan prompt
-// TODO: Idea of clues? 3/4 etc
-
 const tauntingMessagePrompt = (): string => {
   const taunts = [
     `Ask something good...`,
-    `Do you even care...?`,
     `Keep guessing...`,
     `Try harder...`,
     `You're not even close...`,
-    `Come on, or... ;)`,
     `Life is in your hands...`,
     `You're wasting your time...`
   ];
@@ -79,7 +73,7 @@ const ChatRoom = ({
           placeholder={
             messages.length > 0 && theme === Theme.HORROR
               ? tauntingMessagePrompt()
-              : 'Ask him something...'
+              : 'Ask something...'
           }
         />
 

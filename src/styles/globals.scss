@@ -20,6 +20,13 @@ html {
   &.theme-horror {
     #chat {
       background-color: #282c34;
+
+      .sent {
+        p {
+          color: #e5e5ea;
+          background: black;
+        }
+      }
     }
 
     #chatform {

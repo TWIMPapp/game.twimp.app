@@ -6,6 +6,7 @@ import { QueryParams } from '@/types/queryParams';
 import ChatRoom from '@/components/ChatRoom';
 import { MessageItem } from '@/types/MessageItem';
 import { InventoryItem } from '@/types/inventoryItem';
+import ItemsDialog from '@/components/ItemsDialog';
 
 const baseUrl =
   'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=conversation';
@@ -13,7 +14,7 @@ const baseUrl =
 interface ChatResponse {
   ok: boolean;
   message: MessageItem;
-  item: InventoryItem[];
+  items: InventoryItem[];
   energy: number;
 }
 
@@ -55,15 +56,19 @@ export default function Multi() {
   const [loaded, setLoaded] = useState<boolean>(false);
   const [sending, setSending] = useState<boolean>(false);
   const [messages, setMessages] = useState<MessageItem[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [items, setItems] = useState<InventoryItem[]>([]);
   const [energy, setEnergy] = useState<number>(0);
+  const [open, setOpen] = useState<boolean>(false);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const messageCallback = async (message: string) => {
     const newMessage: MessageItem = {
       text: message,
       id: Math.random().toString(36).substr(2, 9),
-      // TODO: get avatar from user
-      avatar: 'https://i.pravatar.cc/40',
+      avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/killer.png',
       createdAt: new Date(),
       sent: true
     };
@@ -79,6 +84,13 @@ export default function Multi() {
       setMessages([...messages, newMessage, returnedMessage]);
       setEnergy(data.energy);
       setSending(false);
+
+      if (data) {
+        if (data.items.length > 0) {
+          setItems(data.items);
+          setOpen(true);
+        }
+      }
     }
   };
 
@@ -112,6 +124,7 @@ export default function Multi() {
       ) : (
         <Loading />
       )}
+      <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
     </>
   );
 }
