@@ -5,6 +5,7 @@ import Loading from '@/components/Loading';
 import { QueryParams } from '@/types/queryParams';
 import ChatRoom from '@/components/ChatRoom';
 import { MessageItem } from '@/types/MessageItem';
+import { InventoryItem } from '@/types/inventoryItem';
 
 const baseUrl =
   'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=conversation';
@@ -12,12 +13,8 @@ const baseUrl =
 interface ChatResponse {
   ok: boolean;
   message: MessageItem;
-}
-
-interface ChatData {
-  // question: string;
-  // hint?: string;
-  // answers: string[];
+  item: InventoryItem[];
+  energy: number;
 }
 
 const stringifyQueryParams = (params: QueryParams): string => {
@@ -26,14 +23,14 @@ const stringifyQueryParams = (params: QueryParams): string => {
     .join('&')}`;
 };
 
-// const getData = async (params: QueryParams): Promise<ChatData> => {
-//   const response = await axios
-//     .get(`${baseUrl}/question${stringifyQueryParams(params)}`)
-//     .catch((error) => {
-//       console.error(error);
-//     });
-//   return response?.data?.body;
-// };
+const getData = async (params: QueryParams): Promise<ChatResponse> => {
+  const response = await axios
+    .get(`${baseUrl}/start${stringifyQueryParams(params)}`)
+    .catch((error) => {
+      console.error(error);
+    });
+  return response?.data?.body;
+};
 
 const postData = async (message: string, params: QueryParams): Promise<ChatResponse> => {
   const response = await axios
@@ -88,11 +85,12 @@ export default function Multi() {
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
       setParams(_params);
-      // TODO: Get initial message from conversation
-      // const data = await getData(_params);
-      // if (data) {
-      setLoaded(true);
-      // }
+      const data = await getData(_params);
+      if (data) {
+        console.log('#######', data);
+        setMessages([data.message]);
+        setLoaded(true);
+      }
     };
 
     fetchData();

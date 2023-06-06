@@ -1,14 +1,14 @@
-import { createRef, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MessageItem } from '@/types/MessageItem';
 import ChatMessage from './ChatMessage';
 import { CircularProgress } from '@mui/material';
 import { Theme } from '@/types/theme.enum';
 
-// TODO: Ryan send initial message
 // TODO: Avatar support
 // TODO: Improve Ryan prompt
 // TODO: Idea of battery?
 // TODO: Idea of clues? 3/4 etc
+// TODO: Add character limit
 
 const tauntingMessagePrompt = (): string => {
   const taunts = [
