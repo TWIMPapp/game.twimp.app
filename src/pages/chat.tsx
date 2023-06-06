@@ -7,6 +7,7 @@ import ChatRoom from '@/components/ChatRoom';
 import { MessageItem } from '@/types/MessageItem';
 import { InventoryItem } from '@/types/inventoryItem';
 import ItemsDialog from '@/components/ItemsDialog';
+import { promiseWithTimeout } from '@/utils/promiseWithTimeout';
 
 const baseUrl =
   'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=conversation';
@@ -68,28 +69,46 @@ export default function Multi() {
     const newMessage: MessageItem = {
       text: message,
       id: Math.random().toString(36).substr(2, 9),
-      avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/killer.png',
+      avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/user.png',
       createdAt: new Date(),
       sent: true
     };
     setMessages([...messages, newMessage]);
     setSending(true);
 
-    const data = await postData(message, params as QueryParams);
+    const data = (await promiseWithTimeout(20000, postData(message, params as QueryParams)).catch(
+      (error) => {
+        console.error(error);
+        return {
+          ok: false,
+          message: {
+            text: 'Sorry, something went wrong. Please try again.',
+            id: Math.random().toString(36).substr(2, 9),
+            avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/error.png',
+            createdAt: new Date(),
+            sent: false
+          },
+          items: [],
+          energy
+        } as ChatResponse;
+      }
+    )) as ChatResponse;
+
     if (data?.message) {
       const returnedMessage: MessageItem = {
         ...data.message,
         sent: false
       };
       setMessages([...messages, newMessage, returnedMessage]);
-      setEnergy(data.energy);
       setSending(false);
 
-      if (data) {
-        if (data.items.length > 0) {
-          setItems(data.items);
-          setOpen(true);
-        }
+      if (data?.energy) {
+        setEnergy(data.energy);
+      }
+
+      if (data?.items?.length > 0) {
+        setItems(data.items);
+        setOpen(true);
       }
     }
   };
