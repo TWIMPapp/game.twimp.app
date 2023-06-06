@@ -71,7 +71,7 @@ const ChatRoom = ({
           onChange={(e) => setFormValue(e.target.value)}
           maxLength={100}
           placeholder={
-            messages.length > 0 && theme === Theme.HORROR
+            messages.length > 1 && theme === Theme.HORROR
               ? tauntingMessagePrompt()
               : 'Ask something...'
           }

@@ -69,7 +69,9 @@ export default function Multi() {
     const newMessage: MessageItem = {
       text: message,
       id: Math.random().toString(36).substr(2, 9),
-      avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/user.png',
+      avatar: params?.user_image_url
+        ? params.user_image_url
+        : 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/user.png',
       createdAt: new Date(),
       sent: true
     };
