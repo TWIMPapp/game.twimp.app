@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { MessageItem } from '@/types/MessageItem';
 import ChatMessage from './ChatMessage';
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, Icon, LinearProgress } from '@mui/material';
 import { Theme } from '@/types/theme.enum';
+import { BatteryAlert, Bolt } from '@mui/icons-material';
 
 // TODO: Avatar support
 // TODO: Improve Ryan prompt
-// TODO: Idea of battery?
 // TODO: Idea of clues? 3/4 etc
 
 const tauntingMessagePrompt = (): string => {
@@ -27,11 +27,13 @@ const tauntingMessagePrompt = (): string => {
 const ChatRoom = ({
   messages,
   sending,
+  energy,
   theme,
   callback
 }: {
   messages: MessageItem[];
   sending: boolean;
+  energy: number;
   theme?: Theme;
   callback: (answer: string) => any;
 }) => {
@@ -60,6 +62,15 @@ const ChatRoom = ({
       </main>
 
       <form id="chatform" onSubmit={sendMessage}>
+        <div className="energy">
+          <LinearProgress className="energy__progress" variant="determinate" value={energy} />
+          {theme === Theme.HORROR ? (
+            <BatteryAlert className="energy__icon" color="primary" />
+          ) : (
+            <Bolt className="energy__icon" color="primary" />
+          )}
+          <span className="energy__percent">{energy}%</span>
+        </div>
         <input
           value={formValue}
           disabled={sending}

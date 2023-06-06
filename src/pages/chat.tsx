@@ -55,6 +55,8 @@ export default function Multi() {
   const [loaded, setLoaded] = useState<boolean>(false);
   const [sending, setSending] = useState<boolean>(false);
   const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [energy, setEnergy] = useState<number>(0);
 
   const messageCallback = async (message: string) => {
     const newMessage: MessageItem = {
@@ -75,6 +77,7 @@ export default function Multi() {
         sent: false
       };
       setMessages([...messages, newMessage, returnedMessage]);
+      setEnergy(data.energy);
       setSending(false);
     }
   };
@@ -87,8 +90,8 @@ export default function Multi() {
       setParams(_params);
       const data = await getData(_params);
       if (data) {
-        console.log('#######', data);
         setMessages([data.message]);
+        setEnergy(data.energy);
         setLoaded(true);
       }
     };
@@ -102,6 +105,7 @@ export default function Multi() {
         <ChatRoom
           messages={messages}
           sending={sending}
+          energy={energy}
           theme={params?.theme}
           callback={messageCallback}
         />

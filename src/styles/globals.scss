@@ -25,6 +25,14 @@ html {
     #chatform {
       background-color: lighten(#282c34, 10%);
 
+      .energy {
+        color: lighten(#282c34, 60%);
+
+        &__icon {
+          color: lighten(#282c34, 60%);
+        }
+      }
+
       input {
         color: #fff;
         background-color: lighten(#282c34, 10%);
@@ -109,6 +117,30 @@ html {
   max-width: 728px;
   display: flex;
   font-size: 1.5rem;
+
+  .energy {
+    position: absolute;
+    top: 0px;
+    height: 10px;
+    width: 100%;
+
+    &__progress {
+      width: 100%;
+    }
+
+    &__icon {
+      position: absolute;
+      top: -30px;
+      left: 0px;
+    }
+
+    &__percent {
+      position: absolute;
+      top: -34px;
+      left: 25px;
+      font-size: 80%;
+    }
+  }
 
   button {
     width: 20%;
