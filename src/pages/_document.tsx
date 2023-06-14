@@ -1,21 +1,9 @@
 import { Html, Head, Main, NextScript } from 'next/document';
-import Script from 'next/script';
 
 export default function Document() {
   return (
     <Html lang="en" className="h-full w-full">
       <Head>
-        <Script
-          strategy="afterInteractive"
-          src="https://www.googletagmanager.com/gtag/js?id=G-1QZ56CKR0K"
-        ></Script>
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-
-          gtag('config', 'G-1QZ56CKR0K');`}
-        </Script>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
         <meta name="referrer" content="same-origin"></meta>
         <meta
@@ -26,6 +14,11 @@ export default function Document() {
       <body>
         <Main />
         <NextScript />
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html: `<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PJT9V98" height="0" width="0" style="display: none; visibility: hidden;" />`
+          }}
+        />
       </body>
     </Html>
   );

@@ -219,7 +219,7 @@ export default function Maninabox() {
     axios
       .post(
         url,
-        { email, firstname, chapter: `Chapter ${launchingChapter?.num}` },
+        { email, firstname, chapter: `Chapter ${launchingChapter?.num}`, city: 'Bristol' },
         {
           headers: {
             'Content-Type': 'text/plain'
