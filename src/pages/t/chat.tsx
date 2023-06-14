@@ -60,6 +60,7 @@ export default function Multi() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [energy, setEnergy] = useState<number>(0);
   const [open, setOpen] = useState<boolean>(false);
+  const [isTyping, setIsTyping] = useState<boolean>(false);
 
   const handleClose = () => {
     setOpen(false);
@@ -78,6 +79,11 @@ export default function Multi() {
     };
     setMessages([...messages, newMessage]);
     setSending(true);
+
+    const randomTime = Math.floor(Math.random() * 2000) + 1000;
+    setTimeout(() => {
+      setIsTyping(true);
+    }, randomTime);
 
     const data = (await promiseWithTimeout(20000, postData(message, params as QueryParams)).catch(
       (error) => {
@@ -103,6 +109,7 @@ export default function Multi() {
         ...data.message,
         sent: false
       };
+      setIsTyping(false);
       setMessages([...messages, newMessage, returnedMessage]);
       setSending(false);
 
@@ -141,6 +148,7 @@ export default function Multi() {
           messages={messages}
           sending={sending}
           energy={energy}
+          isTyping={isTyping}
           theme={params?.theme}
           callback={messageCallback}
         />

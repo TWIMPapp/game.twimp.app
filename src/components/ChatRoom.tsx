@@ -5,11 +5,10 @@ import { CircularProgress, LinearProgress } from '@mui/material';
 import { Theme } from '@/types/theme.enum';
 import { BatteryAlert, Bolt } from '@mui/icons-material';
 
-// TODO: Turn screen off if energy is 0
-// TODO: Get all messages on initial load (sent and received based on role)
-// TODO: Do a bubble as if the user is typing
-// TODO: Refocus box on enter
-// TODO: Make sure window is scrolled down on response
+// TODO: [BE] Messages should return with id
+
+// TODO: [FE] Turn screen off if energy is 0
+// TODO: [FE] Get all messages on initial load (sent and received based on role)
 
 const tauntingMessagePrompt = (): string => {
   const taunts = [
@@ -24,16 +23,27 @@ const tauntingMessagePrompt = (): string => {
   return taunts[Math.floor(Math.random() * taunts.length)];
 };
 
+const typingMsg: MessageItem = {
+  id: '999',
+  text: '...',
+  role: 'assistant',
+  createdAt: new Date(),
+  avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/ryan.png',
+  sent: false
+};
+
 const ChatRoom = ({
   messages,
   sending,
   energy,
+  isTyping,
   theme,
   callback
 }: {
   messages: MessageItem[];
   sending: boolean;
   energy: number;
+  isTyping: boolean;
   theme?: Theme;
   callback: (answer: string) => any;
 }) => {
@@ -46,7 +56,7 @@ const ChatRoom = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const sendMessage = async (e: any) => {
     e.preventDefault();
@@ -58,6 +68,7 @@ const ChatRoom = ({
     <>
       <main id="chat">
         {messages && messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
+        {isTyping && <ChatMessage key={999} message={typingMsg} />}
         <div ref={messagesEndRef} />
       </main>
 
