@@ -7,7 +7,6 @@ import { BatteryAlert, Bolt } from '@mui/icons-material';
 
 // TODO: [BE] Messages should return with id
 
-// TODO: [FE] Turn screen off if energy is 0
 // TODO: [FE] Get all messages on initial load (sent and received based on role)
 
 const tauntingMessagePrompt = (): string => {

@@ -8,6 +8,7 @@ import { MessageItem } from '@/types/MessageItem';
 import { InventoryItem } from '@/types/inventoryItem';
 import ItemsDialog from '@/components/ItemsDialog';
 import { promiseWithTimeout } from '@/utils/promiseWithTimeout';
+import NoBatteryDialog from '@/components/NoBatteryDialog';
 
 const baseUrl =
   'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=conversation';
@@ -61,6 +62,7 @@ export default function Multi() {
   const [energy, setEnergy] = useState<number>(0);
   const [open, setOpen] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [noBattery, setNoBattery] = useState<boolean>(false);
 
   const handleClose = () => {
     setOpen(false);
@@ -115,6 +117,10 @@ export default function Multi() {
 
       if (data?.energy) {
         setEnergy(data.energy);
+
+        if (data.energy <= 0) {
+          setNoBattery(true);
+        }
       }
 
       if (data?.items?.length > 0) {
@@ -156,6 +162,7 @@ export default function Multi() {
         <Loading />
       )}
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
+      <NoBatteryDialog open={noBattery}></NoBatteryDialog>
     </>
   );
 }
