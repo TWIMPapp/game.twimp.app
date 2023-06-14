@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { MessageItem } from '@/types/MessageItem';
 import ChatMessage from './ChatMessage';
-import { CircularProgress, Icon, LinearProgress } from '@mui/material';
+import { CircularProgress, LinearProgress } from '@mui/material';
 import { Theme } from '@/types/theme.enum';
 import { BatteryAlert, Bolt } from '@mui/icons-material';
+
+// TODO: Turn screen off if energy is 0
+// TODO: Get all messages on initial load (sent and received based on role)
+// TODO: Do a bubble as if the user is typing
+// TODO: Refocus box on enter
+// TODO: Make sure window is scrolled down on response
 
 const tauntingMessagePrompt = (): string => {
   const taunts = [
