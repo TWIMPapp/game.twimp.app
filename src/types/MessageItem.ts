@@ -4,4 +4,7 @@ export interface MessageItem {
   avatar: string;
   createdAt: Date;
   sent: boolean;
+  conversationId: number;
+  userId: string;
+  role: 'user' | 'assistant' | 'system';
 }
