@@ -28,7 +28,8 @@ const typingMsg: MessageItem = {
   role: 'assistant',
   createdAt: new Date(),
   avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/ryan.png',
-  sent: false
+  sent: false,
+  name: ''
 };
 
 const ChatRoom = ({
