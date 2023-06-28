@@ -6,8 +6,8 @@ const ChatMessage = ({ message }: { message: MessageItem }) => {
   return (
     <>
       <div className={`message ${sent ? 'sent' : 'received'}`}>
-        <img src={avatar} />
-        <p>{text}</p>
+        {/* <img src={avatar} /> */}
+        <p className="no-avatar">{text}</p>
       </div>
     </>
   );

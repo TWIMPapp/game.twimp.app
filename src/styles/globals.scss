@@ -99,6 +99,10 @@ html {
       color: white;
       background: #0b93f6;
       align-self: flex-end;
+
+      &.no-avatar {
+        margin-right: 40px;
+      }
     }
   }
 
@@ -106,6 +110,10 @@ html {
     p {
       background: #e5e5ea;
       color: black;
+
+      &.no-avatar {
+        margin-left: 40px;
+      }
     }
   }
 
