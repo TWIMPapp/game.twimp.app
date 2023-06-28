@@ -99,7 +99,8 @@ export default function Multi() {
             avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/error.png',
             createdAt: new Date(),
             sent: false,
-            role: 'assistant'
+            role: 'assistant',
+            name: ''
           },
           items: [],
           energy
