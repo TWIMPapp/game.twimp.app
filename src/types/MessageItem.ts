@@ -7,4 +7,5 @@ export interface MessageItem {
   conversationId?: number;
   userId?: string;
   role: 'user' | 'assistant' | 'system';
+  name: string;
 }

@@ -65,6 +65,10 @@ const ChatRoom = ({
 
   return (
     <>
+      <div className="chat-header">
+        <img className="chat-header__avatar" src={messages[0].avatar} />
+        <h1 className="chat-header__name">{messages[0].name}</h1>
+      </div>
       <main id="chat">
         {messages && messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
         {isTyping && <ChatMessage key={999} message={typingMsg} />}

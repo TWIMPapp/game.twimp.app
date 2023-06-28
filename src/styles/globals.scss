@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+$twimp-pink: #ff2e5b;
+$twimp-yellow: #e2d46b;
+$twimp-green: #bac94a;
+$twimp-light-blue: #97d7c7;
+$twimp-blue: #59a7a7;
+
 body,
 html {
   height: 100vh;
@@ -53,11 +59,35 @@ html {
   }
 }
 
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: $twimp-blue;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  position: relative;
+  height: 60px;
+
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+
+  &__name {
+    margin-left: 10px;
+  }
+}
+
 #chat {
   background-color: darken(#fff, 2%);
   text-align: center;
   padding: 10px;
-  height: 90vh;
+  height: calc(90vh - 60px);
   margin-bottom: 10vh;
   overflow-y: scroll;
   display: flex;
@@ -101,7 +131,7 @@ html {
       align-self: flex-end;
 
       &.no-avatar {
-        margin-right: 40px;
+        margin-left: 40px;
       }
     }
   }
@@ -112,7 +142,7 @@ html {
       color: black;
 
       &.no-avatar {
-        margin-left: 40px;
+        margin-right: 40px;
       }
     }
   }
@@ -147,14 +177,14 @@ html {
     &__icon {
       position: absolute;
       top: -30px;
-      left: 0px;
+      right: 10px;
     }
 
     &__percent {
       position: absolute;
-      top: -34px;
-      left: 25px;
-      font-size: 80%;
+      top: -30px;
+      right: 30px;
+      font-size: 70%;
     }
   }
 

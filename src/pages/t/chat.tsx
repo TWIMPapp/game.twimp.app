@@ -27,6 +27,7 @@ const stringifyQueryParams = (params: QueryParams): string => {
 };
 
 const getData = async (params: QueryParams): Promise<ChatResponse> => {
+  // TODO: Get name and avatar from initial GET
   const response = await axios
     .get(`${baseUrl}/start${stringifyQueryParams(params)}`)
     .catch((error) => {
