@@ -78,7 +78,8 @@ export default function Multi() {
         : 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/user.png',
       createdAt: new Date(),
       sent: true,
-      role: 'user'
+      role: 'user',
+      name: ''
     };
     setMessages([...messages, newMessage]);
     setSending(true);
