@@ -38,6 +38,7 @@ const ChatRoom = ({
   energy,
   isTyping,
   theme,
+  upsideDown,
   callback
 }: {
   messages: MessageItem[];
@@ -45,6 +46,7 @@ const ChatRoom = ({
   energy: number;
   isTyping: boolean;
   theme?: Theme;
+  upsideDown?: boolean;
   callback: (answer: string) => any;
 }) => {
   const [formValue, setFormValue] = useState('');
@@ -70,13 +72,13 @@ const ChatRoom = ({
         <img className="chat-header__avatar" src={messages[0].avatar} />
         <h1 className="chat-header__name">{messages[0].name}</h1>
       </div>
-      <main id="chat">
+      <main id="chat" className={upsideDown ? 'upside-down' : ''}>
         {messages && messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
         {isTyping && <ChatMessage key={999} message={typingMsg} />}
         <div ref={messagesEndRef} />
       </main>
 
-      <form id="chatform" onSubmit={sendMessage}>
+      <form id="chatform" className={upsideDown ? 'upside-down' : ''} onSubmit={sendMessage}>
         <div className="energy">
           <LinearProgress className="energy__progress" variant="determinate" value={energy} />
           {theme === Theme.HORROR ? (

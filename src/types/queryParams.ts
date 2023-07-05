@@ -10,4 +10,5 @@ export interface QueryParams {
   lat: string;
   lng: string;
   theme: Theme;
+  upside_down: boolean;
 }

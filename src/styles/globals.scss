@@ -93,6 +93,12 @@ html {
   display: flex;
   flex-direction: column;
 
+  &.upside-down {
+    flex-direction: column-reverse;
+    margin-bottom: 0;
+    margin-top: 10vh;
+  }
+
   &::-webkit-scrollbar {
     width: 0.25rem;
   }
@@ -163,6 +169,26 @@ html {
   max-width: 728px;
   display: flex;
   font-size: 1.5rem;
+
+  &.upside-down {
+    top: 60px;
+    bottom: auto;
+
+    .energy {
+      top: auto;
+      bottom: -10px;
+
+      &__icon {
+        top: auto;
+        bottom: -20px;
+      }
+
+      &__percent {
+        top: auto;
+        bottom: -20px;
+      }
+    }
+  }
 
   .energy {
     position: absolute;
