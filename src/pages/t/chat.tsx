@@ -159,7 +159,7 @@ export default function Multi() {
           energy={energy}
           isTyping={isTyping}
           theme={params?.theme}
-          upsideDown={params?.upside_down ?? true}
+          upsideDown={params?.upside_down}
           callback={messageCallback}
         />
       ) : (
