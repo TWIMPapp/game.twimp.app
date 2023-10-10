@@ -23,7 +23,7 @@ const TaskDialog = ({
   return (
     <>
       <Dialog open={open} onClose={handleClose}>
-        <Card>
+        <Card sx={{ overflowY: 'auto' }}>
           <CardMedia component="img" height="140" image={task.image} />
           <CardContent sx={{ whiteSpace: 'pre-wrap' }}>{task.content}</CardContent>
           <CardActions>
