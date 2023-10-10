@@ -5,6 +5,7 @@ import Loading from '@/components/Loading';
 import { QueryParams } from '@/types/queryParams';
 import { Task } from '@/types/Task';
 import TaskList from '@/components/TaskList';
+import { Box } from '@mui/material';
 
 // ?user_id=3&trail_ref=DragonReturn_Brandon&task_sequence=700&path=0|5|29|55&lat=51.470675&lng=-2.5908689
 
@@ -53,7 +54,17 @@ export default function Journal() {
         tasks?.length > 0 ? (
           <TaskList tasks={tasks} />
         ) : (
-          <div>Nothing to see here just yet 👀</div>
+          <Box
+            sx={{
+              display: 'flex',
+              width: '100vw',
+              height: '100vh',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            Nothing to see here just yet 👀
+          </Box>
         )
       ) : (
         <Loading />
