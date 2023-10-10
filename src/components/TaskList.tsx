@@ -21,7 +21,7 @@ export default function TaskList({ tasks }: Props) {
   };
 
   return (
-    <List sx={{ width: '100%', padding: '40px 40px 40px 20px' }}>
+    <List sx={{ width: '90%', padding: '40px 20px' }}>
       {tasks &&
         tasks.map((task, index) => (
           <>
