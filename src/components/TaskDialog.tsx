@@ -1,0 +1,40 @@
+import { useState } from 'react';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import { Task } from '@/types/Task';
+import Card from '@mui/material/Card';
+import CardMedia from '@mui/material/CardMedia';
+import { CardActions, CardContent } from '@mui/material';
+
+const TaskDialog = ({
+  open,
+  handleClose,
+  task
+}: {
+  open: boolean;
+  handleClose: () => void;
+  task: Task;
+}) => {
+  return (
+    <>
+      <Dialog open={open} onClose={handleClose}>
+        <Card>
+          <CardMedia component="img" height="140" image={task.image} />
+          <CardContent sx={{ whiteSpace: 'pre-wrap' }}>{task.content}</CardContent>
+          <CardActions>
+            <Button color="primary" onClick={handleClose}>
+              Close
+            </Button>
+          </CardActions>
+        </Card>
+      </Dialog>
+    </>
+  );
+};
+
+export default TaskDialog;
