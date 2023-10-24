@@ -60,10 +60,29 @@ function Map() {
           lat: Number(position.coords.latitude),
           lng: Number(position.coords.longitude)
         });
-        const data = await postData(position, params as QueryParams);
-        if (data) {
-          console.log('####### data 2', data);
-        }
+
+        navigator.geolocation.watchPosition(
+          async (position) => {
+            console.log('####### pos watch 2', position);
+            setCenter({
+              lat: Number(position.coords.latitude),
+              lng: Number(position.coords.longitude)
+            });
+
+            const data = await postData(position, params as QueryParams);
+            if (data) {
+              console.log('####### data watch 2', data);
+            }
+          },
+          (error) => {
+            console.log('####### error watch 2', error);
+          },
+          {
+            maximumAge: 10000,
+            timeout: 5000,
+            enableHighAccuracy: true
+          }
+        );
       },
       (error) => {
         console.log('####### error 2', error);
