@@ -69,7 +69,7 @@ function Map() {
         console.log('####### error 2', error);
       },
       {
-        maximumAge: 30000,
+        maximumAge: 10000,
         timeout: 5000,
         enableHighAccuracy: true
       }
