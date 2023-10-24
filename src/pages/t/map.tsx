@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 // ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689&theme=family
 
 const baseUrl =
-  'https://script.google.com/macros/s/AKfycbx2Hnd9zQqpuO8dyP4ZouhmbpvO1S1cvO47tfhaXHRBCs_KxZHfkQGsFYdzJkFeWgiAJA/exec?q=trails/next';
+  'https://script.google.com/macros/s/AKfycbx2Hnd9zQqpuO8dyP4ZouhmbpvO1S1cvO47tfhaXHRBCs_KxZHfkQGsFYdzJkFeWgiAJA/exec?q=trails';
 
 // interface NextResponse {
 //   correct: boolean;
@@ -20,11 +20,11 @@ const baseUrl =
 //   answers: string[];
 // }
 
-const postData = async (position: any, params: QueryParams): Promise<any> => {
+const postData = async (position: GeolocationPosition, params: QueryParams): Promise<any> => {
   const response = await axios
     .post(
-      `${baseUrl}/question`,
-      { position, ...params },
+      `${baseUrl}/next`,
+      { ...{ lat: position.coords.latitude, lng: position.coords.longitude }, ...params },
       {
         headers: {
           'Content-Type': 'text/plain'
@@ -74,7 +74,7 @@ function Map() {
     const interval = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
-          console.log('#######', position);
+          console.log('####### pos', position);
           setCenter({
             lat: Number(position.coords.latitude),
             lng: Number(position.coords.longitude)
@@ -85,7 +85,7 @@ function Map() {
           }
         },
         (error) => {
-          console.log('#######', error);
+          console.log('####### error', error);
         },
         {
           maximumAge: 30000,
