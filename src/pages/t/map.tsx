@@ -1,5 +1,6 @@
 import Loading from '@/components/Loading';
 import { QueryParams } from '@/types/queryParams';
+import { Button } from '@mui/material';
 import { GoogleMap, LoadScript } from '@react-google-maps/api';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
@@ -47,6 +48,30 @@ function Map() {
   const [params, setParams] = useState<QueryParams>();
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
 
+  const getLocationSendData = async () => {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        console.log('####### pos 2', position);
+        setCenter({
+          lat: Number(position.coords.latitude),
+          lng: Number(position.coords.longitude)
+        });
+        const data = await postData(position, params as QueryParams);
+        if (data) {
+          console.log('####### data 2', data);
+        }
+      },
+      (error) => {
+        console.log('####### error 2', error);
+      },
+      {
+        maximumAge: 30000,
+        timeout: 5000
+        // enableHighAccuracy: true
+      }
+    );
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const _params = Object.fromEntries(
@@ -71,37 +96,18 @@ function Map() {
       }
     };
 
-    const interval = setInterval(() => {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          console.log('####### pos', position);
-          setCenter({
-            lat: Number(position.coords.latitude),
-            lng: Number(position.coords.longitude)
-          });
-          const data = await postData(position, params as QueryParams);
-          if (data) {
-            console.log('#######', data);
-          }
-        },
-        (error) => {
-          console.log('####### error', error);
-        },
-        {
-          maximumAge: 30000,
-          timeout: 5000
-          // enableHighAccuracy: true
-        }
-      );
-    }, 10000);
+    // const interval = setInterval(() => getLocationSendData(), 10000);
 
     fetchData();
-    return () => clearInterval(interval);
+    // return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <>
+      <Button sx={{ marginTop: '200px' }} onClick={getLocationSendData}>
+        Send location
+      </Button>
       {center?.lat && center?.lat ? (
         <LoadScript googleMapsApiKey="AIzaSyC2KHxX2ZUVmEKyCvRrduQbPDwwDyWXy2Q">
           <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={20} />
