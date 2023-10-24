@@ -71,6 +71,8 @@ function Map() {
       }
     };
 
+    navigator.geolocation.
+
     const interval = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -88,9 +90,9 @@ function Map() {
           console.log('#######', error);
         },
         {
-          maximumAge: 60000,
+          maximumAge: 30000,
           timeout: 5000,
-          enableHighAccuracy: true
+          // enableHighAccuracy: true
         }
       );
     }, 10000);
