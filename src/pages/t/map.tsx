@@ -71,8 +71,6 @@ function Map() {
       }
     };
 
-    navigator.geolocation.
-
     const interval = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -91,7 +89,7 @@ function Map() {
         },
         {
           maximumAge: 30000,
-          timeout: 5000,
+          timeout: 5000
           // enableHighAccuracy: true
         }
       );
