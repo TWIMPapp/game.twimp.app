@@ -66,8 +66,8 @@ function Map() {
       },
       {
         maximumAge: 30000,
-        timeout: 5000
-        // enableHighAccuracy: true
+        timeout: 5000,
+        enableHighAccuracy: true
       }
     );
   };
