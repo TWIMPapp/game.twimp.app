@@ -22,16 +22,20 @@ const baseUrl =
 // }
 
 const postData = async (position: GeolocationPosition, params: QueryParams): Promise<any> => {
+  const body = {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude,
+    accuracy: position.coords.accuracy,
+    user_id: params?.user_id,
+    trail_ref: params?.trail_ref
+  };
+
   const response = await axios
-    .post(
-      `${baseUrl}/next`,
-      { ...{ lat: position.coords.latitude, lng: position.coords.longitude }, ...params },
-      {
-        headers: {
-          'Content-Type': 'text/plain'
-        }
+    .post(`${baseUrl}/next`, body, {
+      headers: {
+        'Content-Type': 'text/plain'
       }
-    )
+    })
     .catch((error) => {
       console.error(error);
     });
@@ -110,7 +114,12 @@ function Map() {
       </Button>
       {center?.lat && center?.lat ? (
         <LoadScript googleMapsApiKey="AIzaSyC2KHxX2ZUVmEKyCvRrduQbPDwwDyWXy2Q">
-          <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={20} />
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={20}
+            options={{ disableDefaultUI: true }}
+          />
         </LoadScript>
       ) : (
         <Loading />
