@@ -74,12 +74,12 @@ function Map() {
             if (canRun) {
               canRun = false;
               const data = await postData(position, params as QueryParams);
-              if (data) {
-                console.log('####### data watch 2', data);
-                setTimeout(async () => {
-                  canRun = true;
-                }, 5000);
-              }
+              // if (data) {
+              console.log('####### data watch 2', data);
+              setTimeout(() => {
+                canRun = true;
+              }, 5000);
+              // }
             }
           },
           (error) => {
