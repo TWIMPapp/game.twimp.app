@@ -52,6 +52,7 @@ const containerStyle = {
 function Map() {
   const [params, setParams] = useState<QueryParams>();
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
+  const [markerCenter, setMarkerCenter] = useState({ lat: 0, lng: 0 });
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
 
   const getLocationSendData = async () => {
@@ -68,7 +69,7 @@ function Map() {
         navigator.geolocation.watchPosition(
           async (position) => {
             console.log('####### pos watch 2', position);
-            setCenter({
+            setMarkerCenter({
               lat: Number(position.coords.latitude),
               lng: Number(position.coords.longitude)
             });
@@ -153,7 +154,7 @@ function Map() {
           >
             {isGoogleMapsAPILoaded && (
               <MarkerF
-                position={center}
+                position={markerCenter}
                 icon={{ url: MarkerIcon.src, scaledSize: new google.maps.Size(48, 48) }}
               />
             )}
