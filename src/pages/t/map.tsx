@@ -56,47 +56,27 @@ function Map() {
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
 
   const getLocationSendData = async () => {
-    navigator.geolocation.getCurrentPosition(
+    let canRun = true;
+
+    navigator.geolocation.watchPosition(
       async (position) => {
-        console.log('####### pos 2', position);
-        setCenter({
+        setMarkerCenter({
           lat: Number(position.coords.latitude),
           lng: Number(position.coords.longitude)
         });
 
-        let canRun = true;
-
-        navigator.geolocation.watchPosition(
-          async (position) => {
-            console.log('####### pos watch 2', position);
-            setMarkerCenter({
-              lat: Number(position.coords.latitude),
-              lng: Number(position.coords.longitude)
-            });
-
-            if (canRun) {
-              canRun = false;
-              const data = await postData(position, params as QueryParams);
-              if (data) {
-                console.log('####### data watch 2', data);
-                setTimeout(() => {
-                  canRun = true;
-                }, 5000);
-              }
-            }
-          },
-          (error) => {
-            console.log('####### error watch 2', error);
-          },
-          {
-            maximumAge: 10000,
-            timeout: 5000,
-            enableHighAccuracy: true
+        if (canRun) {
+          canRun = false;
+          const data = await postData(position, params as QueryParams);
+          if (data) {
+            setTimeout(() => {
+              canRun = true;
+            }, 5000);
           }
-        );
+        }
       },
       (error) => {
-        console.log('####### error watch 2', error);
+        console.log(error);
       },
       {
         maximumAge: 10000,
@@ -128,6 +108,8 @@ function Map() {
           }
         );
       }
+
+      getLocationSendData();
     };
 
     fetchData();
@@ -136,9 +118,6 @@ function Map() {
 
   return (
     <>
-      <Button sx={{ marginTop: '200px' }} onClick={getLocationSendData}>
-        Send location
-      </Button>
       {center?.lat && center?.lng ? (
         <LoadScript
           googleMapsApiKey="AIzaSyC2KHxX2ZUVmEKyCvRrduQbPDwwDyWXy2Q"
