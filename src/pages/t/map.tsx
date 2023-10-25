@@ -1,9 +1,10 @@
 import Loading from '@/components/Loading';
 import { QueryParams } from '@/types/queryParams';
 import { Button } from '@mui/material';
-import { GoogleMap, LoadScript } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, MarkerF } from '@react-google-maps/api';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import MarkerIcon from '../../assets/icons/marker-icon.png';
 
 // ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689&theme=family
 
@@ -51,6 +52,7 @@ const containerStyle = {
 function Map() {
   const [params, setParams] = useState<QueryParams>();
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
+  const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
 
   const getLocationSendData = async () => {
     navigator.geolocation.getCurrentPosition(
@@ -74,12 +76,12 @@ function Map() {
             if (canRun) {
               canRun = false;
               const data = await postData(position, params as QueryParams);
-              // if (data) {
-              console.log('####### data watch 2', data);
-              setTimeout(() => {
-                canRun = true;
-              }, 5000);
-              // }
+              if (data) {
+                console.log('####### data watch 2', data);
+                setTimeout(() => {
+                  canRun = true;
+                }, 5000);
+              }
             }
           },
           (error) => {
@@ -93,7 +95,7 @@ function Map() {
         );
       },
       (error) => {
-        console.log('####### error 2', error);
+        console.log('####### error watch 2', error);
       },
       {
         maximumAge: 10000,
@@ -127,10 +129,7 @@ function Map() {
       }
     };
 
-    // const interval = setInterval(() => getLocationSendData(), 10000);
-
     fetchData();
-    // return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -139,14 +138,26 @@ function Map() {
       <Button sx={{ marginTop: '200px' }} onClick={getLocationSendData}>
         Send location
       </Button>
-      {center?.lat && center?.lat ? (
-        <LoadScript googleMapsApiKey="AIzaSyC2KHxX2ZUVmEKyCvRrduQbPDwwDyWXy2Q">
+      {center?.lat && center?.lng ? (
+        <LoadScript
+          googleMapsApiKey="AIzaSyC2KHxX2ZUVmEKyCvRrduQbPDwwDyWXy2Q"
+          onLoad={() => {
+            setIsGoogleMapsAPILoaded(true);
+          }}
+        >
           <GoogleMap
             mapContainerStyle={containerStyle}
             center={center}
             zoom={20}
             options={{ disableDefaultUI: true }}
-          />
+          >
+            {isGoogleMapsAPILoaded && (
+              <MarkerF
+                position={center}
+                icon={{ url: MarkerIcon.src, scaledSize: new google.maps.Size(48, 48) }}
+              />
+            )}
+          </GoogleMap>
         </LoadScript>
       ) : (
         <Loading />
