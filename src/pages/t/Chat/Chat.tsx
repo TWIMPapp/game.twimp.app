@@ -54,7 +54,7 @@ const postData = async (message: string, params: QueryParams): Promise<ChatRespo
   return response?.data?.body;
 };
 
-export default function Multi() {
+export default function Chat() {
   const [params, setParams] = useState<QueryParams>();
   const [loaded, setLoaded] = useState<boolean>(false);
   const [sending, setSending] = useState<boolean>(false);

@@ -13,7 +13,6 @@ import { ShoppingCart, Launch, Email } from '@mui/icons-material';
 import Countdown from '@/components/Countdown';
 import EmailDialog from '@/components/EmailDialog';
 import axios from 'axios';
-import Image from 'next/image';
 import Logo from '@/components/Logo';
 
 interface Chapter {
@@ -203,7 +202,7 @@ const card = (chapter: Chapter, setOpen: (bool: boolean) => void) => (
   </React.Fragment>
 );
 
-export default function Maninabox() {
+export default function BristolMIAB() {
   const [open, setOpen] = useState<boolean>(false);
 
   const handleClose = () => {

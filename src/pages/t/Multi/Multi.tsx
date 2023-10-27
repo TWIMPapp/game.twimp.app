@@ -5,7 +5,6 @@ import MultiQuestion from '@/components/MultiQuestion';
 import Loading from '@/components/Loading';
 import ItemsDialog from '@/components/ItemsDialog';
 import { InventoryItem } from '@/types/inventoryItem';
-import { Theme } from '@/types/theme.enum';
 import { QueryParams } from '@/types/queryParams';
 
 // ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689&theme=family
@@ -17,7 +16,7 @@ import { QueryParams } from '@/types/queryParams';
 // IMP: Add interceptors for the API to retry on failure (try 3 times, if failed, open support)
 
 const baseUrl =
-  'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=trails';
+  'https://script.google.com/macros/s/AKfycbx2Hnd9zQqpuO8dyP4ZouhmbpvO1S1cvO47tfhaXHRBCs_KxZHfkQGsFYdzJkFeWgiAJA/exec?q=trails';
 
 interface MultiQuestionResponse {
   correct: boolean;
