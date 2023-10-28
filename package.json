@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"npm run storybook\"",
+    "serve": "concurrently \"npm run dev\" \"npm run storybook\"",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -47,6 +48,7 @@
     "concurrently": "^8.2.2",
     "eslint-plugin-storybook": "^0.6.15",
     "sass": "^1.62.1",
-    "storybook": "^7.5.1"
+    "storybook": "^7.5.1",
+    "tsconfig-paths-webpack-plugin": "^4.1.0"
   }
 }

@@ -1,6 +1,6 @@
 import { StoryFn } from '@storybook/react';
 
-import Journal from './Journal';
+import Journal from './index';
 
 export default {
   title: 'Tasks/Journal',

@@ -1,6 +1,6 @@
 import { StoryFn } from '@storybook/react';
 
-import Map from './Map';
+import Map from './index';
 
 export default {
   title: 'Tasks/Map',

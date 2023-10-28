@@ -1,4 +1,4 @@
-import { MessageItem } from '@/types/MessageItem';
+import { MessageItem } from '../types/MessageItem';
 
 const ChatMessage = ({ message }: { message: MessageItem }) => {
   const { text, id, avatar, createdAt, sent } = message;

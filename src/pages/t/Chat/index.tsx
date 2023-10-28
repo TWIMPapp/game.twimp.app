@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-import Loading from '@/components/Loading';
-import { QueryParams } from '@/types/queryParams';
-import ChatRoom from '@/components/ChatRoom';
-import { MessageItem } from '@/types/MessageItem';
-import { InventoryItem } from '@/types/inventoryItem';
-import ItemsDialog from '@/components/ItemsDialog';
-import { promiseWithTimeout } from '@/utils/promiseWithTimeout';
-import NoBatteryDialog from '@/components/NoBatteryDialog';
+import Loading from '../../../components/Loading';
+import { QueryParams } from '../../../types/queryParams';
+import ChatRoom from '../../../components/ChatRoom';
+import { MessageItem } from '../../../types/MessageItem';
+import { InventoryItem } from '../../../types/inventoryItem';
+import ItemsDialog from '../../../components/ItemsDialog';
+import { promiseWithTimeout } from '../../../utils/promiseWithTimeout';
+import NoBatteryDialog from '../../../components/NoBatteryDialog';
 
 const baseUrl =
   'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=conversation';

@@ -1,10 +1,9 @@
-import Loading from '@/components/Loading';
-import { QueryParams } from '@/types/queryParams';
-import { Button } from '@mui/material';
+import Loading from '../../../components/Loading';
+import { QueryParams } from '../../../types/queryParams';
 import { GoogleMap, LoadScript, MarkerF } from '@react-google-maps/api';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import MarkerIcon from '../../assets/icons/marker-icon.png';
+import MarkerIcon from '../../../assets/icons/marker-icon.png';
 
 // ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689&theme=family
 
@@ -49,7 +48,7 @@ const containerStyle = {
   height: '100vh'
 };
 
-function Map() {
+export default function Map() {
   const [params, setParams] = useState<QueryParams>();
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [markerCenter, setMarkerCenter] = useState({ lat: 0, lng: 0 });
@@ -145,5 +144,3 @@ function Map() {
     </>
   );
 }
-
-export default Map;

@@ -6,7 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Avatar from '@mui/material/Avatar';
 
-import { Task } from '@/types/Task';
+import { Task } from '../types/Task';
 import TaskDialog from './TaskDialog';
 
 interface Props {

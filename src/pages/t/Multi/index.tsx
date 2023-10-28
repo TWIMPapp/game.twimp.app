@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-import MultiQuestion from '@/components/MultiQuestion';
-import Loading from '@/components/Loading';
-import ItemsDialog from '@/components/ItemsDialog';
-import { InventoryItem } from '@/types/inventoryItem';
-import { QueryParams } from '@/types/queryParams';
+import MultiQuestion from '../../../components/MultiQuestion';
+import Loading from '../../../components/Loading';
+import ItemsDialog from '../../../components/ItemsDialog';
+import { InventoryItem } from '../../../types/inventoryItem';
+import { QueryParams } from '../../../types/queryParams';
 
 // ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689&theme=family
 

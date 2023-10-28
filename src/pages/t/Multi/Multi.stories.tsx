@@ -1,6 +1,6 @@
 import { StoryFn } from '@storybook/react';
 
-import Multi from './Multi';
+import Multi from './index';
 
 export default {
   title: 'Tasks/Multi',

@@ -1,11 +1,12 @@
-import Loading from '@/components/Loading';
+import Loading from '../components/Loading';
 import '@/styles/globals.scss';
-import { QueryParams } from '@/types/queryParams';
+import { QueryParams } from '../types/queryParams';
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
 
 import { Press_Start_2P, MedievalSharp, Creepster } from 'next/font/google';
 import Script from 'next/script';
+import Head from 'next/head';
 
 const GTM_ID = 'GTM-PJT9V98';
 
@@ -56,9 +57,17 @@ export default function App({ Component, pageProps }: AppProps) {
       `}
       </Script>
       {params ? (
-        <main id="game" className={`theme-${params.theme}`}>
-          <Component {...pageProps} />
-        </main>
+        <>
+          <Head>
+            <meta
+              name="viewport"
+              content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
+            ></meta>
+          </Head>
+          <main id="game" className={`theme-${params.theme}`}>
+            <Component {...pageProps} />
+          </main>
+        </>
       ) : (
         <Loading />
       )}

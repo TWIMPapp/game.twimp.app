@@ -10,10 +10,10 @@ import {
   Typography
 } from '@mui/material';
 import { ShoppingCart, Launch, Email } from '@mui/icons-material';
-import Countdown from '@/components/Countdown';
-import EmailDialog from '@/components/EmailDialog';
+import Countdown from '../../../components/Countdown';
+import EmailDialog from '../../../components/EmailDialog';
 import axios from 'axios';
-import Logo from '@/components/Logo';
+import Logo from '../../../components/Logo';
 
 interface Chapter {
   num: number;

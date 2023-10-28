@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-import Loading from '@/components/Loading';
-import { QueryParams } from '@/types/queryParams';
-import { Task } from '@/types/Task';
-import TaskList from '@/components/TaskList';
+import Loading from '../../../components/Loading';
+import { QueryParams } from '../../../types/queryParams';
+import { Task } from '../../../types/Task';
+import TaskList from '../../../components/TaskList';
 import { Box } from '@mui/material';
 
 // ?user_id=3&trail_ref=DragonReturn_Brandon&task_sequence=700&path=0|5|29|55&lat=51.470675&lng=-2.5908689
