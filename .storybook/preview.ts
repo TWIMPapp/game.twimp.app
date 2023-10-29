@@ -22,7 +22,8 @@ const preview: Preview = {
     viewport: {
       viewports: customViewports,
       defaultViewport: 'iphone12Pro'
-    }
+    },
+    layout: 'fullscreen'
   }
 };
 

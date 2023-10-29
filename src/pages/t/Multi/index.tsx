@@ -1,67 +1,14 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 
 import MultiQuestion from '../../../components/MultiQuestion';
 import Loading from '../../../components/Loading';
 import ItemsDialog from '../../../components/ItemsDialog';
-import { InventoryItem } from '../../../types/inventoryItem';
-import { QueryParams } from '../../../types/queryParams';
-
-// ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689&theme=family
-
-// TODO: Be themeable (family, rpg) -- theme up
-// TODO: Support true/false questions with right colours
-
-// IMP: Add error state for when the API is down
-// IMP: Add interceptors for the API to retry on failure (try 3 times, if failed, open support)
-
-const baseUrl =
-  'https://script.google.com/macros/s/AKfycbx2Hnd9zQqpuO8dyP4ZouhmbpvO1S1cvO47tfhaXHRBCs_KxZHfkQGsFYdzJkFeWgiAJA/exec?q=trails';
-
-interface MultiQuestionResponse {
-  correct: boolean;
-  message: string;
-  items: InventoryItem[];
-}
-
-interface MultiQuestionData {
-  question: string;
-  hint?: string;
-  answers: string[];
-}
-
-const stringifyQueryParams = (params: QueryParams): string => {
-  return `&${Object.keys(params)
-    .map((key) => `${key}=${(params as any)[key]}`)
-    .join('&')}`;
-};
-
-const getData = async (params: QueryParams): Promise<MultiQuestionData> => {
-  const response = await axios
-    .get(`${baseUrl}/question${stringifyQueryParams(params)}`)
-    .catch((error) => {
-      console.error(error);
-    });
-  return response?.data?.body;
-};
-
-const postData = async (answer: string, params: QueryParams): Promise<MultiQuestionResponse> => {
-  const response = await axios
-    .post(
-      `${baseUrl}/question`,
-      { answer, ...params },
-      {
-        headers: {
-          'Content-Type': 'text/plain'
-        }
-      }
-    )
-    .catch((error) => {
-      console.error(error);
-    });
-
-  return response?.data?.body;
-};
+import { InventoryItem } from '../../../types/InventoryItem';
+import { QueryParams } from '../../../types/QueryParams';
+import { APIService } from '@/services/API';
+import { MultiQuestionResponse } from './MultiQuestionResponse.interface';
+import { MultiQuestionData } from './MultiQuestionData.interface';
+import { Endpoint } from '@/types/Endpoint.enum';
 
 export default function Multi() {
   const [question, setQuestion] = useState<MultiQuestionData>();
@@ -70,12 +17,14 @@ export default function Multi() {
   const [message, setMessage] = useState<string>();
   const [open, setOpen] = useState<boolean>(false);
 
+  const API = new APIService(Endpoint.QUESTION);
+
   const handleClose = () => {
     setOpen(false);
   };
 
   const answerCallback = async (answer: string) => {
-    const data = await postData(answer, params as QueryParams);
+    const data = await API.post<MultiQuestionResponse>(answer, params as QueryParams);
     if (data) {
       if (data.message) {
         setMessage(data.message);
@@ -95,7 +44,7 @@ export default function Multi() {
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
       setParams(_params);
-      const data = await getData(_params);
+      const data = await API.get<MultiQuestionData>(_params);
       console.log(data);
       if (data) {
         setQuestion(data);

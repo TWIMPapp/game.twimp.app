@@ -1,25 +1,21 @@
 import Loading from '../../../components/Loading';
-import { QueryParams } from '../../../types/queryParams';
+import { QueryParams } from '../../../types/QueryParams';
 import { GoogleMap, LoadScript, MarkerF } from '@react-google-maps/api';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import MarkerIcon from '../../../assets/icons/marker-icon.png';
+import { APIService } from '@/services/API';
+import { Endpoint } from '@/types/Endpoint.enum';
 
-// ?user_id=115&trail_ref=Bristol-AnniesMurder&task_sequence=700&path=0|1&lat=51.470675&lng=-2.5908689&theme=family
+interface NextResponse {
+  correct: boolean;
+  message: string;
+}
 
-const baseUrl =
-  'https://script.google.com/macros/s/AKfycbx2Hnd9zQqpuO8dyP4ZouhmbpvO1S1cvO47tfhaXHRBCs_KxZHfkQGsFYdzJkFeWgiAJA/exec?q=trails';
-
-// interface NextResponse {
-//   correct: boolean;
-//   message: string;
-// }
-
-// interface NextData {
-//   question: string;
-//   hint?: string;
-//   answers: string[];
-// }
+interface NextData {
+  question: string;
+  hint?: string;
+  answers: string[];
+}
 
 const postData = async (position: GeolocationPosition, params: QueryParams): Promise<any> => {
   const body = {
@@ -30,17 +26,7 @@ const postData = async (position: GeolocationPosition, params: QueryParams): Pro
     trail_ref: params?.trail_ref
   };
 
-  const response = await axios
-    .post(`${baseUrl}/next`, body, {
-      headers: {
-        'Content-Type': 'text/plain'
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-
-  return response?.data?.body;
+  return await new APIService(Endpoint.NEXT).post<NextResponse>(body, params);
 };
 
 const containerStyle = {

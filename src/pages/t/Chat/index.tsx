@@ -2,57 +2,16 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 import Loading from '../../../components/Loading';
-import { QueryParams } from '../../../types/queryParams';
+import { QueryParams } from '../../../types/QueryParams';
 import ChatRoom from '../../../components/ChatRoom';
 import { MessageItem } from '../../../types/MessageItem';
-import { InventoryItem } from '../../../types/inventoryItem';
+import { InventoryItem } from '../../../types/InventoryItem';
 import ItemsDialog from '../../../components/ItemsDialog';
 import { promiseWithTimeout } from '../../../utils/promiseWithTimeout';
 import NoBatteryDialog from '../../../components/NoBatteryDialog';
-
-const baseUrl =
-  'https://script.google.com/macros/s/AKfycbzbTsAS3gNbiFsIX-uZZMNeJcrCJ6LwviXLElR-rkdItfxrN2Kq6p6Wh4aZ7kLKyu40CQ/exec?q=conversation';
-
-interface ChatResponse {
-  ok: boolean;
-  message: MessageItem;
-  items: InventoryItem[];
-  energy: number;
-}
-
-const stringifyQueryParams = (params: QueryParams): string => {
-  return `&${Object.keys(params)
-    .map((key) => `${key}=${(params as any)[key]}`)
-    .join('&')}`;
-};
-
-const getData = async (params: QueryParams): Promise<ChatResponse> => {
-  // TODO: Get name and avatar from initial GET
-  const response = await axios
-    .get(`${baseUrl}/start${stringifyQueryParams(params)}`)
-    .catch((error) => {
-      console.error(error);
-    });
-  return response?.data?.body;
-};
-
-const postData = async (message: string, params: QueryParams): Promise<ChatResponse> => {
-  const response = await axios
-    .post(
-      `${baseUrl}`,
-      { message, ...params },
-      {
-        headers: {
-          'Content-Type': 'text/plain'
-        }
-      }
-    )
-    .catch((error) => {
-      console.error(error);
-    });
-
-  return response?.data?.body;
-};
+import { ChatResponse } from './ChatResponse.interface';
+import { APIService } from '@/services/API';
+import { Endpoint } from '@/types/Endpoint.enum';
 
 export default function Chat() {
   const [params, setParams] = useState<QueryParams>();
@@ -64,6 +23,8 @@ export default function Chat() {
   const [open, setOpen] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [noBattery, setNoBattery] = useState<boolean>(false);
+
+  const API = new APIService(Endpoint.CHAT);
 
   const handleClose = () => {
     setOpen(false);
@@ -89,25 +50,26 @@ export default function Chat() {
       setIsTyping(true);
     }, randomTime);
 
-    const data = (await promiseWithTimeout(20000, postData(message, params as QueryParams)).catch(
-      (error) => {
-        console.error(error);
-        return {
-          ok: false,
-          message: {
-            text: 'Sorry, something went wrong. Please try again.',
-            id: Math.random().toString(36).substr(2, 9),
-            avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/error.png',
-            createdAt: new Date(),
-            sent: false,
-            role: 'assistant',
-            name: ''
-          },
-          items: [],
-          energy
-        } as ChatResponse;
-      }
-    )) as ChatResponse;
+    const data = (await promiseWithTimeout(
+      20000,
+      API.post<ChatResponse>(message, params as QueryParams)
+    ).catch((error) => {
+      console.error(error);
+      return {
+        ok: false,
+        message: {
+          text: 'Sorry, something went wrong. Please try again.',
+          id: Math.random().toString(36).substr(2, 9),
+          avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/error.png',
+          createdAt: new Date(),
+          sent: false,
+          role: 'assistant',
+          name: ''
+        },
+        items: [],
+        energy
+      } as ChatResponse;
+    })) as ChatResponse;
 
     if (data?.message) {
       const returnedMessage: MessageItem = {
@@ -139,7 +101,7 @@ export default function Chat() {
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
       setParams(_params);
-      const data = await getData(_params);
+      const data = await API.get<ChatResponse>(_params);
       if (data) {
         setMessages([data.message]);
         setEnergy(data.energy);

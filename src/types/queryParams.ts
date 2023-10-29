@@ -1,4 +1,4 @@
-import { Theme } from './theme.enum';
+import { Theme } from './Theme.enum';
 
 export interface QueryParams {
   user_id: string;

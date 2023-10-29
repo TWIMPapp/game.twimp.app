@@ -1,6 +1,6 @@
 import Loading from '../components/Loading';
 import '@/styles/globals.scss';
-import { QueryParams } from '../types/queryParams';
+import { QueryParams } from '../types/QueryParams';
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
 
