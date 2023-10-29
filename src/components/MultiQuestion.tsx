@@ -2,6 +2,20 @@ import { useState } from 'react';
 import Hint from './Hint';
 import Question from './Question';
 import { Option } from '@/types/Task';
+import { Colour } from '@/types/Colour.enum';
+
+const colourMap = {
+  [Colour.Red]: 'bg-red-400',
+  [Colour.Blue]: 'bg-blue-400',
+  [Colour.Green]: 'bg-green-400',
+  [Colour.Yellow]: 'bg-yellow-400',
+  [Colour.Orange]: 'bg-orange-400',
+  [Colour.Purple]: 'bg-purple-400',
+  [Colour.Pink]: 'bg-pink-400',
+  [Colour.Brown]: 'bg-brown-400',
+  [Colour.Grey]: 'bg-gray-400',
+  [Colour.Black]: 'bg-black-400'
+};
 
 const getColour = (index: number): string => {
   return ['bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-red-400'][index];
@@ -42,9 +56,9 @@ const MultiQuestion = ({
             <button
               key={index}
               style={{ height: 'calc((100vh - 550px) / 2)' }}
-              className={`text-white p-6 font-semibold rounded shadow ${getColour(
-                index
-              )} animate__animated ${isActiveAnswer(option) ? 'animate__bounce' : ''}`}
+              className={`text-white p-6 font-semibold rounded shadow ${
+                option.colour ? colourMap[option.colour] : getColour(index)
+              } animate__animated ${isActiveAnswer(option) ? 'animate__bounce' : ''}`}
               onClick={() => handleClick(option)}
             >
               {option.content}

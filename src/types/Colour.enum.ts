@@ -8,7 +8,5 @@ export enum Colour {
   Pink = 'pink',
   Brown = 'brown',
   Grey = 'grey',
-  Black = 'black',
-  White = 'white',
-  None = 'none'
+  Black = 'black'
 }

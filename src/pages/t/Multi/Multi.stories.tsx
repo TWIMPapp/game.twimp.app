@@ -4,6 +4,7 @@ import { withQuery } from '@storybook/addon-queryparams';
 import Multi from './index';
 import { TaskType } from '@/types/TaskType.enum';
 import { QuestionMultiTask } from '@/types/Task';
+import { Colour } from '@/types/Colour.enum';
 
 const task: QuestionMultiTask = {
   ok: true,
@@ -16,16 +17,20 @@ const task: QuestionMultiTask = {
   required: true,
   options: [
     {
-      content: 'Apollo 11'
+      content: 'Apollo 11',
+      colour: Colour.Blue
     },
     {
-      content: 'Apollo 12'
+      content: 'Apollo 12',
+      colour: Colour.Yellow
     },
     {
-      content: 'Apollo 13'
+      content: 'Apollo 13',
+      colour: Colour.Purple
     },
     {
-      content: 'Apollo 14'
+      content: 'Apollo 14',
+      colour: Colour.Red
     }
   ]
 };
