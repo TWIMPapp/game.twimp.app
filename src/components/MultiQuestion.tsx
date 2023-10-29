@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Hint from './Hint';
 import Question from './Question';
+import { Option } from '@/types/Task';
 
 const getColour = (index: number): string => {
   return ['bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-red-400'][index];
@@ -9,41 +10,44 @@ const getColour = (index: number): string => {
 const MultiQuestion = ({
   question,
   hint,
-  answers,
+  options,
   callback
 }: {
   question: string;
   hint?: string;
-  answers: string[];
-  callback: (answer: string) => any;
+  options: Option[];
+  callback: (option: Option) => any;
 }) => {
-  const [activeAnswer, setActiveAnswer] = useState<string | null>(null);
+  const [activeOption, setActiveOption] = useState<Option | null>(null);
 
-  const handleClick = (answer: string) => {
-    callback(answer);
-    setActiveAnswer(answer);
+  const handleClick = (option: Option) => {
+    callback(option);
+    setActiveOption(option);
   };
 
-  const isActiveAnswer = (answer: string): boolean => {
-    return activeAnswer === answer;
+  const isActiveAnswer = (option: Option): boolean => {
+    return activeOption?.content === option.content;
   };
 
   return (
-    <div className="p-10">
-      <Question question={question} />
-      {hint && <Hint hint={hint} />}
+    <div className="p-6">
+      <div className="max-h-64">
+        <Question question={question} />
+        {hint && <Hint hint={hint} />}
+      </div>
 
-      <div className="grid grid-cols-1 gap-6 mt-6">
-        {answers?.map((answer: string, index: number) => {
+      <div className="grid grid-cols-2 gap-6 mt-6">
+        {options?.map((option: Option, index: number) => {
           return (
             <button
               key={index}
-              className={`text-white p-4 font-semibold rounded shadow ${getColour(
+              style={{ height: 'calc((100vh - 550px) / 2)' }}
+              className={`text-white p-6 font-semibold rounded shadow ${getColour(
                 index
-              )} animate__animated ${isActiveAnswer(answer) ? 'animate__bounce' : ''}`}
-              onClick={() => handleClick(answer)}
+              )} animate__animated ${isActiveAnswer(option) ? 'animate__bounce' : ''}`}
+              onClick={() => handleClick(option)}
             >
-              {answer}
+              {option.content}
             </button>
           );
         })}

@@ -2,74 +2,50 @@ import { useEffect, useState } from 'react';
 
 import MultiQuestion from '../../../components/MultiQuestion';
 import Loading from '../../../components/Loading';
-import ItemsDialog from '../../../components/ItemsDialog';
-import { InventoryItem } from '../../../types/InventoryItem';
-import { QueryParams } from '../../../types/QueryParams';
-import { APIService } from '@/services/API';
-import { MultiQuestionResponse } from './MultiQuestionResponse.interface';
-import { MultiQuestionData } from './MultiQuestionData.interface';
-import { Endpoint } from '@/types/Endpoint.enum';
+import { Option, QuestionMultiTask } from '@/types/Task';
+import { TaskHandlerService } from '@/services/TaskHandler';
 
 export default function Multi() {
-  const [question, setQuestion] = useState<MultiQuestionData>();
-  const [params, setParams] = useState<QueryParams>();
-  const [items, setItems] = useState<InventoryItem[]>();
-  const [message, setMessage] = useState<string>();
-  const [open, setOpen] = useState<boolean>(false);
+  const [task, setTask] = useState<QuestionMultiTask>();
 
-  const API = new APIService(Endpoint.Question);
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const answerCallback = async (answer: string) => {
-    const data = await API.post<MultiQuestionResponse>(answer, params as QueryParams);
-    if (data) {
-      if (data.message) {
-        setMessage(data.message);
-        setOpen(true);
-      }
-
-      if (data.items.length > 0) {
-        setItems(data.items);
-        setOpen(true);
-      }
-    }
+  const optionCallback = async (option: Option) => {
+    console.log('######### option', option);
+    // const data = await API.post<MultiQuestionResponse>(answer, params as QueryParams);
+    // if (data) {
+    //   if (data.message) {
+    //     setMessage(data.message);
+    //     setOpen(true);
+    //   }
+    //   if (data.items.length > 0) {
+    //     setItems(data.items);
+    //     setOpen(true);
+    //   }
+    // }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const _params = Object.fromEntries(
-        new URLSearchParams(window.location.search)
-      ) as unknown as QueryParams;
-      setParams(_params);
-      const data = await API.get<MultiQuestionData>(_params);
-      console.log(data);
-      if (data) {
-        setQuestion(data);
-      }
-    };
-
-    fetchData();
+    const data = new TaskHandlerService().getTaskFromParams<QuestionMultiTask>();
+    console.log('############ data', data);
+    if (data) {
+      setTask(data);
+    }
   }, []);
 
   return (
     <>
-      {question ? (
+      {task?.image_url && (
+        <div className="flex justify-center">
+          <img src={task.image_url} className="max-h-64 w-full" />
+        </div>
+      )}
+      {task?.content ? (
         <>
           <MultiQuestion
-            question={question.question}
-            hint={question.hint}
-            answers={question.answers}
-            callback={answerCallback}
+            question={task.content}
+            hint={task.hint}
+            options={task.options}
+            callback={optionCallback}
           />
-          <ItemsDialog
-            items={items}
-            message={message}
-            open={open}
-            handleClose={handleClose}
-          ></ItemsDialog>
         </>
       ) : (
         <Loading />

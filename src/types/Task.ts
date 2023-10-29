@@ -5,6 +5,7 @@ import { Status } from './Status.enum';
 import { TaskType } from './TaskType.enum';
 
 export interface Task {
+  ok: boolean;
   type: TaskType;
   content: string;
   required: boolean;
@@ -79,3 +80,11 @@ export interface ChatTask extends Task {
   character: Character[];
   messages: Message[];
 }
+
+export type TaskUnion =
+  | QuestionMultiTask
+  | QuestionSingleTask
+  | MapTask
+  | InformationTask
+  | InstructionTask
+  | ChatTask;

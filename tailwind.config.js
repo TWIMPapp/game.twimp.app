@@ -8,4 +8,5 @@ module.exports = {
   plugins: [
     require('tailwindcss-animatecss'),
   ],
+  purge: ['./src/**/*.{js,jsx,ts,tsx}'],
 }
