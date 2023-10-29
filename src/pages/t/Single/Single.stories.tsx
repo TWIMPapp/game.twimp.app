@@ -3,7 +3,7 @@ import { StoryFn } from '@storybook/react';
 import Single from './index';
 
 export default {
-  title: 'Tasks/Single',
+  title: 'Tasks/Question Single',
   component: Single
 };
 

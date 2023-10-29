@@ -26,7 +26,7 @@ const postData = async (position: GeolocationPosition, params: QueryParams): Pro
     trail_ref: params?.trail_ref
   };
 
-  return await new APIService(Endpoint.NEXT).post<NextResponse>(body, params);
+  return await new APIService(Endpoint.Next).post<NextResponse>(body, params);
 };
 
 const containerStyle = {

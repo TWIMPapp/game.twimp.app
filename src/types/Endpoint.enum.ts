@@ -1,7 +1,7 @@
 export enum Endpoint {
-  QUESTION = 'question',
-  ANSWER = 'answer',
-  NEXT = 'next',
-  JOURNAL = 'journal',
-  CHAT = 'chat'
+  Question = 'question',
+  Next = 'next',
+  Journal = 'journal',
+  Chat = 'chat',
+  Awtys = 'awty'
 }

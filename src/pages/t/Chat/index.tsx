@@ -24,7 +24,7 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [noBattery, setNoBattery] = useState<boolean>(false);
 
-  const API = new APIService(Endpoint.CHAT);
+  const API = new APIService(Endpoint.Chat);
 
   const handleClose = () => {
     setOpen(false);

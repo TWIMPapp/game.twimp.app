@@ -15,7 +15,7 @@ export default function Journal() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
 
-  const API = new APIService(Endpoint.JOURNAL);
+  const API = new APIService(Endpoint.Journal);
 
   useEffect(() => {
     setLoaded(false);

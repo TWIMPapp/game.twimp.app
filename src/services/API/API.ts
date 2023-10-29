@@ -14,7 +14,7 @@ export class APIService {
     this._endpoint = endpoint;
   }
 
-  public async get<T>(params: QueryParams): Promise<T> {
+  public async get<T extends { ok: boolean }>(params: QueryParams): Promise<T> {
     const response = await axios
       .get(`${baseUrl}/${this._endpoint}${stringifyQueryParams(params)}`)
       .catch((error) => {
@@ -23,7 +23,7 @@ export class APIService {
     return response?.data?.body;
   }
 
-  public async post<T>(body: any, params: QueryParams): Promise<T> {
+  public async post<T extends { ok: boolean }>(body: any, params: QueryParams): Promise<T> {
     const response = await axios
       .post(
         `${baseUrl}/${this._endpoint}`,

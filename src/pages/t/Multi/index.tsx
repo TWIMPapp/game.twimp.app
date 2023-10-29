@@ -17,7 +17,7 @@ export default function Multi() {
   const [message, setMessage] = useState<string>();
   const [open, setOpen] = useState<boolean>(false);
 
-  const API = new APIService(Endpoint.QUESTION);
+  const API = new APIService(Endpoint.Question);
 
   const handleClose = () => {
     setOpen(false);

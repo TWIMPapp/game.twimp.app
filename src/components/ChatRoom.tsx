@@ -81,7 +81,7 @@ const ChatRoom = ({
       <form id="chatform" className={upsideDown ? 'upside-down' : ''} onSubmit={sendMessage}>
         <div className="energy">
           <LinearProgress className="energy__progress" variant="determinate" value={energy} />
-          {theme === Theme.HORROR ? (
+          {theme === Theme.Horror ? (
             <BatteryAlert className="energy__icon" color="primary" />
           ) : (
             <Bolt className="energy__icon" color="primary" />
@@ -94,14 +94,14 @@ const ChatRoom = ({
           onChange={(e) => setFormValue(e.target.value)}
           maxLength={100}
           placeholder={
-            messages.length > 1 && theme === Theme.HORROR
+            messages.length > 1 && theme === Theme.Horror
               ? tauntingMessagePrompt()
               : 'Ask something...'
           }
         />
 
         <button type="submit" disabled={!formValue || sending}>
-          {sending ? <CircularProgress color="inherit" /> : theme === Theme.HORROR ? '💀' : '💬'}
+          {sending ? <CircularProgress color="inherit" /> : theme === Theme.Horror ? '💀' : '💬'}
         </button>
       </form>
     </>
