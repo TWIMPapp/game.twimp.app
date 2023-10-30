@@ -3,10 +3,15 @@ import '@/styles/globals.scss';
 import { QueryParams } from '../types/QueryParams';
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
-
-import { Press_Start_2P, MedievalSharp, Creepster } from 'next/font/google';
+import { Press_Start_2P, MedievalSharp } from 'next/font/google';
 import Script from 'next/script';
 import Head from 'next/head';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import BackpackIcon from '@mui/icons-material/Backpack';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import MapIcon from '@mui/icons-material/Map';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 const GTM_ID = 'GTM-PJT9V98';
 
@@ -22,8 +27,17 @@ const rpg = MedievalSharp({
   weight: '400'
 });
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#ff6c88'
+    }
+  }
+});
+
 export default function App({ Component, pageProps }: AppProps) {
   const [params, setParams] = useState<QueryParams>();
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     const fetchData = () => {
@@ -35,6 +49,10 @@ export default function App({ Component, pageProps }: AppProps) {
 
     fetchData();
   }, []);
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
 
   return (
     <>
@@ -64,9 +82,32 @@ export default function App({ Component, pageProps }: AppProps) {
               content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
             ></meta>
           </Head>
-          <main id="game" className={`theme-${params.theme}`}>
-            <Component {...pageProps} />
-          </main>
+          <ThemeProvider theme={theme}>
+            <main className={`game theme-${params.theme}`}>
+              <Tabs
+                className="game__tabs"
+                value={activeTab}
+                onChange={handleChange}
+                aria-label="tabs"
+                variant="fullWidth"
+              >
+                <Tab
+                  className="game__tabs__tab"
+                  icon={<BackpackIcon />}
+                  label="Backpack"
+                  aria-label="Inventory"
+                />
+                <Tab
+                  className="game__tabs__tab"
+                  icon={<AssignmentIcon />}
+                  label="Task"
+                  aria-label="Task"
+                />
+                <Tab className="game__tabs__tab" icon={<MapIcon />} label="Map" aria-label="Map" />
+              </Tabs>
+              <Component {...pageProps} />
+            </main>
+          </ThemeProvider>
         </>
       ) : (
         <Loading />

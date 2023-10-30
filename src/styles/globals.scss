@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 $twimp-pink: #ff2e5b;
+$twimp-light-pink: #ff6c88;
 $twimp-yellow: #e2d46b;
 $twimp-green: #bac94a;
 $twimp-light-blue: #97d7c7;
@@ -14,7 +15,7 @@ html {
   // background-color: rgb(18, 18, 18);
 }
 
-#game {
+.game {
   width: 100vw;
   height: 100vh;
 
