@@ -4,8 +4,9 @@ import MultiQuestion from '../../../components/MultiQuestion';
 import Loading from '../../../components/Loading';
 import { Option, QuestionMultiTask } from '@/types/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
+import { Page } from '@/types/Page.enum';
 
-export default function Multi() {
+const Multi = () => {
   const [task, setTask] = useState<QuestionMultiTask>();
 
   const optionCallback = async (option: Option) => {
@@ -52,4 +53,7 @@ export default function Multi() {
       )}
     </>
   );
-}
+};
+
+Multi.displayName = Page.Multi;
+export default Multi;

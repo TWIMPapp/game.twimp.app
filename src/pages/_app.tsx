@@ -2,7 +2,13 @@ import Loading from '../components/Loading';
 import '@/styles/globals.scss';
 import { QueryParams } from '../types/QueryParams';
 import type { AppProps } from 'next/app';
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useState,
+  MouseEvent as ReactMouseEvent,
+  ReactElement,
+  JSXElementConstructor
+} from 'react';
 import { Press_Start_2P, MedievalSharp } from 'next/font/google';
 import Script from 'next/script';
 import Head from 'next/head';
@@ -12,6 +18,7 @@ import BackpackIcon from '@mui/icons-material/Backpack';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import MapIcon from '@mui/icons-material/Map';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Page } from '@/types/Page.enum';
 
 const GTM_ID = 'GTM-PJT9V98';
 
@@ -35,9 +42,42 @@ const theme = createTheme({
   }
 });
 
+function samePageLinkNavigation(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) {
+  if (
+    event.defaultPrevented ||
+    event.button !== 0 || // ignore everything but left-click
+    event.metaKey ||
+    event.ctrlKey ||
+    event.altKey ||
+    event.shiftKey
+  ) {
+    return false;
+  }
+  return true;
+}
+
+interface LinkTabProps {
+  icon?: ReactElement<any, string | JSXElementConstructor<any>>;
+  label?: string;
+  href?: string;
+}
+
+function LinkTab(props: LinkTabProps) {
+  return <Tab component="a" icon={props.icon} aria-label={props.label} {...props} />;
+}
+
+const PageMap = {
+  [Page.InventoryTab]: 0,
+  [Page.MapTab]: 2
+};
+
 export default function App({ Component, pageProps }: AppProps) {
   const [params, setParams] = useState<QueryParams>();
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(
+    Component.displayName && (PageMap as any)[Component.displayName] > -1
+      ? (PageMap as any)[Component.displayName]
+      : 1
+  );
 
   useEffect(() => {
     const fetchData = () => {
@@ -51,7 +91,14 @@ export default function App({ Component, pageProps }: AppProps) {
   }, []);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
+    // event.type can be equal to focus with selectionFollowsFocus.
+    if (
+      event.type !== 'click' ||
+      (event.type === 'click' &&
+        samePageLinkNavigation(event as React.MouseEvent<HTMLAnchorElement, MouseEvent>))
+    ) {
+      setActiveTab(newValue);
+    }
   };
 
   return (
@@ -91,19 +138,10 @@ export default function App({ Component, pageProps }: AppProps) {
                 aria-label="tabs"
                 variant="fullWidth"
               >
-                <Tab
-                  className="game__tabs__tab"
-                  icon={<BackpackIcon />}
-                  label="Backpack"
-                  aria-label="Inventory"
-                />
-                <Tab
-                  className="game__tabs__tab"
-                  icon={<AssignmentIcon />}
-                  label="Task"
-                  aria-label="Task"
-                />
-                <Tab className="game__tabs__tab" icon={<MapIcon />} label="Map" aria-label="Map" />
+                <LinkTab icon={<BackpackIcon />} aria-label="Inventory" href="/t/inventoryTab" />
+                {/* TODO: Route to handler */}
+                <LinkTab icon={<AssignmentIcon />} aria-label="Task" href="/t/multi" />
+                <LinkTab icon={<MapIcon />} aria-label="Map" href="/t/mapTab" />
               </Tabs>
               <Component {...pageProps} />
             </main>
