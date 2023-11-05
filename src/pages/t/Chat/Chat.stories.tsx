@@ -1,14 +1,14 @@
-// import { StoryFn } from '@storybook/react';
+import { StoryFn } from '@storybook/react';
 
-// import Chat from '.';
+import Chat from './';
 
-// export default {
-//   title: 'Tasks/Chat',
-//   component: Chat
-// };
+export default {
+  title: 'Tasks/Chat',
+  component: Chat
+};
 
-// const ChatTemplate: StoryFn<typeof Chat> = (args) => {
-//   return <Chat></Chat>;
-// };
+const ChatTemplate: StoryFn<typeof Chat> = (args) => {
+  return <Chat></Chat>;
+};
 
-// export const DefaultState = ChatTemplate.bind({});
+export const DefaultState = ChatTemplate.bind({});

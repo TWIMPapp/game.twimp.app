@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { MessageItem } from '../types/MessageItem';
 import ChatMessage from './ChatMessage';
 import { CircularProgress, LinearProgress } from '@mui/material';
-import { Theme } from '../types/Theme.enum';
 import { BatteryAlert, Bolt } from '@mui/icons-material';
+import { Message } from '@/types/Task';
+import { Theme } from '@/types/Theme.enum';
 
 // TODO: [BE] Messages should return with id
 
@@ -22,14 +22,12 @@ const tauntingMessagePrompt = (): string => {
   return taunts[Math.floor(Math.random() * taunts.length)];
 };
 
-const typingMsg: MessageItem = {
+const typingMsg: Message = {
   id: '999',
-  text: '...',
+  content: '...',
   role: 'assistant',
-  createdAt: new Date(),
-  avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/ryan.png',
-  sent: false,
-  name: ''
+  created: new Date(),
+  character_id: 'typing'
 };
 
 const ChatRoom = ({
@@ -41,7 +39,7 @@ const ChatRoom = ({
   upsideDown,
   callback
 }: {
-  messages: MessageItem[];
+  messages: Message[];
   sending: boolean;
   energy: number;
   isTyping: boolean;
@@ -69,8 +67,8 @@ const ChatRoom = ({
   return (
     <>
       <div className="chat-header">
-        <img className="chat-header__avatar" src={messages[0].avatar} />
-        <h1 className="chat-header__name">{messages[0].name}</h1>
+        {/* <img className="chat-header__avatar" src={messages[0].avatar} /> */}
+        <h1 className="chat-header__name">{messages[0].character_id}</h1>
       </div>
       <main id="chat" className={upsideDown ? 'upside-down' : ''}>
         {messages && messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}

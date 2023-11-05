@@ -4,20 +4,20 @@ import axios from 'axios';
 import Loading from '../../../components/Loading';
 import { QueryParams } from '../../../types/QueryParams';
 import ChatRoom from '../../../components/ChatRoom';
-import { MessageItem } from '../../../types/MessageItem';
-import { InventoryItem } from '../../../types/InventoryItem';
 import ItemsDialog from '../../../components/ItemsDialog';
 import { promiseWithTimeout } from '../../../utils/promiseWithTimeout';
 import NoBatteryDialog from '../../../components/NoBatteryDialog';
-import { ChatResponse } from './ChatResponse.interface';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/types/Endpoint.enum';
+import { InventoryItem } from '@/types/inventoryItem';
+import { Message } from '@/types/Task';
+import { ChatResponse } from './ChatResponse.interface';
 
 export default function Chat() {
   const [params, setParams] = useState<QueryParams>();
   const [loaded, setLoaded] = useState<boolean>(false);
   const [sending, setSending] = useState<boolean>(false);
-  const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [energy, setEnergy] = useState<number>(0);
   const [open, setOpen] = useState<boolean>(false);
@@ -31,16 +31,15 @@ export default function Chat() {
   };
 
   const messageCallback = async (message: string) => {
-    const newMessage: MessageItem = {
-      text: message,
+    const newMessage: Message = {
+      content: message,
       id: Math.random().toString(36).substr(2, 9),
-      avatar: params?.user_image_url
-        ? params.user_image_url
-        : 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/user.png',
-      createdAt: new Date(),
-      sent: true,
+      // avatar: params?.user_image_url
+      //   ? params.user_image_url
+      //   : 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/user.png',
+      created: new Date(),
       role: 'user',
-      name: ''
+      character_id: 'new'
     };
     setMessages([...messages, newMessage]);
     setSending(true);
@@ -58,13 +57,11 @@ export default function Chat() {
       return {
         ok: false,
         message: {
-          text: 'Sorry, something went wrong. Please try again.',
+          content: 'Sorry, something went wrong. Please try again.',
           id: Math.random().toString(36).substr(2, 9),
-          avatar: 'https://trail-images.s3.eu-west-2.amazonaws.com/ryan/error.png',
-          createdAt: new Date(),
-          sent: false,
+          created: new Date(),
           role: 'assistant',
-          name: ''
+          character_id: ''
         },
         items: [],
         energy
@@ -72,9 +69,8 @@ export default function Chat() {
     })) as ChatResponse;
 
     if (data?.message) {
-      const returnedMessage: MessageItem = {
-        ...data.message,
-        sent: false
+      const returnedMessage: Message = {
+        ...data.message
       };
       setIsTyping(false);
       setMessages([...messages, newMessage, returnedMessage]);
@@ -121,7 +117,7 @@ export default function Chat() {
           energy={energy}
           isTyping={isTyping}
           theme={params?.theme}
-          upsideDown={params?.upside_down}
+          // upsideDown={params?.upside_down}
           callback={messageCallback}
         />
       ) : (

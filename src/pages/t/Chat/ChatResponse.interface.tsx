@@ -1,9 +1,9 @@
-import { MessageItem } from '../../../types/MessageItem';
-import { InventoryItem } from '../../../types/InventoryItem';
+import { Message } from '@/types/Task';
+import { InventoryItem } from '@/types/inventoryItem';
 
 export interface ChatResponse {
   ok: boolean;
-  message: MessageItem;
+  message: Message;
   items: InventoryItem[];
   energy: number;
 }

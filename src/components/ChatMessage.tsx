@@ -1,13 +1,13 @@
-import { MessageItem } from '../types/MessageItem';
+import { Message } from '@/types/Task';
 
-const ChatMessage = ({ message }: { message: MessageItem }) => {
-  const { text, id, avatar, createdAt, sent } = message;
+const ChatMessage = ({ message }: { message: Message }) => {
+  const { content, id, created, role } = message;
+  const sent = role === 'user';
 
   return (
     <>
       <div className={`message ${sent ? 'sent' : 'received'}`}>
-        {/* <img src={avatar} /> */}
-        <p className="no-avatar">{text}</p>
+        <p className="no-avatar">{content}</p>
       </div>
     </>
   );

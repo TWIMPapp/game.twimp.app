@@ -1,4 +1,3 @@
-import { type } from 'os';
 import { Colour } from './Colour.enum';
 import { SentimentType } from './SentimentType.enum';
 import { Status } from './Status.enum';
