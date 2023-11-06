@@ -3,5 +3,7 @@ export enum Endpoint {
   Next = 'next',
   Journal = 'journal',
   Chat = 'chat',
-  Awty = 'awty'
+  Awty = 'awty',
+  Play = 'play',
+  Restart = 'restart'
 }

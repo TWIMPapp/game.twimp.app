@@ -10,7 +10,7 @@ export interface Task {
   required: boolean;
   image_url?: string;
   audio_url?: string;
-  sentiment?: Sentiment;
+  // sentiment?: Sentiment;
 }
 
 // Task sub properties
