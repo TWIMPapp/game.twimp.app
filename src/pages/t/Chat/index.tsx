@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 
 import Loading from '../../../components/Loading';
 import { QueryParams } from '../../../types/QueryParams';
 import ChatRoom from '../../../components/ChatRoom';
 import ItemsDialog from '../../../components/ItemsDialog';
-import { promiseWithTimeout } from '../../../utils/promiseWithTimeout';
 import NoBatteryDialog from '../../../components/NoBatteryDialog';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/types/Endpoint.enum';
 import { InventoryItem } from '@/types/inventoryItem';
 import { Message } from '@/types/Task';
 import { ChatResponse } from './ChatResponse.interface';
+import { promiseWithTimeout } from '@/utils/promiseWithTimeout';
 
 export default function Chat() {
   const [params, setParams] = useState<QueryParams>();
