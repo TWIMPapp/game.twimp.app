@@ -1,5 +1,4 @@
 import Loading from '../../../components/Loading';
-import { QueryParams } from '../../../types/QueryParams';
 import { GoogleMap, LoadScript, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { useEffect, useState } from 'react';
 import MarkerIcon from '../../../assets/icons/marker-icon.png';
@@ -9,6 +8,7 @@ import { Card, CardContent } from '@mui/material';
 import { MapTask, Marker, TaskUnion } from '@/types/Task';
 import { Colour } from '@/types/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
+import { QueryParams } from '@/types/QueryParams';
 
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',

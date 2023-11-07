@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 import Loading from '../../../components/Loading';
-import { QueryParams } from '../../../types/QueryParams';
 import ChatRoom from '../../../components/ChatRoom';
 import ItemsDialog from '../../../components/ItemsDialog';
 import NoBatteryDialog from '../../../components/NoBatteryDialog';
@@ -11,6 +10,7 @@ import { InventoryItem } from '@/types/inventoryItem';
 import { Message } from '@/types/Task';
 import { ChatResponse } from './ChatResponse.interface';
 import { promiseWithTimeout } from '@/utils/promiseWithTimeout';
+import { QueryParams } from '@/types/QueryParams';
 
 export default function Chat() {
   const [params, setParams] = useState<QueryParams>();
