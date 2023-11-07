@@ -20,6 +20,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Page } from '@/typings/Page.enum';
 import QueryParams from '@/typings/QueryParams';
 
+export const TabBarHeight = 68;
+
 const GTM_ID = 'GTM-PJT9V98';
 
 const family = Press_Start_2P({
@@ -137,6 +139,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 onChange={handleChange}
                 aria-label="tabs"
                 variant="fullWidth"
+                sx={{ height: `${TabBarHeight}px` }}
               >
                 <LinkTab icon={<BackpackIcon />} aria-label="Inventory" href="/task/inventoryTab" />
                 {/* TODO: Route to handler */}

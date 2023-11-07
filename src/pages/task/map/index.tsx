@@ -9,6 +9,7 @@ import { MapTask, Marker, TaskUnion } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
+import { TabBarHeight } from '@/pages/_app';
 
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
@@ -48,7 +49,7 @@ const postData = async (
 
 const containerStyle = {
   width: '100vw',
-  height: '100vh'
+  height: `calc(100vh - ${TabBarHeight}px)`
 };
 
 export default function Map() {
@@ -63,7 +64,7 @@ export default function Map() {
     let canRun = true;
 
     const taskMarkers =
-      task?.markers.map((marker) => ({
+      task?.markers?.map((marker) => ({
         ...marker,
         image_url:
           marker.image_url ?? marker.colour
@@ -152,9 +153,9 @@ export default function Map() {
         >
           {task?.content ? (
             <Card
-              className="animate__animated animate__bounce border-colour-pink border-dashed border-2"
+              className="animate__animated animate__bounce"
               sx={{
-                position: 'absolute',
+                position: 'fixed',
                 bottom: '16px',
                 left: '16px',
                 right: '16px',
@@ -162,8 +163,11 @@ export default function Map() {
               }}
             >
               <CardContent className="text-center">
-                <h2 className="text-2xl">{task?.content}</h2>
-                <p className="text-gray-500 pt-2 block">{awtyResponse?.message ?? ''}</p>
+                <h2 className="text-2xl" dangerouslySetInnerHTML={{ __html: task?.content }}></h2>
+                <p
+                  className="text-gray-500 pt-2 block"
+                  dangerouslySetInnerHTML={{ __html: awtyResponse?.message ?? '' }}
+                ></p>
               </CardContent>
             </Card>
           ) : null}
@@ -174,7 +178,7 @@ export default function Map() {
             options={{ disableDefaultUI: true }}
           >
             {isGoogleMapsAPILoaded &&
-              markers.map((marker: Marker, index: number) => {
+              markers?.map((marker: Marker, index: number) => {
                 return (
                   <MarkerF
                     key={index}
