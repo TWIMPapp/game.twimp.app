@@ -3,7 +3,7 @@ import ChatMessage from './ChatMessage';
 import { CircularProgress, LinearProgress } from '@mui/material';
 import { BatteryAlert, Bolt } from '@mui/icons-material';
 import { Message } from '@/types/Task';
-import { Theme } from '@/types/Theme.enum';
+import { ThemeStyle } from '@/types/ThemeStyle.enum';
 
 // TODO: [BE] Messages should return with id
 
@@ -43,7 +43,7 @@ const ChatRoom = ({
   sending: boolean;
   energy: number;
   isTyping: boolean;
-  theme?: Theme;
+  theme?: ThemeStyle;
   upsideDown?: boolean;
   callback: (answer: string) => any;
 }) => {
@@ -79,7 +79,7 @@ const ChatRoom = ({
       <form id="chatform" className={upsideDown ? 'upside-down' : ''} onSubmit={sendMessage}>
         <div className="energy">
           <LinearProgress className="energy__progress" variant="determinate" value={energy} />
-          {theme === Theme.Horror ? (
+          {theme === ThemeStyle.Horror ? (
             <BatteryAlert className="energy__icon" color="primary" />
           ) : (
             <Bolt className="energy__icon" color="primary" />
@@ -92,14 +92,20 @@ const ChatRoom = ({
           onChange={(e) => setFormValue(e.target.value)}
           maxLength={100}
           placeholder={
-            messages.length > 1 && theme === Theme.Horror
+            messages.length > 1 && theme === ThemeStyle.Horror
               ? tauntingMessagePrompt()
               : 'Ask something...'
           }
         />
 
         <button type="submit" disabled={!formValue || sending}>
-          {sending ? <CircularProgress color="inherit" /> : theme === Theme.Horror ? '💀' : '💬'}
+          {sending ? (
+            <CircularProgress color="inherit" />
+          ) : theme === ThemeStyle.Horror ? (
+            '💀'
+          ) : (
+            '💬'
+          )}
         </button>
       </form>
     </>
