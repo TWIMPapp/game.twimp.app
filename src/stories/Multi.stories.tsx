@@ -1,7 +1,7 @@
 import { Meta, StoryFn } from '@storybook/react';
 import { withQuery } from '@storybook/addon-queryparams';
 
-import Multi from './';
+import Multi from '../pages/t/multi';
 import { TaskType } from '@/typings/TaskType.enum';
 import { QuestionMultiTask } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';

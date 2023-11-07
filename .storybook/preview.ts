@@ -1,5 +1,5 @@
 import type { Preview } from '@storybook/react';
-import 'tailwindcss/tailwind.css';
+import '../src/styles/globals.scss';
 
 const customViewports = {
   iphone12Pro: {

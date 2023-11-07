@@ -1,6 +1,6 @@
 import { StoryFn } from '@storybook/react';
 
-import Chat from './';
+import Chat from '../pages/t/chat';
 
 export default {
   title: 'Tasks/Chat',

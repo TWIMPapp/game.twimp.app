@@ -1,6 +1,6 @@
 import { StoryFn } from '@storybook/react';
 
-import MIAB from './MIAB';
+import MIAB from '../pages/bristol/MIAB/MIAB';
 
 export default {
   title: 'Pages/Bristol/MIAB',

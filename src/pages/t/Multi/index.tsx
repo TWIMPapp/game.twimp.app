@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from 'react';
 
 import MultiQuestion from '../../../components/MultiQuestion';
@@ -9,7 +10,6 @@ import QueryParams from '@/typings/QueryParams';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
-import Image from 'next/image';
 
 interface NextResponse {
   ok: boolean;
@@ -67,7 +67,7 @@ const Multi = () => {
     <>
       {task?.image_url && (
         <div className="flex justify-center">
-          <Image src={task.image_url} alt="question-image" className="max-h-64 w-full" />
+          <img src={task.image_url} alt="question-image" className="max-h-64 w-full" />
         </div>
       )}
       {task?.content ? (
