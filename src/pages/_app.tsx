@@ -138,10 +138,10 @@ export default function App({ Component, pageProps }: AppProps) {
                 aria-label="tabs"
                 variant="fullWidth"
               >
-                <LinkTab icon={<BackpackIcon />} aria-label="Inventory" href="/t/inventoryTab" />
+                <LinkTab icon={<BackpackIcon />} aria-label="Inventory" href="/task/inventoryTab" />
                 {/* TODO: Route to handler */}
-                <LinkTab icon={<AssignmentIcon />} aria-label="Task" href="/t/multi" />
-                <LinkTab icon={<MapIcon />} aria-label="Map" href="/t/mapTab" />
+                <LinkTab icon={<AssignmentIcon />} aria-label="Task" href="/task/multi" />
+                <LinkTab icon={<MapIcon />} aria-label="Map" href="/task/mapTab" />
               </Tabs>
               <Component {...pageProps} />
             </main>
