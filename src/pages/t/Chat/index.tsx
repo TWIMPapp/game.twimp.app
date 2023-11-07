@@ -4,13 +4,19 @@ import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import { InventoryItem } from '@/typings/inventoryItem';
 import { Message } from '@/typings/Task';
-import { ChatResponse } from './ChatResponse.interface';
 import { promiseWithTimeout } from '@/utils/promiseWithTimeout';
 import QueryParams from '@/typings/QueryParams';
 import ChatRoom from '@/components/ChatRoom';
 import Loading from '@/components/Loading';
 import ItemsDialog from '@/components/ItemsDialog';
 import NoBatteryDialog from '@/components/NoBatteryDialog';
+
+interface ChatResponse {
+  ok: boolean;
+  message: Message;
+  items: InventoryItem[];
+  energy: number;
+}
 
 export default function Chat() {
   const [params, setParams] = useState<QueryParams>();

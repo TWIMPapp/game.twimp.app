@@ -2,11 +2,16 @@ import { useEffect, useState } from 'react';
 import Loading from '../../../components/Loading';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
-import { Task, TaskUnion } from '@/typings/Task';
+import { MapTask, Task, TaskUnion } from '@/typings/Task';
 import QueryParams from '@/typings/QueryParams';
-import { PlayResponse } from './PlayResponse.interface';
 import ProgressDialog from '@/components/ProgressDialog';
 import { TaskHandlerService } from '@/services/TaskHandler';
+
+interface PlayResponse {
+  ok: boolean;
+  start: MapTask;
+  continue: TaskUnion;
+}
 
 export default function Handler() {
   const [queryParams, setQueryParams] = useState<QueryParams>();
