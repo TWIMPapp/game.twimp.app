@@ -27,8 +27,8 @@ export default function TaskList({ tasks }: Props) {
           <>
             <ListItem alignItems="flex-start" onClick={() => setSelectedTask(task)}>
               <ListItemAvatar>
-                {task.image ? (
-                  <Avatar src={task.image} sx={{ width: 40, height: 40 }} variant="rounded" />
+                {task.image_url ? (
+                  <Avatar src={task.image_url} sx={{ width: 40, height: 40 }} variant="rounded" />
                 ) : (
                   ''
                 )}
