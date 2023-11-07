@@ -60,16 +60,17 @@ export default function Map() {
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [markerInfoBox, setMarkerInfoBox] = useState<Marker>();
 
-  const getLocationSendData = async (params: QueryParams) => {
+  const getLocationSendData = async (params: QueryParams, mapTask: MapTask) => {
     let canRun = true;
 
     const taskMarkers =
-      task?.markers?.map((marker) => ({
+      mapTask?.markers?.map((marker) => ({
         ...marker,
-        image_url:
-          marker.image_url ?? marker.colour
-            ? MarkerColourMap[marker.colour as Colour]
-            : MarkerColourMap[Colour.Red]
+        image_url: marker.image_url
+          ? marker.image_url
+          : marker.colour
+          ? MarkerColourMap[marker.colour as Colour]
+          : MarkerColourMap[Colour.Red]
       })) ?? [];
 
     navigator.geolocation.watchPosition(
@@ -134,7 +135,7 @@ export default function Map() {
           }
         );
 
-        getLocationSendData(_params);
+        getLocationSendData(_params, mapTask);
       }
     };
 
