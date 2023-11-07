@@ -9,6 +9,17 @@ $twimp-green: #bac94a;
 $twimp-light-blue: #97d7c7;
 $twimp-blue: #59a7a7;
 
+.colour-pink {
+  color: $twimp-pink;
+}
+.border-colour-pink {
+  border-color: $twimp-pink;
+}
+
+.background-pink {
+  background-color: $twimp-pink;
+}
+
 body,
 html {
   height: 100vh;

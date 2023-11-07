@@ -1,8 +1,9 @@
 import { Endpoint } from '@/types/Endpoint.enum';
 import { APIService } from '../API';
 import { QueryParams } from '@/types/QueryParams';
-import { TaskType } from '@/types/TaskType.enum';
-import { Task } from '@/types/Task';
+import { Task, TaskUnion } from '@/types/Task';
+import { TaskTypeRouteMap } from './TaskTypeRouteMap';
+import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
 
 export class TaskHandlerService {
   private _API = new APIService(Endpoint.Next);
@@ -14,30 +15,19 @@ export class TaskHandlerService {
     return params?.task ? JSON.parse(params.task as any) : null;
   }
 
-  public goToTaskComponent(task: Task): void {
+  public goToTaskComponent(task: TaskUnion, params: QueryParams): void {
     if (!task) return;
-    switch (task?.type) {
-      case TaskType.Question_multi:
-        this.goToQuestionMulti(task);
-        break;
-      case TaskType.Question_single:
-        this.goToQuestionSingle(task);
-        break;
-      case TaskType.Marker:
-        this.goToMarker(task);
-        break;
-      case TaskType.Message:
-        this.goToMessage(task);
-        break;
-      case TaskType.Character:
-        this.goToCharacter(task);
-        break;
-      default:
-        break;
-    }
-  }
+    const route = TaskTypeRouteMap[task.type];
 
-  private _routeToComponent(task: Task, component: string): void {
-    // TODO: nextjs routing
+    if (route) {
+      const taskParams = new URLSearchParams({
+        task: JSON.stringify(task)
+      });
+      window.location.assign(
+        `${route}?${stringifyQueryParams(params, { includeStartAmp: false })}&${taskParams}`
+      );
+    } else {
+      console.error(`Invalid task type: ${task.type}`);
+    }
   }
 }

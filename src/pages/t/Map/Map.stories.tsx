@@ -1,10 +1,36 @@
-import { StoryFn } from '@storybook/react';
+import { Meta, StoryFn } from '@storybook/react';
 
 import Map from './index';
+import { withQuery } from '@storybook/addon-queryparams';
+import { MapTask } from '@/types/Task';
+import { TaskType } from '@/types/TaskType.enum';
+import { Colour } from '@/types/Colour.enum';
 
-export default {
+const task: MapTask = {
+  ok: true,
+  type: TaskType.Map,
+  content: 'You should go here...',
+  required: true,
+  markers: [
+    {
+      lat: 51.503273708539716,
+      lng: -0.10895379433126426,
+      colour: Colour.Red,
+      title: 'London',
+      subtitle: 'Capital of England'
+    }
+  ]
+};
+
+const meta: Meta<typeof Map> = {
   title: 'Tasks/Map',
-  component: Map
+  component: Map,
+  decorators: [withQuery],
+  parameters: {
+    query: {
+      task: JSON.stringify(task)
+    }
+  }
 };
 
 const MapTemplate: StoryFn<typeof Map> = (args) => {
@@ -12,3 +38,5 @@ const MapTemplate: StoryFn<typeof Map> = (args) => {
 };
 
 export const DefaultState = MapTemplate.bind({});
+
+export default meta;

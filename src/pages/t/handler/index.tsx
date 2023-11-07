@@ -2,45 +2,54 @@ import { useEffect, useState } from 'react';
 import Loading from '../../../components/Loading';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/types/Endpoint.enum';
-import { Task } from '@/types/Task';
+import { Task, TaskUnion } from '@/types/Task';
 import { QueryParams } from '@/types/QueryParams';
 import { PlayResponse } from './PlayResponse.interface';
 import ProgressDialog from '@/components/ProgressDialog';
+import { TaskHandlerService } from '@/services/TaskHandler';
 
 export default function Handler() {
-  const [params, setParams] = useState<QueryParams>();
-  const [startTask, setStartTask] = useState<Task>();
-  const [continueTask, setContinueTask] = useState<Task>();
+  const [queryParams, setQueryParams] = useState<QueryParams>();
+  const [startTask, setStartTask] = useState<TaskUnion>();
+  const [continueTask, setContinueTask] = useState<TaskUnion>();
   const [openProgressDialog, setOpenProgressDialog] = useState(false);
 
   const PlayAPI = new APIService(Endpoint.Play);
 
-  const handleProgressDialogClose = (isRestarting: boolean) => {
-    if (isRestarting) {
+  const handleProgressDialogClose = async (isRestarting: boolean) => {
+    if (isRestarting && startTask) {
       const RestartAPI = new APIService(Endpoint.Restart);
-      RestartAPI.post({}, params as QueryParams);
-    } else {
-      goToStartTask();
+      await RestartAPI.post({}, queryParams as QueryParams);
+      goToTask(startTask, queryParams as QueryParams);
+    } else if (continueTask) {
+      goToTask(continueTask, queryParams as QueryParams);
     }
     setOpenProgressDialog(false);
   };
 
-  const goToStartTask = () => {};
+  const goToTask = (task: TaskUnion, params: QueryParams) => {
+    new TaskHandlerService().goToTaskComponent(task, params);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
-      const _params = Object.fromEntries(
+      const _queryParams = Object.fromEntries(
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
-      if (_params) {
-        setParams(_params);
-        const data = await PlayAPI.get<PlayResponse>(_params);
-        if (data?.continue) {
-          setContinueTask(data.continue);
-          setOpenProgressDialog(true);
-        } else if (data?.start) {
+      if (_queryParams) {
+        setQueryParams(_queryParams);
+        const data = await PlayAPI.get<PlayResponse>(_queryParams);
+
+        if (data) {
           setStartTask(data.start);
-          goToStartTask();
+          setContinueTask(data.continue);
+          if (data?.continue) {
+            setOpenProgressDialog(true);
+          } else {
+            goToTask(data.start, _queryParams);
+          }
+        } else {
+          console.error('Error');
         }
       }
     };

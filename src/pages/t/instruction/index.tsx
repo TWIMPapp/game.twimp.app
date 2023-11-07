@@ -1,1 +1,3 @@
-export default function Instruction() {}
+export default function Instruction() {
+  return <div>Instruction</div>;
+}

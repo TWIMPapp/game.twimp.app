@@ -1,5 +1,5 @@
 import { Colour } from './Colour.enum';
-import { SentimentType } from './SentimentType.enum';
+import { Sentiment } from './Sentiment.enum';
 import { Status } from './Status.enum';
 import { TaskType } from './TaskType.enum';
 
@@ -10,13 +10,11 @@ export interface Task {
   required: boolean;
   image_url?: string;
   audio_url?: string;
-  // sentiment?: Sentiment;
 }
 
 // Task sub properties
-
-export interface Sentiment {
-  type: SentimentType;
+export interface Outcome {
+  sentiment: Sentiment;
   title: string;
   subtitle: string;
 }

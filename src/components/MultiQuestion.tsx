@@ -11,10 +11,7 @@ const colourMap = {
   [Colour.Yellow]: 'bg-yellow-400',
   [Colour.Orange]: 'bg-orange-400',
   [Colour.Purple]: 'bg-purple-400',
-  [Colour.Pink]: 'bg-pink-400',
-  [Colour.Brown]: 'bg-brown-400',
-  [Colour.Grey]: 'bg-gray-400',
-  [Colour.Black]: 'bg-black-400'
+  [Colour.Pink]: 'bg-pink-400'
 };
 
 const getColour = (index: number): string => {
