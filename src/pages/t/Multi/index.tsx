@@ -5,7 +5,7 @@ import Loading from '../../../components/Loading';
 import { Option, Outcome, QuestionMultiTask, TaskUnion } from '@/types/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import { Page } from '@/types/Page.enum';
-import { QueryParams } from '@/types/QueryParams';
+import QueryParams from '@/types/QueryParams';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/types/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';

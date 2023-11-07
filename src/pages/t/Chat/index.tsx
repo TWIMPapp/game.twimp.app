@@ -6,7 +6,7 @@ import { InventoryItem } from '@/types/inventoryItem';
 import { Message } from '@/types/Task';
 import { ChatResponse } from './ChatResponse.interface';
 import { promiseWithTimeout } from '@/utils/promiseWithTimeout';
-import { QueryParams } from '@/types/QueryParams';
+import QueryParams from '@/types/QueryParams';
 import ChatRoom from '@/components/ChatRoom';
 import Loading from '@/components/Loading';
 import ItemsDialog from '@/components/ItemsDialog';

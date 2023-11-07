@@ -8,7 +8,7 @@ import { Card, CardContent } from '@mui/material';
 import { MapTask, Marker, TaskUnion } from '@/types/Task';
 import { Colour } from '@/types/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
-import { QueryParams } from '@/types/QueryParams';
+import QueryParams from '@/types/QueryParams';
 
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',

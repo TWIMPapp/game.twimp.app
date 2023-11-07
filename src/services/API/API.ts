@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
 import { Endpoint } from '@/types/Endpoint.enum';
-import { QueryParams } from '@/types/QueryParams';
+import QueryParams from '@/types/QueryParams';
 
 const baseUrl =
   'https://script.google.com/macros/s/AKfycbx2Hnd9zQqpuO8dyP4ZouhmbpvO1S1cvO47tfhaXHRBCs_KxZHfkQGsFYdzJkFeWgiAJA/exec?q=trails';

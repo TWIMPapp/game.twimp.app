@@ -3,7 +3,7 @@ import Loading from '../../../components/Loading';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/types/Endpoint.enum';
 import { Task, TaskUnion } from '@/types/Task';
-import { QueryParams } from '@/types/QueryParams';
+import QueryParams from '@/types/QueryParams';
 import { PlayResponse } from './PlayResponse.interface';
 import ProgressDialog from '@/components/ProgressDialog';
 import { TaskHandlerService } from '@/services/TaskHandler';
