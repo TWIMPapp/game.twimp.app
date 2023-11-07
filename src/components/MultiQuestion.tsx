@@ -52,7 +52,6 @@ const MultiQuestion = ({
           return (
             <button
               key={index}
-              style={{ height: 'calc((100vh - 550px) / 2)' }}
               className={`text-white p-6 font-semibold rounded shadow ${
                 option.colour ? colourMap[option.colour] : getColour(index)
               } animate__animated ${isActiveAnswer(option) ? 'animate__bounce' : ''}`}

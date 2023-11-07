@@ -22,7 +22,10 @@ $twimp-blue: #59a7a7;
 
 body,
 html {
-  height: 100vh;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .game {
@@ -67,6 +70,10 @@ html {
         background-color: lighten(#282c34, 20%);
       }
     }
+  }
+
+  &__tabs {
+    padding-top: 20px;
   }
 }
 
