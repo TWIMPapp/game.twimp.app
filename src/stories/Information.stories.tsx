@@ -1,6 +1,6 @@
 import { StoryFn } from '@storybook/react';
 
-import Information from '../pages/t/information/index';
+import Information from '../pages/t/information';
 
 export default {
   title: 'Tasks/Information',

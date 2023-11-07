@@ -1,6 +1,6 @@
 import { Meta, StoryFn } from '@storybook/react';
 
-import Map from '../pages/t/map/index';
+import Map from '../pages/t/map';
 import { withQuery } from '@storybook/addon-queryparams';
 import { MapTask } from '@/typings/Task';
 import { TaskType } from '@/typings/TaskType.enum';
