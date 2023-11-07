@@ -1,4 +1,4 @@
-import { TaskType } from '@/types/TaskType.enum';
+import { TaskType } from '@/typings/TaskType.enum';
 
 export const TaskTypeRouteMap: Record<TaskType, string> = {
   [TaskType.Question_multi]: '/t/multi',

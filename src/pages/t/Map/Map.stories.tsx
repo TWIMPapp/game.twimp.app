@@ -2,9 +2,9 @@ import { Meta, StoryFn } from '@storybook/react';
 
 import Map from './index';
 import { withQuery } from '@storybook/addon-queryparams';
-import { MapTask } from '@/types/Task';
-import { TaskType } from '@/types/TaskType.enum';
-import { Colour } from '@/types/Colour.enum';
+import { MapTask } from '@/typings/Task';
+import { TaskType } from '@/typings/TaskType.enum';
+import { Colour } from '@/typings/Colour.enum';
 
 const task: MapTask = {
   ok: true,

@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 import Loading from '../../../components/Loading';
-import { Task } from '../../../types/Task';
+import { Task } from '../../../typings/Task';
 import TaskList from '../../../components/TaskList';
 import { Box } from '@mui/material';
 import { APIService } from '@/services/API';
-import { Endpoint } from '@/types/Endpoint.enum';
-import QueryParams from '@/types/QueryParams';
+import { Endpoint } from '@/typings/Endpoint.enum';
+import QueryParams from '@/typings/QueryParams';
 
 // ?user_id=3&trail_ref=DragonReturn_Brandon&task_sequence=700&path=0|5|29|55&lat=51.470675&lng=-2.5908689
 

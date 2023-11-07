@@ -1,4 +1,4 @@
-import { Message } from '@/types/Task';
+import { Message } from '@/typings/Task';
 
 const ChatMessage = ({ message }: { message: Message }) => {
   const { content, id, created, role } = message;

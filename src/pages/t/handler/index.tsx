@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import Loading from '../../../components/Loading';
 import { APIService } from '@/services/API';
-import { Endpoint } from '@/types/Endpoint.enum';
-import { Task, TaskUnion } from '@/types/Task';
-import QueryParams from '@/types/QueryParams';
+import { Endpoint } from '@/typings/Endpoint.enum';
+import { Task, TaskUnion } from '@/typings/Task';
+import QueryParams from '@/typings/QueryParams';
 import { PlayResponse } from './PlayResponse.interface';
 import ProgressDialog from '@/components/ProgressDialog';
 import { TaskHandlerService } from '@/services/TaskHandler';

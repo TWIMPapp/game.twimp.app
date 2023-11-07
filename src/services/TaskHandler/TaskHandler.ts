@@ -1,7 +1,7 @@
-import { Endpoint } from '@/types/Endpoint.enum';
+import { Endpoint } from '@/typings/Endpoint.enum';
 import { APIService } from '../API';
-import QueryParams from '@/types/QueryParams';
-import { Task, TaskUnion } from '@/types/Task';
+import QueryParams from '@/typings/QueryParams';
+import { Task, TaskUnion } from '@/typings/Task';
 import { TaskTypeRouteMap } from './TaskTypeRouteMap';
 import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
 

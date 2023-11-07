@@ -2,9 +2,9 @@ import { Meta, StoryFn } from '@storybook/react';
 import { withQuery } from '@storybook/addon-queryparams';
 
 import Multi from './';
-import { TaskType } from '@/types/TaskType.enum';
-import { QuestionMultiTask } from '@/types/Task';
-import { Colour } from '@/types/Colour.enum';
+import { TaskType } from '@/typings/TaskType.enum';
+import { QuestionMultiTask } from '@/typings/Task';
+import { Colour } from '@/typings/Colour.enum';
 
 const task: QuestionMultiTask = {
   ok: true,

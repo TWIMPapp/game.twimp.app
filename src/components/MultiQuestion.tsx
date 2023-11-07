@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import Hint from './Hint';
 import Question from './Question';
-import { Option } from '@/types/Task';
-import { Colour } from '@/types/Colour.enum';
+import { Option } from '@/typings/Task';
+import { Colour } from '@/typings/Colour.enum';
 
 const colourMap = {
   [Colour.Red]: 'bg-red-400',

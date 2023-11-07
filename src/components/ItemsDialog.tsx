@@ -7,7 +7,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { TransitionProps } from '@mui/material/transitions';
 import { forwardRef } from 'react';
-import { InventoryItem } from '@/types/inventoryItem';
+import { InventoryItem } from '@/typings/inventoryItem';
 
 const sentimentBorderColour = (sentiment: 'good' | 'bad' | 'hardtosay'): string => {
   return {

@@ -1,4 +1,4 @@
-import QueryParams from '@/types/QueryParams';
+import QueryParams from '@/typings/QueryParams';
 
 export const stringifyQueryParams = (
   params: QueryParams,

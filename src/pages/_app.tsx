@@ -17,7 +17,7 @@ import BackpackIcon from '@mui/icons-material/Backpack';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import MapIcon from '@mui/icons-material/Map';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Page } from '@/types/Page.enum';
+import { Page } from '@/typings/Page.enum';
 // import { QueryParams } from '@/types/QueryParams';
 
 const GTM_ID = 'GTM-PJT9V98';

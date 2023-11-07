@@ -3,12 +3,12 @@ import { GoogleMap, LoadScript, MarkerF, InfoWindowF } from '@react-google-maps/
 import { useEffect, useState } from 'react';
 import MarkerIcon from '../../../assets/icons/marker-icon.png';
 import { APIService } from '@/services/API';
-import { Endpoint } from '@/types/Endpoint.enum';
+import { Endpoint } from '@/typings/Endpoint.enum';
 import { Card, CardContent } from '@mui/material';
-import { MapTask, Marker, TaskUnion } from '@/types/Task';
-import { Colour } from '@/types/Colour.enum';
+import { MapTask, Marker, TaskUnion } from '@/typings/Task';
+import { Colour } from '@/typings/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
-import QueryParams from '@/types/QueryParams';
+import QueryParams from '@/typings/QueryParams';
 
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',

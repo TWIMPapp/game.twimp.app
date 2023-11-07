@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import ChatMessage from './ChatMessage';
 import { CircularProgress, LinearProgress } from '@mui/material';
 import { BatteryAlert, Bolt } from '@mui/icons-material';
-import { Message } from '@/types/Task';
-import { ThemeStyle } from '@/types/ThemeStyle.enum';
+import { Message } from '@/typings/Task';
+import { ThemeStyle } from '@/typings/ThemeStyle.enum';
 
 // TODO: [BE] Messages should return with id
 

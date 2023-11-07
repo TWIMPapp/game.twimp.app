@@ -1,4 +1,4 @@
-import { MapTask, TaskUnion } from '@/types/Task';
+import { MapTask, TaskUnion } from '@/typings/Task';
 
 export interface PlayResponse {
   ok: boolean;

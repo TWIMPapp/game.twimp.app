@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 
 import MultiQuestion from '../../../components/MultiQuestion';
 import Loading from '../../../components/Loading';
-import { Option, Outcome, QuestionMultiTask, TaskUnion } from '@/types/Task';
+import { Option, Outcome, QuestionMultiTask, TaskUnion } from '@/typings/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
-import { Page } from '@/types/Page.enum';
-import QueryParams from '@/types/QueryParams';
+import { Page } from '@/typings/Page.enum';
+import QueryParams from '@/typings/QueryParams';
 import { APIService } from '@/services/API';
-import { Endpoint } from '@/types/Endpoint.enum';
+import { Endpoint } from '@/typings/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
 import Image from 'next/image';
 

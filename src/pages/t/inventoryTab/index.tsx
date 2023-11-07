@@ -1,4 +1,4 @@
-import { Page } from '@/types/Page.enum';
+import { Page } from '@/typings/Page.enum';
 
 const InventoryTab = () => {
   return (

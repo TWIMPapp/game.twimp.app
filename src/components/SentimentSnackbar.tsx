@@ -1,5 +1,5 @@
-import { Sentiment } from '@/types/Sentiment.enum';
-import { Outcome } from '@/types/Task';
+import { Sentiment } from '@/typings/Sentiment.enum';
+import { Outcome } from '@/typings/Task';
 import { Alert, AlertColor, Snackbar } from '@mui/material';
 
 const severityMap: Record<Sentiment, AlertColor> = {

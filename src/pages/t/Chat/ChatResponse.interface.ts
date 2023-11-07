@@ -1,5 +1,5 @@
-import { Message } from '@/types/Task';
-import { InventoryItem } from '@/types/inventoryItem';
+import { Message } from '@/typings/Task';
+import { InventoryItem } from '@/typings/inventoryItem';
 
 export interface ChatResponse {
   ok: boolean;
