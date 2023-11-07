@@ -18,7 +18,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import MapIcon from '@mui/icons-material/Map';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Page } from '@/types/Page.enum';
-import { QueryParams } from '@/types/QueryParams';
+// import { QueryParams } from '@/types/QueryParams';
 
 const GTM_ID = 'GTM-PJT9V98';
 
@@ -72,23 +72,23 @@ const PageMap = {
 };
 
 export default function App({ Component, pageProps }: AppProps) {
-  const [params, setParams] = useState<QueryParams>();
+  // const [params, setParams] = useState<QueryParams>();
   const [activeTab, setActiveTab] = useState(
     Component.displayName && (PageMap as any)[Component.displayName] > -1
       ? (PageMap as any)[Component.displayName]
       : 1
   );
 
-  useEffect(() => {
-    const fetchData = () => {
-      const _params = Object.fromEntries(
-        new URLSearchParams(window.location.search)
-      ) as unknown as QueryParams;
-      setParams(_params);
-    };
+  // useEffect(() => {
+  //   const fetchData = () => {
+  //     const _params = Object.fromEntries(
+  //       new URLSearchParams(window.location.search)
+  //     ) as unknown as QueryParams;
+  //     setParams(_params);
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     // event.type can be equal to focus with selectionFollowsFocus.
@@ -121,35 +121,36 @@ export default function App({ Component, pageProps }: AppProps) {
         })(window,document,'script','dataLayer','${GTM_ID}');
       `}
       </Script>
-      {params ? (
-        <>
-          <Head>
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
-            ></meta>
-          </Head>
-          <ThemeProvider theme={theme}>
-            <main className={`game theme-${params.theme}`}>
-              <Tabs
-                className="game__tabs"
-                value={activeTab}
-                onChange={handleChange}
-                aria-label="tabs"
-                variant="fullWidth"
-              >
-                <LinkTab icon={<BackpackIcon />} aria-label="Inventory" href="/t/inventoryTab" />
-                {/* TODO: Route to handler */}
-                <LinkTab icon={<AssignmentIcon />} aria-label="Task" href="/t/multi" />
-                <LinkTab icon={<MapIcon />} aria-label="Map" href="/t/mapTab" />
-              </Tabs>
-              <Component {...pageProps} />
-            </main>
-          </ThemeProvider>
-        </>
-      ) : (
-        <Loading />
-      )}
+      {/* {params ? ( */}
+      <>
+        <Head>
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
+          ></meta>
+        </Head>
+        {/* <ThemeProvider theme={theme}> */}
+        {/* <main className={`game theme-${params.theme}`}> */}
+        <main className="game">
+          <Tabs
+            className="game__tabs"
+            value={activeTab}
+            onChange={handleChange}
+            aria-label="tabs"
+            variant="fullWidth"
+          >
+            <LinkTab icon={<BackpackIcon />} aria-label="Inventory" href="/t/inventoryTab" />
+            {/* TODO: Route to handler */}
+            <LinkTab icon={<AssignmentIcon />} aria-label="Task" href="/t/multi" />
+            <LinkTab icon={<MapIcon />} aria-label="Map" href="/t/mapTab" />
+          </Tabs>
+          <Component {...pageProps} />
+        </main>
+        {/* </ThemeProvider> */}
+      </>
+      {/* ) : (
+        <Loading /> */}
+      {/* )} */}
     </>
   );
 }
