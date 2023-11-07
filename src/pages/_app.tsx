@@ -1,6 +1,5 @@
 import Loading from '../components/Loading';
 import '@/styles/globals.scss';
-import { QueryParams } from '../types/QueryParams';
 import type { AppProps } from 'next/app';
 import {
   useEffect,
@@ -19,6 +18,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import MapIcon from '@mui/icons-material/Map';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Page } from '@/types/Page.enum';
+import { QueryParams } from '@/types/QueryParams';
 
 const GTM_ID = 'GTM-PJT9V98';
 
