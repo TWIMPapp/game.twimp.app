@@ -1,6 +1,6 @@
 import { StoryFn } from '@storybook/react';
 
-import Single from '../pages/t/single';
+import Single from '../src/pages/t/single';
 
 export default {
   title: 'Tasks/Question Single',
