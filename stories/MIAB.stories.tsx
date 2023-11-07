@@ -1,3 +1,4 @@
+import React from 'react';
 import { StoryFn } from '@storybook/react';
 
 import MIAB from '../src/pages/bristol/MIAB/MIAB';

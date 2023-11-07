@@ -1,21 +1,19 @@
+import React from 'react';
 import { Meta, StoryFn } from '@storybook/react';
 
-import Map from '../src/pages/t/map';
+import Map from '../src/pages/task/map';
 import { withQuery } from '@storybook/addon-queryparams';
-import { MapTask } from '@/typings/Task';
-import { TaskType } from '@/typings/TaskType.enum';
-import { Colour } from '@/typings/Colour.enum';
 
-const task: MapTask = {
+const task = {
   ok: true,
-  type: TaskType.Map,
+  type: 'map',
   content: 'You should go here...',
   required: true,
   markers: [
     {
       lat: 51.503273708539716,
       lng: -0.10895379433126426,
-      colour: Colour.Red,
+      colour: 'red',
       title: 'London',
       subtitle: 'Capital of England'
     }

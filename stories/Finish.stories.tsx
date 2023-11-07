@@ -1,6 +1,7 @@
+import React from 'react';
 import { StoryFn } from '@storybook/react';
 
-import Finish from '../src/pages/t/finish';
+import Finish from '../src/pages/task/finish';
 
 export default {
   title: 'Tasks/Finish',

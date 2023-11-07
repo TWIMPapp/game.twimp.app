@@ -1,14 +1,12 @@
+import React from 'react';
 import { Meta, StoryFn } from '@storybook/react';
 import { withQuery } from '@storybook/addon-queryparams';
 
-import Multi from '../src/pages/t/multi';
-import { TaskType } from '@/typings/TaskType.enum';
-import { QuestionMultiTask } from '@/typings/Task';
-import { Colour } from '@/typings/Colour.enum';
+import Multi from '../src/pages/task/multi';
 
-const task: QuestionMultiTask = {
+const task = {
   ok: true,
-  type: TaskType.Question_multi,
+  type: 'question_multi',
   image_url:
     'https://d3i6fh83elv35t.cloudfront.net/newshour/app/uploads/2016/07/apollogiftweet1.gif',
   content:
@@ -18,19 +16,19 @@ const task: QuestionMultiTask = {
   options: [
     {
       content: 'Apollo 11',
-      colour: Colour.Blue
+      colour: 'blue'
     },
     {
       content: 'Apollo 12',
-      colour: Colour.Yellow
+      colour: 'yellow'
     },
     {
       content: 'Apollo 13',
-      colour: Colour.Purple
+      colour: 'purple'
     },
     {
       content: 'Apollo 14',
-      colour: Colour.Red
+      colour: 'red'
     }
   ]
 };
