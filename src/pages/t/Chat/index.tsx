@@ -1,9 +1,5 @@
 import { useEffect, useState } from 'react';
 
-import Loading from '../../../components/Loading';
-import ChatRoom from '../../../components/ChatRoom';
-import ItemsDialog from '../../../components/ItemsDialog';
-import NoBatteryDialog from '../../../components/NoBatteryDialog';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/types/Endpoint.enum';
 import { InventoryItem } from '@/types/inventoryItem';
@@ -11,6 +7,10 @@ import { Message } from '@/types/Task';
 import { ChatResponse } from './ChatResponse.interface';
 import { promiseWithTimeout } from '@/utils/promiseWithTimeout';
 import { QueryParams } from '@/types/QueryParams';
+import ChatRoom from '@/components/ChatRoom';
+import Loading from '@/components/Loading';
+import ItemsDialog from '@/components/ItemsDialog';
+import NoBatteryDialog from '@/components/NoBatteryDialog';
 
 export default function Chat() {
   const [params, setParams] = useState<QueryParams>();
@@ -105,6 +105,7 @@ export default function Chat() {
     };
 
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

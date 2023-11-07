@@ -9,6 +9,7 @@ import { QueryParams } from '@/types/QueryParams';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/types/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
+import Image from 'next/image';
 
 interface NextResponse {
   ok: boolean;
@@ -66,7 +67,7 @@ const Multi = () => {
     <>
       {task?.image_url && (
         <div className="flex justify-center">
-          <img src={task.image_url} className="max-h-64 w-full" />
+          <Image src={task.image_url} alt="question-image" className="max-h-64 w-full" />
         </div>
       )}
       {task?.content ? (
