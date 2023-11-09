@@ -10,7 +10,6 @@ import QueryParams from '@/typings/QueryParams';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
-import { url } from 'inspector';
 
 interface NextResponse {
   ok: boolean;
