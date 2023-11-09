@@ -34,16 +34,16 @@ const postData = async (
   params: QueryParams
 ): Promise<AwtyResponse> => {
   const body = {
-    lat: position.coords.latitude,
-    lng: position.coords.longitude,
-    accuracy: position.coords.accuracy,
-    user_id: params.user_id,
-    trail_ref: params.trail_ref
+    lat: position?.coords?.latitude,
+    lng: position?.coords?.longitude,
+    accuracy: position?.coords?.accuracy,
+    user_id: params?.user_id,
+    trail_ref: params?.trail_ref
   };
 
   return await new APIService(Endpoint.Awty).post<AwtyResponse>(body, {
-    user_id: params.user_id,
-    trail_ref: params.trail_ref
+    user_id: params?.user_id,
+    trail_ref: params?.trail_ref
   });
 };
 
