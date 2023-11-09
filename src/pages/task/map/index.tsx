@@ -11,6 +11,8 @@ import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
 import { TabBarHeight } from '@/pages/_app';
 
+const AWTY_INTERVAL = 5000;
+
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
   [Colour.Red]: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
@@ -95,7 +97,7 @@ export default function Map() {
               setTimeout(() => {
                 setAwtyResponse(data);
                 canRun = true;
-              }, 5000);
+              }, AWTY_INTERVAL);
             }
           }
         }
