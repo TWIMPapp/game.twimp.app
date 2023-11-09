@@ -159,7 +159,7 @@ export default function Map() {
               className="animate__animated animate__bounce"
               sx={{
                 position: 'fixed',
-                bottom: '16px',
+                bottom: '76px',
                 left: '16px',
                 right: '16px',
                 zIndex: 999

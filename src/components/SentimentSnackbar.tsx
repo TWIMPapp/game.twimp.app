@@ -20,7 +20,12 @@ const SentimentSnackbar = ({
   handleClose: () => void;
 }) => {
   return (
-    <Snackbar open={open} autoHideDuration={autoHideDuration} onClose={handleClose}>
+    <Snackbar
+      open={open}
+      autoHideDuration={autoHideDuration}
+      onClose={handleClose}
+      sx={{ marginBottom: '60px' }}
+    >
       <Alert severity={severityMap[outcome.sentiment]} sx={{ width: '100%' }}>
         <h3>{outcome.title}</h3>
         <p>{outcome.subtitle}</p>
