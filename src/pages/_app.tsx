@@ -20,7 +20,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Page } from '@/typings/Page.enum';
 import QueryParams from '@/typings/QueryParams';
 
-export const TabBarHeight = 68;
+export const TabBarHeight = 88;
 
 const GTM_ID = 'GTM-PJT9V98';
 
