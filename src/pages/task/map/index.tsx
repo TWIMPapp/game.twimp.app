@@ -9,7 +9,7 @@ import { MapTask, Marker, TaskUnion } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
-import { TabBarHeight } from '@/pages/_app';
+import { TabBarHeight } from '@/components/MainTabs';
 
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',

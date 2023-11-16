@@ -1,26 +1,13 @@
 import Loading from '../components/Loading';
 import '@/styles/globals.scss';
 import type { AppProps } from 'next/app';
-import {
-  useEffect,
-  useState,
-  MouseEvent as ReactMouseEvent,
-  ReactElement,
-  JSXElementConstructor
-} from 'react';
+import { useEffect, useState } from 'react';
 import { Press_Start_2P, MedievalSharp } from 'next/font/google';
 import Script from 'next/script';
 import Head from 'next/head';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import BackpackIcon from '@mui/icons-material/Backpack';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import MapIcon from '@mui/icons-material/Map';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Page } from '@/typings/Page.enum';
 import QueryParams from '@/typings/QueryParams';
-
-export const TabBarHeight = 68;
+import MainTabs from '@/components/MainTabs';
 
 const GTM_ID = 'GTM-PJT9V98';
 
@@ -36,7 +23,7 @@ const rpg = MedievalSharp({
   weight: '400'
 });
 
-const theme = createTheme({
+export const theme = createTheme({
   palette: {
     primary: {
       main: '#ff6c88'
@@ -44,42 +31,8 @@ const theme = createTheme({
   }
 });
 
-function samePageLinkNavigation(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) {
-  if (
-    event.defaultPrevented ||
-    event.button !== 0 || // ignore everything but left-click
-    event.metaKey ||
-    event.ctrlKey ||
-    event.altKey ||
-    event.shiftKey
-  ) {
-    return false;
-  }
-  return true;
-}
-
-interface LinkTabProps {
-  icon?: ReactElement<any, string | JSXElementConstructor<any>>;
-  label?: string;
-  href?: string;
-}
-
-function LinkTab(props: LinkTabProps) {
-  return <Tab component="a" icon={props.icon} aria-label={props.label} {...props} />;
-}
-
-const PageMap = {
-  [Page.InventoryTab]: 0,
-  [Page.MapTab]: 2
-};
-
 export default function App({ Component, pageProps }: AppProps) {
   const [params, setParams] = useState<QueryParams>();
-  const [activeTab, setActiveTab] = useState(
-    Component.displayName && (PageMap as any)[Component.displayName] > -1
-      ? (PageMap as any)[Component.displayName]
-      : 1
-  );
 
   useEffect(() => {
     const fetchData = () => {
@@ -91,17 +44,6 @@ export default function App({ Component, pageProps }: AppProps) {
 
     fetchData();
   }, []);
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    // event.type can be equal to focus with selectionFollowsFocus.
-    if (
-      event.type !== 'click' ||
-      (event.type === 'click' &&
-        samePageLinkNavigation(event as React.MouseEvent<HTMLAnchorElement, MouseEvent>))
-    ) {
-      setActiveTab(newValue);
-    }
-  };
 
   return (
     <>
@@ -133,19 +75,7 @@ export default function App({ Component, pageProps }: AppProps) {
           </Head>
           <ThemeProvider theme={theme}>
             <main className={`game theme-${params.theme}`}>
-              <Tabs
-                className="game__tabs"
-                value={activeTab}
-                onChange={handleChange}
-                aria-label="tabs"
-                variant="fullWidth"
-                sx={{ height: `${TabBarHeight}px` }}
-              >
-                <LinkTab icon={<BackpackIcon />} aria-label="Inventory" href="/task/inventoryTab" />
-                {/* TODO: Route to handler */}
-                <LinkTab icon={<AssignmentIcon />} aria-label="Task" href="/task/multi" />
-                <LinkTab icon={<MapIcon />} aria-label="Map" href="/task/mapTab" />
-              </Tabs>
+              <MainTabs componentDisplayName={Component?.displayName} />
               <Component {...pageProps} />
             </main>
           </ThemeProvider>

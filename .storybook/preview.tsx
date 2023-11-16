@@ -1,5 +1,9 @@
+import React from 'react';
+import { Box, ThemeProvider } from '@mui/material';
 import type { Preview } from '@storybook/react';
 import '../src/styles/globals.scss';
+import { theme } from '../src/pages/_app';
+import MainTabs from '../src/components/MainTabs';
 
 const customViewports = {
   iphone12Pro: {
@@ -24,7 +28,17 @@ const preview: Preview = {
       viewports: customViewports,
       defaultViewport: 'iphone12Pro'
     },
-    layout: 'fullscreen'
+    layout: 'fullscreen',
+    decorators: [
+      (story) => {
+        return (
+          // <ThemeProvider theme={theme}>
+          // <MainTabs />
+          <main className="game">{story()}</main>
+          // </ThemeProvider>
+        );
+      }
+    ]
   }
 };
 
