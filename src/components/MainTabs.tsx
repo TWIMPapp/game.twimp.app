@@ -4,6 +4,8 @@ import { JSXElementConstructor, ReactElement, useState } from 'react';
 import BackpackIcon from '@mui/icons-material/Backpack';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import MapIcon from '@mui/icons-material/Map';
+import QueryParams from '@/typings/QueryParams';
+import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
 
 export const TabBarHeight = 68;
 
@@ -36,7 +38,13 @@ const PageMap = {
   [Page.MapTab]: 2
 };
 
-const MainTabs = ({ componentDisplayName }: { componentDisplayName?: string }) => {
+const MainTabs = ({
+  params,
+  componentDisplayName
+}: {
+  params: QueryParams;
+  componentDisplayName?: string;
+}) => {
   const [activeTab, setActiveTab] = useState(
     componentDisplayName && (PageMap as any)[componentDisplayName] > -1
       ? (PageMap as any)[componentDisplayName]
@@ -62,10 +70,21 @@ const MainTabs = ({ componentDisplayName }: { componentDisplayName?: string }) =
       variant="fullWidth"
       sx={{ height: `${TabBarHeight + 40}px` }}
     >
-      <LinkTab icon={<BackpackIcon />} aria-label="Inventory" href="/task/inventoryTab" />
-      {/* TODO: Route to handler */}
-      <LinkTab icon={<AssignmentIcon />} aria-label="Task" href="/task/multi" />
-      <LinkTab icon={<MapIcon />} aria-label="Map" href="/task/mapTab" />
+      <LinkTab
+        icon={<BackpackIcon />}
+        aria-label="Inventory"
+        href={`/task/inventoryTab?${stringifyQueryParams(params, { includeStartAmp: false })}`}
+      />
+      <LinkTab
+        icon={<AssignmentIcon />}
+        aria-label="Task"
+        href={`/task/handler?${stringifyQueryParams(params, { includeStartAmp: false })}`}
+      />
+      <LinkTab
+        icon={<MapIcon />}
+        aria-label="Map"
+        href={`/task/mapTab?${stringifyQueryParams(params, { includeStartAmp: false })}`}
+      />
     </Tabs>
   );
 };

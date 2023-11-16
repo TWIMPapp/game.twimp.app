@@ -1,13 +1,9 @@
-import { Endpoint } from '@/typings/Endpoint.enum';
-import { APIService } from '../API';
 import QueryParams from '@/typings/QueryParams';
-import { Task, TaskUnion } from '@/typings/Task';
+import { TaskUnion } from '@/typings/Task';
 import { TaskTypeRouteMap } from './TaskTypeRouteMap';
 import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
 
 export class TaskHandlerService {
-  private _API = new APIService(Endpoint.Next);
-
   public getTaskFromParams<T>(): T {
     const params = Object.fromEntries(
       new URLSearchParams(window.location.search)

@@ -8,14 +8,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { TransitionProps } from '@mui/material/transitions';
 import { forwardRef } from 'react';
 import { InventoryItem } from '@/typings/inventoryItem';
-
-const sentimentBorderColour = (sentiment: 'good' | 'bad' | 'hardtosay'): string => {
-  return {
-    good: 'border-green-400',
-    bad: 'border-red-400',
-    hardtosay: 'border-yellow-400'
-  }[sentiment];
-};
+import { sentimentBorderColour } from '@/pages/task/inventoryTab';
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -47,12 +40,12 @@ const ItemsDialog = ({
             return (
               <li
                 key={index}
-                className={`flex items-center justify-between p-4 my-2 border-4 rounded shadow ${sentimentBorderColour(
-                  item.sentiment
-                )}`}
+                className={`flex items-center justify-between p-4 my-2 border-4 rounded shadow ${
+                  item?.sentiment ? sentimentBorderColour(item.sentiment) : ''
+                }`}
               >
                 <div className="flex items-center">
-                  <img src={item.image} alt={item.title} className="w-20 h-20 mr-4" />
+                  <img src={item.image_url} alt={item.title} className="w-20 h-20 mr-4" />
                   <span>{item.title}</span>
                 </div>
               </li>

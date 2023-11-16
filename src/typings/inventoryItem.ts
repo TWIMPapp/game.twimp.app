@@ -1,5 +1,8 @@
+import { Sentiment } from './Sentiment.enum';
+
 export interface InventoryItem {
   title: string;
-  image: string;
-  sentiment: 'good' | 'bad' | 'hardtosay';
+  subtitle?: string;
+  image_url: string;
+  sentiment?: Sentiment;
 }

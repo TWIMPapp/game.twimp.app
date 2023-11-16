@@ -5,5 +5,6 @@ export enum Endpoint {
   Chat = 'chat',
   Awty = 'awty',
   Play = 'play',
-  Restart = 'restart'
+  Restart = 'restart',
+  Items = 'items'
 }
