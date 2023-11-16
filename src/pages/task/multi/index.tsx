@@ -84,7 +84,7 @@ const Multi = () => {
             <SentimentSnackbar
               outcome={outcome}
               open={outcome !== undefined}
-              autoHideDuration={6000}
+              autoHideDuration={10000}
               handleClose={() => {
                 setOutcome(undefined);
               }}

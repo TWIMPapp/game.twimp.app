@@ -75,7 +75,9 @@ const Single = () => {
 
     setTimer(
       setTimeout(() => {
-        onValidate(input);
+        if (input.length > 0) {
+          onValidate(input);
+        }
       }, 1000)
     );
 
@@ -117,7 +119,7 @@ const Single = () => {
             <SentimentSnackbar
               outcome={outcome}
               open={outcome !== undefined}
-              autoHideDuration={6000}
+              autoHideDuration={10000}
               handleClose={() => {
                 setOutcome(undefined);
               }}
