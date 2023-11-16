@@ -60,7 +60,7 @@ const MainTabs = ({ componentDisplayName }: { componentDisplayName?: string }) =
       onChange={handleChange}
       aria-label="tabs"
       variant="fullWidth"
-      sx={{ height: `${TabBarHeight}px` }}
+      sx={{ height: `${TabBarHeight + 40}px` }}
     >
       <LinkTab icon={<BackpackIcon />} aria-label="Inventory" href="/task/inventoryTab" />
       {/* TODO: Route to handler */}

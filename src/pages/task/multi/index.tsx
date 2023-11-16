@@ -35,7 +35,14 @@ const Multi = () => {
 
     if (data) {
       if (data.task) {
-        new TaskHandlerService().goToTaskComponent(data.task, params as QueryParams);
+        setTimeout(
+          () =>
+            new TaskHandlerService().goToTaskComponent(
+              data.task as TaskUnion,
+              params as QueryParams
+            ),
+          1200
+        );
       }
 
       if (data.outcome) {
