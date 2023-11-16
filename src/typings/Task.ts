@@ -68,10 +68,6 @@ export interface InformationTask extends Task {
   type: TaskType.Information;
 }
 
-export interface InstructionTask extends Task {
-  type: TaskType.Instruction;
-}
-
 export interface ChatTask extends Task {
   type: TaskType.Chat;
   character: Character[];
@@ -83,5 +79,4 @@ export type TaskUnion =
   | QuestionSingleTask
   | MapTask
   | InformationTask
-  | InstructionTask
   | ChatTask;

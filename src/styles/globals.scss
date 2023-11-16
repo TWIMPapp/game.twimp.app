@@ -1,6 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import 'github-markdown-css/github-markdown.css';
+
+/*TODO: Detect usage of dark mode and apply dark theme*/
 
 $twimp-pink: #ff2e5b;
 $twimp-light-pink: #ff6c88;

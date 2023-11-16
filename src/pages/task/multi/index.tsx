@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from 'react';
 
 import MultiQuestion from '../../../components/MultiQuestion';
@@ -10,7 +9,6 @@ import QueryParams from '@/typings/QueryParams';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
-import { url } from 'inspector';
 
 interface NextResponse {
   ok: boolean;

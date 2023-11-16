@@ -3,6 +3,5 @@ export enum TaskType {
   Question_single = 'question_single',
   Map = 'map',
   Chat = 'chat',
-  Information = 'information',
-  Instruction = 'instruction'
+  Information = 'information'
 }
