@@ -9,12 +9,7 @@ import QueryParams from '@/typings/QueryParams';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
-
-interface NextResponse {
-  ok: boolean;
-  outcome?: Outcome;
-  task?: TaskUnion;
-}
+import { NextResponse } from '@/typings/NextResponse';
 
 const Multi = () => {
   const [task, setTask] = useState<QuestionMultiTask>();

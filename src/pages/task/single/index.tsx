@@ -11,12 +11,7 @@ import SentimentSnackbar from '@/components/SentimentSnackbar';
 import Question from '@/components/Question';
 import Hint from '@/components/Hint';
 import { TextField } from '@mui/material';
-
-interface NextResponse {
-  ok: boolean;
-  outcome?: Outcome;
-  task?: TaskUnion;
-}
+import { NextResponse } from '../../../typings/NextResponse';
 
 const Single = () => {
   const [task, setTask] = useState<QuestionSingleTask>();
