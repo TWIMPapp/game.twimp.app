@@ -11,6 +11,8 @@ import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
 import { TabBarHeight } from '@/components/MainTabs';
 
+const AWTY_INTERVAL = 5000;
+
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
   [Colour.Red]: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
@@ -34,16 +36,16 @@ const postData = async (
   params: QueryParams
 ): Promise<AwtyResponse> => {
   const body = {
-    lat: position.coords.latitude,
-    lng: position.coords.longitude,
-    accuracy: position.coords.accuracy,
-    user_id: params.user_id,
-    trail_ref: params.trail_ref
+    lat: position?.coords?.latitude,
+    lng: position?.coords?.longitude,
+    accuracy: position?.coords?.accuracy,
+    user_id: params?.user_id,
+    trail_ref: params?.trail_ref
   };
 
   return await new APIService(Endpoint.Awty).post<AwtyResponse>(body, {
-    user_id: params.user_id,
-    trail_ref: params.trail_ref
+    user_id: params?.user_id,
+    trail_ref: params?.trail_ref
   });
 };
 
@@ -95,7 +97,7 @@ export default function Map() {
               setTimeout(() => {
                 setAwtyResponse(data);
                 canRun = true;
-              }, 5000);
+              }, AWTY_INTERVAL);
             }
           }
         }
@@ -157,7 +159,7 @@ export default function Map() {
               className="animate__animated animate__bounce"
               sx={{
                 position: 'fixed',
-                bottom: '16px',
+                bottom: '76px',
                 left: '16px',
                 right: '16px',
                 zIndex: 999
