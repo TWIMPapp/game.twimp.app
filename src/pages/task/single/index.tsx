@@ -45,7 +45,6 @@ const Single = () => {
 
   useEffect(() => {
     const onValidate = async (answer: string) => {
-      console.log('############### answer', answer);
       const body = {
         answer,
         user_id: params?.user_id,
