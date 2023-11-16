@@ -74,9 +74,14 @@ export interface ChatTask extends Task {
   messages: Message[];
 }
 
+export interface FinishTask extends Task {
+  type: TaskType.Finish;
+}
+
 export type TaskUnion =
   | QuestionMultiTask
   | QuestionSingleTask
   | MapTask
   | InformationTask
-  | ChatTask;
+  | ChatTask
+  | FinishTask;
