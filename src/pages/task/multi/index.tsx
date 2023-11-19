@@ -4,7 +4,6 @@ import MultiQuestion from '../../../components/MultiQuestion';
 import Loading from '../../../components/Loading';
 import { Option, Outcome, QuestionMultiTask, TaskUnion } from '@/typings/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
-import { Page } from '@/typings/Page.enum';
 import QueryParams from '@/typings/QueryParams';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
@@ -100,5 +99,4 @@ const Multi = () => {
   );
 };
 
-Multi.displayName = Page.Multi;
 export default Multi;

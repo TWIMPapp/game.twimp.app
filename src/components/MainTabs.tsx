@@ -1,91 +1,51 @@
-import { Page } from '@/typings/Page.enum';
 import { Tab, Tabs } from '@mui/material';
-import { JSXElementConstructor, ReactElement, useState } from 'react';
+import { JSXElementConstructor, ReactElement, SyntheticEvent, useState } from 'react';
 import BackpackIcon from '@mui/icons-material/Backpack';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import MapIcon from '@mui/icons-material/Map';
-import QueryParams from '@/typings/QueryParams';
-import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
+import InventoryTab from '@/pages/task/inventoryTab';
+import MapTab from '@/pages/task/mapTab';
 
 export const TabBarHeight = 68;
 
-interface LinkTabProps {
-  icon?: ReactElement<any, string | JSXElementConstructor<any>>;
-  label?: string;
-  href?: string;
+enum TabPage {
+  InventoryTab,
+  TaskTab,
+  MapTab
 }
 
-function samePageLinkNavigation(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) {
-  if (
-    event.defaultPrevented ||
-    event.button !== 0 || // ignore everything but left-click
-    event.metaKey ||
-    event.ctrlKey ||
-    event.altKey ||
-    event.shiftKey
-  ) {
-    return false;
-  }
-  return true;
-}
+const MainTabs = ({ children }: { children: ReactElement<any, any> }) => {
+  const [activeTab, setActiveTab] = useState(TabPage.TaskTab);
 
-function LinkTab(props: LinkTabProps) {
-  return <Tab component="a" icon={props.icon} aria-label={props.label} {...props} />;
-}
-
-const PageMap = {
-  [Page.InventoryTab]: 0,
-  [Page.MapTab]: 2
-};
-
-const MainTabs = ({
-  params,
-  componentDisplayName
-}: {
-  params: QueryParams;
-  componentDisplayName?: string;
-}) => {
-  const [activeTab, setActiveTab] = useState(
-    componentDisplayName && (PageMap as any)[componentDisplayName] > -1
-      ? (PageMap as any)[componentDisplayName]
-      : 1
-  );
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    // event.type can be equal to focus with selectionFollowsFocus.
-    if (
-      event.type !== 'click' ||
-      (event.type === 'click' &&
-        samePageLinkNavigation(event as React.MouseEvent<HTMLAnchorElement, MouseEvent>))
-    ) {
-      setActiveTab(newValue);
-    }
+  const handleChange = (event: SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
   };
+
   return (
-    <Tabs
-      className="game__tabs"
-      value={activeTab}
-      onChange={handleChange}
-      aria-label="tabs"
-      variant="fullWidth"
-      sx={{ height: `${TabBarHeight + 40}px` }}
-    >
-      <LinkTab
-        icon={<BackpackIcon />}
-        aria-label="Inventory"
-        href={`/task/inventoryTab?${stringifyQueryParams(params, { includeStartAmp: false })}`}
-      />
-      <LinkTab
-        icon={<AssignmentIcon />}
-        aria-label="Task"
-        href={`/task/handler?${stringifyQueryParams(params, { includeStartAmp: false })}`}
-      />
-      <LinkTab
-        icon={<MapIcon />}
-        aria-label="Map"
-        href={`/task/mapTab?${stringifyQueryParams(params, { includeStartAmp: false })}`}
-      />
-    </Tabs>
+    <>
+      <Tabs
+        className="game__tabs"
+        value={activeTab}
+        onChange={handleChange}
+        aria-label="tabs"
+        variant="fullWidth"
+        sx={{ height: `${TabBarHeight + 40}px` }}
+      >
+        <Tab icon={<BackpackIcon />} aria-label="Inventory" />
+        <Tab icon={<AssignmentIcon />} aria-label="Task" />
+        <Tab icon={<MapIcon />} aria-label="Map" />
+      </Tabs>
+
+      <div role="tabpanel" hidden={activeTab !== TabPage.InventoryTab}>
+        <InventoryTab setItems={[]} refreshData={activeTab !== TabPage.InventoryTab} />
+      </div>
+      <div role="tabpanel" hidden={activeTab !== TabPage.TaskTab}>
+        {children}
+      </div>
+      <div role="tabpanel" hidden={activeTab !== TabPage.MapTab}>
+        <MapTab />
+      </div>
+    </>
   );
 };
 

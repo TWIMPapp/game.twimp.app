@@ -1,5 +1,3 @@
-import { Page } from '@/typings/Page.enum';
-
 const MapTab = () => {
   return (
     <div>
@@ -8,5 +6,4 @@ const MapTab = () => {
   );
 };
 
-MapTab.displayName = Page.MapTab;
 export default MapTab;

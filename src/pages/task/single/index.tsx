@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import Loading from '../../../components/Loading';
-import { Option, Outcome, QuestionSingleTask, TaskUnion } from '@/typings/Task';
+import { Outcome, QuestionSingleTask, TaskUnion } from '@/typings/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
-import { Page } from '@/typings/Page.enum';
 import QueryParams from '@/typings/QueryParams';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';

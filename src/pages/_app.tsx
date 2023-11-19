@@ -75,8 +75,9 @@ export default function App({ Component, pageProps }: AppProps) {
           </Head>
           <ThemeProvider theme={theme}>
             <main className={`game theme-${params.theme}`}>
-              <MainTabs params={params} componentDisplayName={Component?.displayName} />
-              <Component {...pageProps} />
+              <MainTabs>
+                <Component {...pageProps} />
+              </MainTabs>
             </main>
           </ThemeProvider>
         </>
