@@ -1,27 +1,28 @@
 import Loading from '../components/Loading';
-import '@/styles/globals.scss';
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
-import { Press_Start_2P, MedievalSharp } from 'next/font/google';
+// import { Press_Start_2P, MedievalSharp } from 'next/font/google';
 import Script from 'next/script';
 import Head from 'next/head';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import QueryParams from '@/typings/QueryParams';
 import MainTabs from '@/components/MainTabs';
 
+import '@/styles/globals.scss';
+
 const GTM_ID = 'GTM-PJT9V98';
 
-const family = Press_Start_2P({
-  subsets: ['cyrillic'],
-  display: 'swap',
-  weight: '400'
-});
+// const family = Press_Start_2P({
+//   subsets: ['cyrillic'],
+//   display: 'swap',
+//   weight: '400'
+// });
 
-const rpg = MedievalSharp({
-  subsets: ['latin'],
-  display: 'swap',
-  weight: '400'
-});
+// const rpg = MedievalSharp({
+//   subsets: ['latin'],
+//   display: 'swap',
+//   weight: '400'
+// });
 
 export const theme = createTheme({
   palette: {
@@ -30,6 +31,9 @@ export const theme = createTheme({
     }
   }
 });
+
+const isTaskPath =
+  typeof window !== 'undefined' ? window?.location?.pathname.includes('/task') : false;
 
 export default function App({ Component, pageProps }: AppProps) {
   const [params, setParams] = useState<QueryParams>();
@@ -75,7 +79,7 @@ export default function App({ Component, pageProps }: AppProps) {
           </Head>
           <ThemeProvider theme={theme}>
             <main className={`game theme-${params.theme}`}>
-              <MainTabs>
+              <MainTabs hidden={!isTaskPath}>
                 <Component {...pageProps} />
               </MainTabs>
             </main>

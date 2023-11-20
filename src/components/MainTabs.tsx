@@ -14,7 +14,7 @@ enum TabPage {
   MapTab
 }
 
-const MainTabs = ({ children }: { children: ReactElement<any, any> }) => {
+const MainTabs = ({ children, hidden }: { children: ReactElement<any, any>; hidden: boolean }) => {
   const [activeTab, setActiveTab] = useState(TabPage.TaskTab);
 
   const handleChange = (event: SyntheticEvent, newValue: number) => {
@@ -24,6 +24,7 @@ const MainTabs = ({ children }: { children: ReactElement<any, any> }) => {
   return (
     <>
       <Tabs
+        hidden={hidden}
         className="game__tabs"
         value={activeTab}
         onChange={handleChange}
@@ -39,7 +40,7 @@ const MainTabs = ({ children }: { children: ReactElement<any, any> }) => {
       <div role="tabpanel" hidden={activeTab !== TabPage.InventoryTab}>
         <InventoryTab setItems={[]} refreshData={activeTab !== TabPage.InventoryTab} />
       </div>
-      <div role="tabpanel" hidden={activeTab !== TabPage.TaskTab}>
+      <div role="tabpanel" className="h-full" hidden={activeTab !== TabPage.TaskTab}>
         {children}
       </div>
       <div role="tabpanel" hidden={activeTab !== TabPage.MapTab}>
