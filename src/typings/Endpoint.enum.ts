@@ -6,5 +6,6 @@ export enum Endpoint {
   Awty = 'awty',
   Play = 'play',
   Restart = 'restart',
-  Items = 'items'
+  Items = 'items',
+  Map = 'map'
 }

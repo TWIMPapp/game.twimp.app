@@ -5,8 +5,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import MapIcon from '@mui/icons-material/Map';
 import InventoryTab from '@/pages/task/inventoryTab';
 import MapTab from '@/pages/task/mapTab';
-
-export const TabBarHeight = 68;
+import { TabBarHeight } from './TabBarHeight';
 
 enum TabPage {
   InventoryTab,
@@ -38,13 +37,15 @@ const MainTabs = ({ children, hidden }: { children: ReactElement<any, any>; hidd
       </Tabs>
 
       <div role="tabpanel" hidden={activeTab !== TabPage.InventoryTab}>
-        <InventoryTab setItems={[]} refreshData={activeTab !== TabPage.InventoryTab} />
+        {activeTab === TabPage.InventoryTab && (
+          <InventoryTab setItems={[]} refreshData={activeTab !== TabPage.InventoryTab} />
+        )}
       </div>
       <div role="tabpanel" className="h-full" hidden={activeTab !== TabPage.TaskTab}>
         {children}
       </div>
       <div role="tabpanel" hidden={activeTab !== TabPage.MapTab}>
-        <MapTab />
+        <MapTab refreshData={false} />
       </div>
     </>
   );
