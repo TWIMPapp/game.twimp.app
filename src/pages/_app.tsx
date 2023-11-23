@@ -28,6 +28,9 @@ export const theme = createTheme({
   palette: {
     primary: {
       main: '#ff6c88'
+    },
+    secondary: {
+      main: '#59a7a7'
     }
   }
 });

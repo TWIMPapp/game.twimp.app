@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 import Loading from '../../../components/Loading';
 import { Outcome, QuestionSingleTask, TaskUnion } from '@/typings/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
@@ -9,7 +8,7 @@ import { Endpoint } from '@/typings/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
 import Question from '@/components/Question';
 import Hint from '@/components/Hint';
-import { TextField } from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 import { NextResponse } from '../../../typings/NextResponse';
 
 const Single = () => {
@@ -37,55 +36,35 @@ const Single = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const onValidate = async (answer: string) => {
-      const body = {
-        answer,
-        user_id: params?.user_id,
-        trail_ref: params?.trail_ref
-      };
+  const onValidate = async (answer: string) => {
+    const body = {
+      answer,
+      user_id: params?.user_id,
+      trail_ref: params?.trail_ref
+    };
 
-      const data = await new APIService(Endpoint.Next).post<NextResponse>(body, {
-        user_id: params?.user_id ?? '',
-        trail_ref: params?.trail_ref ?? ''
-      });
+    const data = await new APIService(Endpoint.Next).post<NextResponse>(body, {
+      user_id: params?.user_id ?? '',
+      trail_ref: params?.trail_ref ?? ''
+    });
 
-      if (data) {
-        if (data.task) {
-          setTimeout(
-            () =>
-              new TaskHandlerService().goToTaskComponent(
-                data.task as TaskUnion,
-                params as QueryParams
-              ),
-            1200
-          );
-        }
-
-        if (data.outcome) {
-          setOutcome(data.outcome);
-        }
+    if (data) {
+      if (data.task) {
+        setTimeout(
+          () =>
+            new TaskHandlerService().goToTaskComponent(
+              data.task as TaskUnion,
+              params as QueryParams
+            ),
+          1200
+        );
       }
-    };
 
-    if (timer) {
-      clearTimeout(timer);
+      if (data.outcome) {
+        setOutcome(data.outcome);
+      }
     }
-
-    setTimer(
-      setTimeout(() => {
-        if (input.length > 0) {
-          onValidate(input);
-        }
-      }, 1000)
-    );
-
-    // Cleanup on unmount
-    return () => {
-      clearTimeout(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input]);
+  };
 
   return (
     <>
@@ -112,6 +91,16 @@ const Single = () => {
                   onChange={(e) => setInput(e.target.value)}
                 />
               </div>
+              <Box className="mt-6 w-full">
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  className="w-full"
+                  onClick={() => onValidate(input)}
+                >
+                  Submit
+                </Button>
+              </Box>
             </div>
           </div>
           {outcome ? (
