@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 import Loading from '../../../components/Loading';
 import { Outcome, QuestionSingleTask, TaskUnion } from '@/typings/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
