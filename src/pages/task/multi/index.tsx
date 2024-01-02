@@ -9,6 +9,7 @@ import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
 import { NextResponse } from '@/typings/NextResponse';
+import { NEVIGATION_DELAY } from '@/constants';
 
 const Multi = () => {
   const [task, setTask] = useState<QuestionMultiTask>();
@@ -35,7 +36,7 @@ const Multi = () => {
               data.task as TaskUnion,
               params as QueryParams
             ),
-          1200
+          NEVIGATION_DELAY
         );
       }
 

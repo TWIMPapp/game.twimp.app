@@ -11,6 +11,7 @@ import Question from '@/components/Question';
 import Hint from '@/components/Hint';
 import { TextField } from '@mui/material';
 import { NextResponse } from '../../../typings/NextResponse';
+import { NEVIGATION_DELAY } from '@/constants';
 
 const Single = () => {
   const [task, setTask] = useState<QuestionSingleTask>();
@@ -58,7 +59,7 @@ const Single = () => {
                 data.task as TaskUnion,
                 params as QueryParams
               ),
-            1200
+            NEVIGATION_DELAY
           );
         }
 
