@@ -15,8 +15,11 @@ const Multi = () => {
   const [task, setTask] = useState<QuestionMultiTask>();
   const [params, setParams] = useState<QueryParams>();
   const [outcome, setOutcome] = useState<Outcome>();
+  const [loadingOption, setLoadingOption] = useState<Option>();
 
   const optionCallback = async (option: Option) => {
+    setLoadingOption(option);
+
     const body = {
       answer: option.content,
       user_id: params?.user_id,
@@ -43,6 +46,8 @@ const Multi = () => {
       if (data.outcome) {
         setOutcome(data.outcome);
       }
+
+      setLoadingOption(undefined);
     }
   };
 
@@ -78,6 +83,7 @@ const Multi = () => {
             question={task.content}
             hint={task.hint}
             options={task.options}
+            loadingOption={loadingOption}
             callback={optionCallback}
           />
           {outcome ? (

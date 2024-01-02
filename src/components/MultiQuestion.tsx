@@ -3,6 +3,7 @@ import Hint from './Hint';
 import Question from './Question';
 import { Option } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
+import { CircularProgress } from '@mui/material';
 
 const colourMap = {
   [Colour.Red]: 'bg-red-400',
@@ -22,11 +23,13 @@ const MultiQuestion = ({
   question,
   hint,
   options,
+  loadingOption,
   callback
 }: {
   question: string;
   hint?: string;
   options: Option[];
+  loadingOption: Option | undefined;
   callback: (option: Option) => any;
 }) => {
   const [activeOption, setActiveOption] = useState<Option | null>(null);
@@ -51,13 +54,14 @@ const MultiQuestion = ({
         {options?.map((option: Option, index: number) => {
           return (
             <button
+              disabled={loadingOption !== undefined}
               key={index}
               className={`text-white p-6 font-semibold rounded shadow ${
                 option.colour ? colourMap[option.colour] : getColour(index)
               } animate__animated ${isActiveAnswer(option) ? 'animate__bounce' : ''}`}
               onClick={() => handleClick(option)}
             >
-              {option.content}
+              {loadingOption?.content === option.content ? <CircularProgress /> : option.content}
             </button>
           );
         })}
