@@ -9,7 +9,7 @@ import { Endpoint } from '@/typings/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
 import Question from '@/components/Question';
 import Hint from '@/components/Hint';
-import { Button, TextField } from '@mui/material';
+import { Button, CircularProgress, TextField } from '@mui/material';
 import { NextResponse } from '../../../typings/NextResponse';
 import { NEVIGATION_DELAY } from '@/constants';
 
@@ -18,6 +18,7 @@ const Single = () => {
   const [params, setParams] = useState<QueryParams>();
   const [outcome, setOutcome] = useState<Outcome>();
   const [input, setInput] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = () => {
@@ -38,6 +39,8 @@ const Single = () => {
   }, []);
 
   const onValidate = async (answer: string) => {
+    setLoading(true);
+
     const body = {
       answer,
       user_id: params?.user_id,
@@ -64,6 +67,8 @@ const Single = () => {
       if (data.outcome) {
         setOutcome(data.outcome);
       }
+
+      setLoading(false);
     }
   };
 
@@ -99,7 +104,7 @@ const Single = () => {
                 className="w-full"
                 onClick={() => onValidate(input)}
               >
-                Submit
+                {loading ? <CircularProgress /> : 'submit'}
               </Button>
             </div>
           </div>
