@@ -9,7 +9,7 @@ import { Endpoint } from '@/typings/Endpoint.enum';
 import SentimentSnackbar from '@/components/SentimentSnackbar';
 import Question from '@/components/Question';
 import Hint from '@/components/Hint';
-import { TextField } from '@mui/material';
+import { Button, TextField } from '@mui/material';
 import { NextResponse } from '../../../typings/NextResponse';
 import { NEVIGATION_DELAY } from '@/constants';
 
@@ -18,7 +18,6 @@ const Single = () => {
   const [params, setParams] = useState<QueryParams>();
   const [outcome, setOutcome] = useState<Outcome>();
   const [input, setInput] = useState<string>('');
-  const [timer, setTimer] = useState<any>(null);
 
   useEffect(() => {
     const fetchData = () => {
@@ -38,55 +37,35 @@ const Single = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const onValidate = async (answer: string) => {
-      const body = {
-        answer,
-        user_id: params?.user_id,
-        trail_ref: params?.trail_ref
-      };
+  const onValidate = async (answer: string) => {
+    const body = {
+      answer,
+      user_id: params?.user_id,
+      trail_ref: params?.trail_ref
+    };
 
-      const data = await new APIService(Endpoint.Next).post<NextResponse>(body, {
-        user_id: params?.user_id ?? '',
-        trail_ref: params?.trail_ref ?? ''
-      });
+    const data = await new APIService(Endpoint.Next).post<NextResponse>(body, {
+      user_id: params?.user_id ?? '',
+      trail_ref: params?.trail_ref ?? ''
+    });
 
-      if (data) {
-        if (data.task) {
-          setTimeout(
-            () =>
-              new TaskHandlerService().goToTaskComponent(
-                data.task as TaskUnion,
-                params as QueryParams
-              ),
-            NEVIGATION_DELAY
-          );
-        }
-
-        if (data.outcome) {
-          setOutcome(data.outcome);
-        }
+    if (data) {
+      if (data.task) {
+        setTimeout(
+          () =>
+            new TaskHandlerService().goToTaskComponent(
+              data.task as TaskUnion,
+              params as QueryParams
+            ),
+          NEVIGATION_DELAY
+        );
       }
-    };
 
-    if (timer) {
-      clearTimeout(timer);
+      if (data.outcome) {
+        setOutcome(data.outcome);
+      }
     }
-
-    setTimer(
-      setTimeout(() => {
-        if (input.length > 0) {
-          onValidate(input);
-        }
-      }, 1000)
-    );
-
-    // Cleanup on unmount
-    return () => {
-      clearTimeout(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input]);
+  };
 
   return (
     <>
@@ -102,7 +81,7 @@ const Single = () => {
             <div className="max-h-64">
               <Question question={task.content} />
               {task?.hint && <Hint hint={task.hint} />}
-              <div className="pt-6">
+              <div className="pt-6 pb-6">
                 <TextField
                   autoFocus
                   label="Answer"
@@ -113,6 +92,15 @@ const Single = () => {
                   onChange={(e) => setInput(e.target.value)}
                 />
               </div>
+              <Button
+                disabled={input.length === 0}
+                variant="contained"
+                color="primary"
+                className="w-full"
+                onClick={() => onValidate(input)}
+              >
+                Submit
+              </Button>
             </div>
           </div>
           {outcome ? (
