@@ -1,3 +1,4 @@
+import ItemsDialog from '@/components/ItemsDialog';
 import Loading from '@/components/Loading';
 import { APIService } from '@/services/API';
 import { TaskHandlerService } from '@/services/TaskHandler';
@@ -5,6 +6,7 @@ import { Endpoint } from '@/typings/Endpoint.enum';
 import { NextResponse } from '@/typings/NextResponse';
 import QueryParams from '@/typings/QueryParams';
 import { InformationTask, TaskUnion } from '@/typings/Task';
+import { InventoryItem } from '@/typings/inventoryItem';
 import { Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
@@ -12,12 +14,16 @@ import remarkGfm from 'remark-gfm';
 
 export default function Information() {
   const [task, setTask] = useState<InformationTask>();
+  const [nextTask, setNextTask] = useState<TaskUnion>();
   const [params, setParams] = useState<QueryParams>();
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [open, setOpen] = useState<boolean>(false);
 
   const goToNextTask = async () => {
     const body = {
       user_id: params?.user_id,
-      trail_ref: params?.trail_ref
+      trail_ref: params?.trail_ref,
+      debug: true
     };
     const data = await new APIService(Endpoint.Next).post<NextResponse>(
       { body },
@@ -29,8 +35,22 @@ export default function Information() {
 
     if (data) {
       if (data.task) {
-        new TaskHandlerService().goToTaskComponent(data.task as TaskUnion, params as QueryParams);
+        setNextTask(data.task);
+
+        if ((data.outcome?.items ?? [])?.length > 0) {
+          setItems(data?.outcome?.items ?? []);
+          setOpen(true);
+        } else {
+          new TaskHandlerService().goToTaskComponent(data.task as TaskUnion, params as QueryParams);
+        }
       }
+    }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    if (nextTask) {
+      new TaskHandlerService().goToTaskComponent(nextTask, params as QueryParams);
     }
   };
 
@@ -43,6 +63,7 @@ export default function Information() {
       if (_params?.task) {
         setParams(_params);
         const data = new TaskHandlerService().getTaskFromParams<InformationTask>();
+
         if (data) {
           setTask(data);
         }
@@ -71,6 +92,7 @@ export default function Information() {
           Next
         </Button>
       </div>
+      <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
     </>
   );
 }

@@ -5,12 +5,14 @@ import MarkerIcon from '../../../assets/icons/marker-icon.png';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import { Card, CardContent } from '@mui/material';
-import { MapTask, Marker, TaskUnion } from '@/typings/Task';
+import { MapTask, Marker, Outcome, TaskUnion } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
 import { TabBarHeight } from '@/components/TabBarHeight';
 import MapComponent from '@/components/Map';
+import { InventoryItem } from '@/typings/inventoryItem';
+import ItemsDialog from '@/components/ItemsDialog';
 
 const AWTY_INTERVAL = 5000;
 
@@ -26,10 +28,11 @@ const MarkerColourMap: Record<Colour, string> = {
 
 interface AwtyResponse {
   ok: boolean;
-  message: string;
+  message?: string;
   distance?: number;
   direction?: string;
   task?: TaskUnion;
+  outcome?: Outcome;
 }
 
 const postData = async (
@@ -57,8 +60,18 @@ const containerStyle = {
 
 export default function Map() {
   const [task, setTask] = useState<MapTask>();
+  const [nextTask, setNextTask] = useState<TaskUnion>();
   const [awtyResponse, setAwtyResponse] = useState<AwtyResponse>();
   const [params, setParams] = useState<QueryParams>();
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [open, setOpen] = useState<boolean>(false);
+
+  const handleClose = () => {
+    setOpen(false);
+    if (nextTask) {
+      new TaskHandlerService().goToTaskComponent(nextTask, params as QueryParams);
+    }
+  };
 
   const handleOnPlayerMove = async (position: GeolocationPosition) => {
     let canRun = true;
@@ -68,7 +81,14 @@ export default function Map() {
       const data = await postData(position, params as QueryParams);
       if (data) {
         if (data.task) {
-          new TaskHandlerService().goToTaskComponent(data.task, params as QueryParams);
+          setNextTask(data.task);
+
+          if ((data.outcome?.items ?? [])?.length > 0) {
+            setItems(data?.outcome?.items ?? []);
+            setOpen(true);
+          } else {
+            new TaskHandlerService().goToTaskComponent(data.task, params as QueryParams);
+          }
         } else {
           setTimeout(() => {
             setAwtyResponse(data);
@@ -120,6 +140,7 @@ export default function Map() {
         </Card>
       ) : null}
       <MapComponent taskMarkers={task?.markers ?? []} onPlayerMove={handleOnPlayerMove} />
+      <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
     </>
   );
 }

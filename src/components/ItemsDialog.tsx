@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Slide from '@mui/material/Slide';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -23,12 +24,14 @@ const ItemsDialog = ({
   items,
   message,
   open,
-  handleClose
+  handleClose,
+  singleItem
 }: {
   items?: InventoryItem[];
   message?: string;
   open: boolean;
   handleClose: () => void;
+  singleItem?: boolean;
 }) => {
   return (
     <Dialog open={open} onClose={handleClose} TransitionComponent={Transition} keepMounted>
@@ -44,9 +47,18 @@ const ItemsDialog = ({
                   item?.sentiment ? sentimentBorderColour(item.sentiment) : ''
                 }`}
               >
-                <div className="flex items-center">
-                  <img src={item.image_url} alt={item.title} className="w-20 h-20 mr-4" />
-                  <span>{item.title}</span>
+                <div className={singleItem ? '' : 'flex items-center'}>
+                  <img
+                    src={singleItem ? item.image_url : item.thumb_url}
+                    alt={item.title}
+                    className={singleItem ? 'w-80 mr-4' : 'w-20 h-20 mr-4'}
+                  />
+                  <div className={singleItem ? '' : 'flex flex-col'}>
+                    <p>
+                      <strong>{item.title}</strong>
+                    </p>
+                    <p>{item.subtitle}</p>
+                  </div>
                 </div>
               </li>
             );
@@ -55,7 +67,7 @@ const ItemsDialog = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color="primary" autoFocus>
-          Got it!
+          {singleItem ? 'Close' : 'Got it!'}
         </Button>
       </DialogActions>
     </Dialog>

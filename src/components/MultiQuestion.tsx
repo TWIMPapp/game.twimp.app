@@ -40,7 +40,7 @@ const MultiQuestion = ({
   };
 
   const isActiveAnswer = (option: Option): boolean => {
-    return activeOption?.content === option.content;
+    return activeOption?.content === option?.content;
   };
 
   return (
@@ -57,7 +57,7 @@ const MultiQuestion = ({
               disabled={loadingOption !== undefined}
               key={index}
               className={`text-white p-6 font-semibold rounded shadow ${
-                option.colour ? colourMap[option.colour] : getColour(index)
+                option?.colour ? colourMap[option.colour] : getColour(index)
               } animate__animated ${isActiveAnswer(option) ? 'animate__bounce' : ''}`}
               onClick={() => handleClick(option)}
             >

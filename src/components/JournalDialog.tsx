@@ -18,7 +18,7 @@ export default function JournalDialog({
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
 
-  const API = new APIService(Endpoint.Journal);
+  const JournalAPI = new APIService(Endpoint.Journal);
 
   useEffect(() => {
     setLoaded(false);
@@ -26,7 +26,7 @@ export default function JournalDialog({
       const _params = Object.fromEntries(
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
-      const data = await API.get<Task[]>(_params);
+      const data = await JournalAPI.get<Task[]>(_params);
 
       if (data) {
         setTasks(data);

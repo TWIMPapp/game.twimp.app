@@ -19,6 +19,7 @@ export const sentimentBorderColour = (sentiment: Sentiment): string => {
 
 const journalItem: InventoryItem = {
   title: 'Journal',
+  thumb_url: JournalImage.src,
   image_url: JournalImage.src
 };
 
@@ -40,7 +41,7 @@ const InventoryTab = ({
   const [openJournal, setJournalOpen] = useState<boolean>(false);
   const [loaded, setLoaded] = useState<boolean>(false);
 
-  const API = new APIService(Endpoint.Items);
+  const ItemsAPI = new APIService(Endpoint.Items);
 
   const handleItemClose = () => {
     setItemOpen(false);
@@ -61,11 +62,13 @@ const InventoryTab = ({
       const _params = Object.fromEntries(
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
-      const data = await API.get<ItemsResponse>(_params);
+      const data = await ItemsAPI.get<ItemsResponse>(_params);
+
+      console.log('#########', data);
 
       if (data?.ok) {
         const emptySlotsCount =
-          Number(20 - (data?.items ?? []).length) > 0 ? Number(20 - (data?.items ?? []).length) : 0;
+          Number(20 - (data?.items ?? []).length) > 0 ? Number(14 - (data?.items ?? []).length) : 0;
         setCollectedItems([...data?.items, ...new Array(emptySlotsCount).fill({})]);
         setLoaded(true);
       }
@@ -89,7 +92,7 @@ const InventoryTab = ({
           <div
             key={journalItem.title}
             className="w-24 h-24 border-4 m-2 rounded-xl flex items-center justify-center cursor-pointer bg-center bg-no-repeat bg-cover"
-            style={{ backgroundImage: `url(${journalItem.image_url})` }}
+            style={{ backgroundImage: `url(${journalItem.thumb_url})` }}
             onClick={() => setJournalOpen(true)}
           ></div>
           {collectedItems.map((item) => (
@@ -98,7 +101,7 @@ const InventoryTab = ({
               className={`w-24 h-24 border-4 m-2 rounded-xl flex items-center justify-center cursor-pointer bg-center bg-no-repeat  bg-cover ${
                 item?.sentiment ? sentimentBorderColour(item?.sentiment) : ''
               }`}
-              style={item.image_url ? { backgroundImage: `url(${item.image_url})` } : {}}
+              style={item.thumb_url ? { backgroundImage: `url(${item.thumb_url})` } : {}}
               onClick={() => {
                 if (!item.title) return;
                 setSelectedItem(item);
@@ -115,6 +118,7 @@ const InventoryTab = ({
           items={[selectedItem]}
           open={openItem}
           handleClose={handleItemClose}
+          singleItem={true}
         ></ItemsDialog>
       )}
       {openJournal && <JournalDialog open={openJournal} handleClose={handleJournalClose} />}

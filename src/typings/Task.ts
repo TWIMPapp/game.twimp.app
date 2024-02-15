@@ -2,6 +2,7 @@ import { Colour } from './Colour.enum';
 import { Sentiment } from './Sentiment.enum';
 import { Status } from './Status.enum';
 import { TaskType } from './TaskType.enum';
+import { InventoryItem } from './inventoryItem';
 
 export interface Task {
   ok: boolean;
@@ -17,6 +18,7 @@ export interface Outcome {
   sentiment: Sentiment;
   title: string;
   subtitle: string;
+  items?: InventoryItem[];
 }
 
 export interface Option {

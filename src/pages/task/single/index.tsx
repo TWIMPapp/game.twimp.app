@@ -11,13 +11,28 @@ import Hint from '@/components/Hint';
 import { Button, CircularProgress, TextField } from '@mui/material';
 import { NextResponse } from '../../../typings/NextResponse';
 import { NEVIGATION_DELAY } from '@/constants';
+import ItemsDialog from '@/components/ItemsDialog';
+import { InventoryItem } from '@/typings/inventoryItem';
 
 const Single = () => {
   const [task, setTask] = useState<QuestionSingleTask>();
+  const [nextTask, setNextTask] = useState<TaskUnion>();
   const [params, setParams] = useState<QueryParams>();
   const [outcome, setOutcome] = useState<Outcome>();
   const [input, setInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [open, setOpen] = useState<boolean>(false);
+
+  const handleClose = () => {
+    setOpen(false);
+    if (nextTask) {
+      setTimeout(
+        () => new TaskHandlerService().goToTaskComponent(nextTask, params as QueryParams),
+        NEVIGATION_DELAY
+      );
+    }
+  };
 
   useEffect(() => {
     const fetchData = () => {
@@ -53,14 +68,21 @@ const Single = () => {
 
     if (data) {
       if (data.task) {
-        setTimeout(
-          () =>
-            new TaskHandlerService().goToTaskComponent(
-              data.task as TaskUnion,
-              params as QueryParams
-            ),
-          NEVIGATION_DELAY
-        );
+        setNextTask(data.task);
+
+        if ((data.outcome?.items ?? [])?.length > 0) {
+          setItems(data?.outcome?.items ?? []);
+          setOpen(true);
+        } else {
+          setTimeout(
+            () =>
+              new TaskHandlerService().goToTaskComponent(
+                data.task as TaskUnion,
+                params as QueryParams
+              ),
+            NEVIGATION_DELAY
+          );
+        }
       }
 
       if (data.outcome) {
@@ -119,6 +141,7 @@ const Single = () => {
           ) : (
             ''
           )}
+          <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
         </>
       ) : (
         <Loading />

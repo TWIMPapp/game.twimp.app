@@ -80,7 +80,8 @@ export default function MapComponent({
         enableHighAccuracy: true
       }
     );
-  }, [onPlayerMove, taskMarkers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskMarkers]);
 
   return (
     <>

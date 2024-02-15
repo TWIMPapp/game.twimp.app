@@ -45,6 +45,8 @@ export default function Handler() {
         setQueryParams(_queryParams);
         const data = await PlayAPI.get<PlayResponse>(_queryParams);
 
+        console.log('######', data, _queryParams);
+
         if (data) {
           setStartTask(data.start);
           setContinueTask(data.continue);
