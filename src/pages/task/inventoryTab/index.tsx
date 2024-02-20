@@ -23,6 +23,8 @@ const journalItem: InventoryItem = {
   image_url: JournalImage.src
 };
 
+const MAX_INVENTORY_SLOTS = 14;
+
 interface ItemsResponse {
   ok: boolean;
   items: InventoryItem[];
@@ -64,11 +66,11 @@ const InventoryTab = ({
       ) as unknown as QueryParams;
       const data = await ItemsAPI.get<ItemsResponse>(_params);
 
-      console.log('#########', data);
-
       if (data?.ok) {
         const emptySlotsCount =
-          Number(20 - (data?.items ?? []).length) > 0 ? Number(14 - (data?.items ?? []).length) : 0;
+          Number(MAX_INVENTORY_SLOTS - (data?.items ?? []).length) > 0
+            ? Number(MAX_INVENTORY_SLOTS - (data?.items ?? []).length)
+            : 0;
         setCollectedItems([...data?.items, ...new Array(emptySlotsCount).fill({})]);
         setLoaded(true);
       }
@@ -78,7 +80,7 @@ const InventoryTab = ({
       fetchData();
     } else {
       setCollectedItems(
-        [...setItems, ...new Array(20 - (collectedItems ?? []).length).fill({})] ?? []
+        [...setItems, ...new Array(MAX_INVENTORY_SLOTS - (setItems ?? []).length).fill({})] ?? []
       );
       setLoaded(true);
     }
