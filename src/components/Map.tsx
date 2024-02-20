@@ -87,7 +87,7 @@ export default function MapComponent({
     <>
       {center?.lat && center?.lng ? (
         <LoadScript
-          googleMapsApiKey="AIzaSyC2KHxX2ZUVmEKyCvRrduQbPDwwDyWXy2Q"
+          googleMapsApiKey="AIzaSyCPlJtyG0WSQJbM48Nbi980bzBixe2hbYQ"
           onLoad={() => {
             setIsGoogleMapsAPILoaded(true);
           }}
