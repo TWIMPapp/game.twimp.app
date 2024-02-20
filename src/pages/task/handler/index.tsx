@@ -9,8 +9,8 @@ import { TaskHandlerService } from '@/services/TaskHandler';
 
 interface PlayResponse {
   ok: boolean;
-  start: MapTask;
-  continue: TaskUnion;
+  start: TaskUnion;
+  continue?: TaskUnion;
 }
 
 export default function Handler() {
@@ -44,8 +44,6 @@ export default function Handler() {
       if (_queryParams) {
         setQueryParams(_queryParams);
         const data = await PlayAPI.get<PlayResponse>(_queryParams);
-
-        console.log('######', data, _queryParams);
 
         if (data) {
           setStartTask(data.start);
