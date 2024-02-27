@@ -87,7 +87,7 @@ export default function Information() {
           <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
         </div>
       )}
-      <div className="flex justify-end p-4 pb-64">
+      <div className="flex justify-end p-4 pb-32">
         <Button className="px-4 py-2" onClick={goToNextTask} variant="contained">
           Next
         </Button>
