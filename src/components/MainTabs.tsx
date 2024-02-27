@@ -28,7 +28,7 @@ const MainTabs = ({ children, hidden }: { children: ReactElement<any, any>; hidd
         value={activeTab}
         onChange={handleChange}
         aria-label="tabs"
-        variant="standard"
+        variant="fullWidth"
         sx={{ height: `${TabBarHeight + 40}px` }}
       >
         <Tab icon={<BackpackIcon />} aria-label="Inventory" />
