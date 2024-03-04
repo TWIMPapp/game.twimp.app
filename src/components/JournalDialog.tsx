@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import Loading from './Loading';
-import { Task } from '../typings/Task';
+import { TaskUnion } from '../typings/Task';
 import TaskList from './TaskList';
 import { Box, Button, Dialog, DialogActions, DialogContent } from '@mui/material';
 import { APIService } from '@/services/API';
@@ -15,7 +15,7 @@ export default function JournalDialog({
   open: boolean;
   handleClose: () => void;
 }) {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskUnion[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
 
   const JournalAPI = new APIService(Endpoint.Journal);
@@ -26,7 +26,7 @@ export default function JournalDialog({
       const _params = Object.fromEntries(
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
-      const data = await JournalAPI.get<Task[]>(_params);
+      const data = await JournalAPI.get<TaskUnion[]>(_params);
 
       if (data) {
         setTasks(data);
