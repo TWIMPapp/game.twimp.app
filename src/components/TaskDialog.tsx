@@ -17,13 +17,13 @@ const TaskDialog = ({
   task: Task;
 }) => {
   return (
-    <Dialog open={open} onClose={handleClose} sx={{ width: '80%', margin: '10%' }}>
+    <Dialog open={open} onClose={handleClose} sx={{ width: '100%' }}>
       <Card sx={{ overflowY: 'auto' }}>
         <CardMedia component="img" height="140" image={task.image_url} />
         <CardContent className="markdown-body" sx={{ whiteSpace: 'pre-wrap' }}>
           <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
         </CardContent>
-        <CardActions>
+        <CardActions className="flex justify-end">
           <Button color="primary" onClick={handleClose}>
             Close
           </Button>

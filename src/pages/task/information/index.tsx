@@ -1,9 +1,11 @@
 import ItemsDialog from '@/components/ItemsDialog';
+import JournalDialog from '@/components/JournalDialog';
 import Loading from '@/components/Loading';
 import { APIService } from '@/services/API';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import { NextResponse } from '@/typings/NextResponse';
+import { PreviousResponse } from '@/typings/PreviousResponse';
 import QueryParams from '@/typings/QueryParams';
 import { InformationTask, TaskUnion } from '@/typings/Task';
 import { InventoryItem } from '@/typings/inventoryItem';
@@ -18,6 +20,11 @@ export default function Information() {
   const [params, setParams] = useState<QueryParams>();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [open, setOpen] = useState<boolean>(false);
+  const [openJournal, setOpenJournal] = useState<boolean>(false);
+
+  const handleJournalClose = () => {
+    setOpenJournal(false);
+  };
 
   const goToNextTask = async () => {
     const body = {
@@ -87,12 +94,16 @@ export default function Information() {
           <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
         </div>
       )}
-      <div className="flex justify-end p-4 pb-96">
+      <div className="flex justify-between p-4 pb-96">
+        <Button className="px-4 py-2" onClick={() => setOpenJournal(true)} variant="outlined">
+          Open Journal
+        </Button>
         <Button className="px-4 py-2" onClick={goToNextTask} variant="contained">
           Next
         </Button>
       </div>
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
+      <JournalDialog open={openJournal} handleClose={handleJournalClose} />
     </>
   );
 }
