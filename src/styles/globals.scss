@@ -76,15 +76,25 @@ html {
   }
 
   &__tabs {
-    padding-top: 40px;
+    top: 40px;
     position: fixed;
     width: 100%;
     background: #fff;
-    height: 108px;
+    height: 68px;
   }
 
   &__tab {
     padding-top: 108px;
+
+    &__buttons {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
   }
 }
 

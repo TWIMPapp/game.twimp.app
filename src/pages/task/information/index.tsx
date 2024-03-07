@@ -90,17 +90,23 @@ export default function Information() {
         ></div>
       )}
       {task?.content && (
-        <div className="markdown-body p-4">
+        <div className="markdown-body p-4 pb-52">
           <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
         </div>
       )}
-      <div className="flex justify-between p-4 pb-96">
-        <Button className="px-4 py-2" onClick={() => setOpenJournal(true)} variant="outlined">
-          Open Journal
-        </Button>
-        <Button className="px-4 py-2" onClick={goToNextTask} variant="contained">
-          Next
-        </Button>
+      <div className="game__tab__buttons">
+        <div className="flex justify-between p-4">
+          <Button
+            className="px-4 py-2 mr-4"
+            onClick={() => setOpenJournal(true)}
+            variant="outlined"
+          >
+            Open Journal
+          </Button>
+          <Button className="px-4 py-2" onClick={goToNextTask} variant="contained">
+            Next
+          </Button>
+        </div>
       </div>
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
       <JournalDialog open={openJournal} handleClose={handleJournalClose} />
