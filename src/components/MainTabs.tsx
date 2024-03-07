@@ -36,15 +36,15 @@ const MainTabs = ({ children, hidden }: { children: ReactElement<any, any>; hidd
         <Tab icon={<MapIcon />} aria-label="Map" />
       </Tabs>
 
-      <div role="tabpanel" hidden={activeTab !== TabPage.InventoryTab}>
+      <div className="game__tab" role="tabpanel" hidden={activeTab !== TabPage.InventoryTab}>
         {activeTab === TabPage.InventoryTab && (
           <InventoryTab setItems={[]} refreshData={activeTab !== TabPage.InventoryTab} />
         )}
       </div>
-      <div role="tabpanel" className="h-full" hidden={activeTab !== TabPage.TaskTab}>
+      <div className="game__tab" role="tabpanel" hidden={activeTab !== TabPage.TaskTab}>
         {children}
       </div>
-      <div role="tabpanel" hidden={activeTab !== TabPage.MapTab}>
+      <div className="game__tab" role="tabpanel" hidden={activeTab !== TabPage.MapTab}>
         <MapTab refreshData={false} />
       </div>
     </>

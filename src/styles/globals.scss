@@ -77,6 +77,14 @@ html {
 
   &__tabs {
     padding-top: 40px;
+    position: fixed;
+    width: 100%;
+    background: #fff;
+    height: 108px;
+  }
+
+  &__tab {
+    padding-top: 108px;
   }
 }
 
