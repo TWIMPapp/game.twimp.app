@@ -152,7 +152,7 @@ export default function Information() {
           </Box>
 
           {task?.content && (
-            <div className="markdown-body mt-72 p-8 pb-64 rounded-tl-3xl rounded-tr-3xl relative">
+            <div className="markdown-body mt-72 p-8 pb-80 rounded-tl-3xl rounded-tr-3xl relative">
               <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
             </div>
           )}
