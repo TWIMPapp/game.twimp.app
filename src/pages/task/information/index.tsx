@@ -106,12 +106,12 @@ export default function Information() {
       {!task && <Loading></Loading>}
       {task?.image_url && (
         <div
-          className="bg-cover bg-center bg-no-repeat absolute h-80"
+          className="bg-cover bg-center bg-no-repeat absolute h-80 w-full"
           style={{ backgroundImage: 'url(' + task.image_url + ')' }}
         >
           <SpeedDial
             ariaLabel={''}
-            sx={{ position: 'absolute', top: 260, right: 16 }}
+            sx={{ position: 'absolute', top: 260, right: 16, zIndex: 99 }}
             icon={<SpeedDialIcon />}
             direction="down"
           >
@@ -141,8 +141,8 @@ export default function Information() {
             />
           </SpeedDial>
           <Box
-            className="fixed rounded-3xl bg-white shadow-md m-auto top-8 right-4"
-            sx={{ zIndex: 999 }}
+            className="fixed rounded-3xl bg-white shadow-md m-auto top-8 right-4 border-4"
+            sx={{ zIndex: 999, borderColor: 'rgba(255, 108, 136, 0.8)' }}
           >
             <div className="flex justify-between p-2">
               <Button className="px-4 py-2" onClick={goToNextTask} variant="text">
