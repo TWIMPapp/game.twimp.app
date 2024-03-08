@@ -31,9 +31,9 @@ const MainTabs = ({ children, hidden }: { children: ReactElement<any, any>; hidd
         variant="fullWidth"
         sx={{ height: `${TabBarHeight + 40}px` }}
       >
-        <Tab icon={<BackpackIcon />} aria-label="Inventory" />
-        <Tab icon={<AssignmentIcon />} aria-label="Task" />
-        <Tab icon={<MapIcon />} aria-label="Map" />
+        <Tab icon={<BackpackIcon />} label="Inventory" />
+        <Tab icon={<AssignmentIcon />} label="Task" />
+        <Tab icon={<MapIcon />} label="Map" />
       </Tabs>
 
       <div className="game__tab" role="tabpanel" hidden={activeTab !== TabPage.InventoryTab}>

@@ -12,6 +12,16 @@ $twimp-green: #bac94a;
 $twimp-light-blue: #97d7c7;
 $twimp-blue: #59a7a7;
 
+.MuiSpeedDial-fab {
+  background-color: $twimp-pink;
+  color: white;
+}
+
+.MuiSpeedDialAction-fab {
+  background-color: $twimp-light-pink;
+  color: white;
+}
+
 .colour-pink {
   color: $twimp-pink;
 }
@@ -76,11 +86,12 @@ html {
   }
 
   &__tabs {
-    top: 40px;
+    top: 0;
     position: fixed;
     width: 100%;
     background: #fff;
-    height: 68px;
+    padding-top: 40px;
+    border-bottom: 1px solid #e5e5ea;
   }
 
   &__tab {

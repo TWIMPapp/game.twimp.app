@@ -44,7 +44,7 @@ const MultiQuestion = ({
   };
 
   return (
-    <div className="p-6">
+    <div className="pl-6 pr-6 pb-6">
       <div className="max-h-64">
         <Question question={question} />
         {hint && <Hint hint={hint} />}

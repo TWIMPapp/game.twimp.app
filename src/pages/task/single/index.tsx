@@ -97,54 +97,55 @@ const Single = () => {
     <>
       {task?.image_url && (
         <div
-          className="flex justify-center h-48 bg-cover bg-center bg-no-repeat"
+          className="bg-cover bg-center bg-no-repeat absolute h-60"
           style={{ backgroundImage: 'url(' + task.image_url + ')' }}
-        ></div>
-      )}
-      {task?.content ? (
-        <>
-          <div className="p-6">
-            <div className="max-h-64">
-              <Question question={task.content} />
-              {task?.hint && <Hint hint={task.hint} />}
-              <div className="pt-6 pb-6">
-                <TextField
-                  autoFocus
-                  label="Answer"
-                  variant="outlined"
-                  className="w-full"
-                  value={input}
-                  error={outcome?.sentiment && outcome.sentiment !== 'positive'}
-                  onChange={(e) => setInput(e.target.value)}
-                />
+        >
+          {task?.content ? (
+            <div className="markdown-body mt-52 rounded-tl-3xl rounded-tr-3xl relative">
+              <div className="pl-6 pr-6 pb-6">
+                <div className="max-h-64">
+                  <Question question={task.content} />
+                  {task?.hint && <Hint hint={task.hint} />}
+                  <div className="pt-6 pb-6">
+                    <TextField
+                      autoFocus
+                      label="Answer"
+                      variant="outlined"
+                      className="w-full"
+                      value={input}
+                      error={outcome?.sentiment && outcome.sentiment !== 'positive'}
+                      onChange={(e) => setInput(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    disabled={input.length === 0}
+                    variant="contained"
+                    color="primary"
+                    className="w-full"
+                    onClick={() => onValidate(input)}
+                  >
+                    {loading ? <CircularProgress /> : 'submit'}
+                  </Button>
+                </div>
               </div>
-              <Button
-                disabled={input.length === 0}
-                variant="contained"
-                color="primary"
-                className="w-full"
-                onClick={() => onValidate(input)}
-              >
-                {loading ? <CircularProgress /> : 'submit'}
-              </Button>
+              {outcome ? (
+                <SentimentSnackbar
+                  outcome={outcome}
+                  open={outcome !== undefined}
+                  autoHideDuration={10000}
+                  handleClose={() => {
+                    setOutcome(undefined);
+                  }}
+                ></SentimentSnackbar>
+              ) : (
+                ''
+              )}
+              <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
             </div>
-          </div>
-          {outcome ? (
-            <SentimentSnackbar
-              outcome={outcome}
-              open={outcome !== undefined}
-              autoHideDuration={10000}
-              handleClose={() => {
-                setOutcome(undefined);
-              }}
-            ></SentimentSnackbar>
           ) : (
-            ''
+            <Loading />
           )}
-          <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
-        </>
-      ) : (
-        <Loading />
+        </div>
       )}
     </>
   );

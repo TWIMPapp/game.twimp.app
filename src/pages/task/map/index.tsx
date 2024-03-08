@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import MarkerIcon from '../../../assets/icons/marker-icon.png';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
-import { Card, CardContent } from '@mui/material';
+import { Box, Card, CardContent } from '@mui/material';
 import { MapTask, Marker, Outcome, TaskUnion } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
@@ -120,24 +120,26 @@ export default function Map() {
   return (
     <>
       {task?.content ? (
-        <Card
-          className="animate__animated animate__bounce"
+        <Box
+          className="animate__animated animate__bounce rounded-3xl bg-white shadow-md p-8"
           sx={{
-            position: 'fixed',
-            bottom: '76px',
-            left: '16px',
-            right: '16px',
+            position: 'absolute',
+            width: 'calc(100% - 32px)',
+            margin: '0 16px',
+            top: '80px',
             zIndex: 999
           }}
         >
-          <CardContent className="text-center">
+          <div className="text-center">
             <h2 className="text-2xl" dangerouslySetInnerHTML={{ __html: task?.content }}></h2>
-            <p
-              className="text-gray-500 pt-2 block"
-              dangerouslySetInnerHTML={{ __html: awtyResponse?.message ?? '' }}
-            ></p>
-          </CardContent>
-        </Card>
+            {awtyResponse?.message && (
+              <p
+                className="pt-2 block bg-white"
+                dangerouslySetInnerHTML={{ __html: awtyResponse?.message ?? '' }}
+              ></p>
+            )}
+          </div>
+        </Box>
       ) : null}
       <MapComponent taskMarkers={task?.markers ?? []} onPlayerMove={handleOnPlayerMove} />
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>

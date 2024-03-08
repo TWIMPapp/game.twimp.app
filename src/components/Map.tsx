@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import MarkerIcon from '@/assets/icons/marker-icon.png';
 import { Marker } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
-import { TabBarHeight } from './TabBarHeight';
 import Loading from './Loading';
 
 const MarkerColourMap: Record<Colour, string> = {
@@ -18,7 +17,7 @@ const MarkerColourMap: Record<Colour, string> = {
 
 const containerStyle = {
   width: '100vw',
-  height: `calc(100vh - ${TabBarHeight}px)`
+  height: `100vh`
 };
 
 export default function MapComponent({

@@ -3,7 +3,7 @@ import { Sentiment } from '@/typings/Sentiment.enum';
 import { InventoryItem } from '@/typings/inventoryItem';
 import { useEffect, useState } from 'react';
 import JournalImage from '../../../assets/images/journal.jpg';
-import JournalDialog from '@/components/JournalDialog';
+// import JournalDialog from '@/components/JournalDialog';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import QueryParams from '@/typings/QueryParams';
@@ -91,12 +91,12 @@ const InventoryTab = ({
     <>
       {loaded ? (
         <div className="flex flex-wrap m-2 justify-center">
-          <div
+          {/* <div
             key={journalItem.title}
             className="w-24 h-24 border-4 m-2 rounded-xl flex items-center justify-center cursor-pointer bg-center bg-no-repeat bg-cover"
             style={{ backgroundImage: `url(${journalItem.thumb_url})` }}
             onClick={() => setJournalOpen(true)}
-          ></div>
+          ></div> */}
           {collectedItems.map((item) => (
             <div
               key={item?.title ?? Math.random()}
@@ -123,7 +123,7 @@ const InventoryTab = ({
           singleItem={true}
         ></ItemsDialog>
       )}
-      {openJournal && <JournalDialog open={openJournal} handleClose={handleJournalClose} />}
+      {/* {openJournal && <JournalDialog open={openJournal} handleClose={handleJournalClose} />} */}
     </>
   );
 };

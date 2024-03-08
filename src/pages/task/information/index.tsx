@@ -5,25 +5,46 @@ import { APIService } from '@/services/API';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import { NextResponse } from '@/typings/NextResponse';
-import { PreviousResponse } from '@/typings/PreviousResponse';
 import QueryParams from '@/typings/QueryParams';
 import { InformationTask, TaskUnion } from '@/typings/Task';
 import { InventoryItem } from '@/typings/inventoryItem';
-import { Button } from '@mui/material';
+import { Box, Button, SpeedDial, SpeedDialAction, SpeedDialIcon, styled } from '@mui/material';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import BackpackIcon from '@mui/icons-material/Backpack';
+import MapIcon from '@mui/icons-material/Map';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
+import InventoryDialog from '@/components/inventoryDialog';
+import MapDialog from '@/components/mapDialog';
 
 export default function Information() {
   const [task, setTask] = useState<InformationTask>();
   const [nextTask, setNextTask] = useState<TaskUnion>();
   const [params, setParams] = useState<QueryParams>();
   const [items, setItems] = useState<InventoryItem[]>([]);
-  const [open, setOpen] = useState<boolean>(false);
+  const [openItems, setOpenItems] = useState<boolean>(false);
   const [openJournal, setOpenJournal] = useState<boolean>(false);
+  const [openInventory, setOpenInventory] = useState<boolean>(false);
+  const [openMap, setOpenMap] = useState<boolean>(false);
 
   const handleJournalClose = () => {
     setOpenJournal(false);
+  };
+
+  const handleInventoryClose = () => {
+    setOpenInventory(false);
+  };
+
+  const handleMapClose = () => {
+    setOpenMap(false);
+  };
+
+  const handleOpenSupport = () => {
+    if ((window as any).$crisp) {
+      (window as any).$crisp.push(['do', 'chat:open']);
+    }
   };
 
   const goToNextTask = async () => {
@@ -46,7 +67,7 @@ export default function Information() {
 
         if ((data.outcome?.items ?? [])?.length > 0) {
           setItems(data?.outcome?.items ?? []);
-          setOpen(true);
+          setOpenItems(true);
         } else {
           new TaskHandlerService().goToTaskComponent(data.task as TaskUnion, params as QueryParams);
         }
@@ -55,7 +76,7 @@ export default function Information() {
   };
 
   const handleClose = () => {
-    setOpen(false);
+    setOpenItems(false);
     if (nextTask) {
       new TaskHandlerService().goToTaskComponent(nextTask, params as QueryParams);
     }
@@ -85,31 +106,62 @@ export default function Information() {
       {!task && <Loading></Loading>}
       {task?.image_url && (
         <div
-          className="flex justify-center h-48 bg-cover bg-center bg-no-repeat"
+          className="bg-cover bg-center bg-no-repeat absolute h-80"
           style={{ backgroundImage: 'url(' + task.image_url + ')' }}
-        ></div>
-      )}
-      {task?.content && (
-        <div className="markdown-body p-4 pb-52">
-          <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
-        </div>
-      )}
-      <div className="game__tab__buttons">
-        <div className="flex justify-between p-4">
-          <Button
-            className="px-4 py-2 mr-4"
-            onClick={() => setOpenJournal(true)}
-            variant="outlined"
+        >
+          <SpeedDial
+            ariaLabel={''}
+            sx={{ position: 'absolute', top: 260, right: 16 }}
+            icon={<SpeedDialIcon />}
+            direction="down"
           >
-            Open Journal
-          </Button>
-          <Button className="px-4 py-2" onClick={goToNextTask} variant="contained">
-            Next
-          </Button>
+            <SpeedDialAction
+              icon={<MenuBookIcon />}
+              tooltipTitle="Journal"
+              tooltipOpen
+              onClick={() => setOpenJournal(true)}
+            />
+            <SpeedDialAction
+              icon={<BackpackIcon />}
+              tooltipTitle="Inventory"
+              tooltipOpen
+              onClick={() => setOpenInventory(true)}
+            />
+            <SpeedDialAction
+              icon={<MapIcon />}
+              tooltipTitle="Map"
+              tooltipOpen
+              onClick={() => setOpenMap(true)}
+            />
+            <SpeedDialAction
+              icon={<ContactSupportIcon />}
+              tooltipTitle="Support"
+              tooltipOpen
+              onClick={() => handleOpenSupport()}
+            />
+          </SpeedDial>
+          <Box
+            className="fixed rounded-3xl bg-white shadow-md m-auto top-4 right-4"
+            sx={{ zIndex: 999 }}
+          >
+            <div className="flex justify-between p-2">
+              <Button className="px-4 py-2" onClick={goToNextTask} variant="text">
+                Next →
+              </Button>
+            </div>
+          </Box>
+
+          {task?.content && (
+            <div className="markdown-body mt-72 p-8 pb-52 rounded-tl-3xl rounded-tr-3xl relative">
+              <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
+            </div>
+          )}
         </div>
-      </div>
-      <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
+      )}
+      <ItemsDialog items={items} open={openItems} handleClose={handleClose}></ItemsDialog>
       <JournalDialog open={openJournal} handleClose={handleJournalClose} />
+      <InventoryDialog open={openInventory} handleClose={handleInventoryClose} />
+      <MapDialog open={openMap} handleClose={handleMapClose} />
     </>
   );
 }

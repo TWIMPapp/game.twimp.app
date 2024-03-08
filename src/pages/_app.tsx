@@ -85,9 +85,9 @@ export default function App({ Component, pageProps }: AppProps) {
           </Head>
           <ThemeProvider theme={theme}>
             <main className={`game theme-${params.theme}`}>
-              <MainTabs hidden={!isTaskPath}>
-                <Component {...pageProps} />
-              </MainTabs>
+              {/* <MainTabs hidden={!isTaskPath}> */}
+              <Component {...pageProps} />
+              {/* </MainTabs> */}
             </main>
           </ThemeProvider>
         </>

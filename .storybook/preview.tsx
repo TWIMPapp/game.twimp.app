@@ -32,10 +32,9 @@ const preview: Preview = {
     decorators: [
       (story) => {
         return (
-          // <ThemeProvider theme={theme}>
-          // <MainTabs />
-          <main className="game">{story()}</main>
-          // </ThemeProvider>
+          <ThemeProvider theme={theme}>
+            <main className="game">{story()}</main>
+          </ThemeProvider>
         );
       }
     ]

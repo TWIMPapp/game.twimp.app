@@ -34,13 +34,14 @@ export default function Finish() {
       {!task && <Loading></Loading>}
       {task?.image_url && (
         <div
-          className="flex justify-center h-48 bg-cover bg-center bg-no-repeat"
+          className="bg-cover bg-center bg-no-repeat absolute h-80"
           style={{ backgroundImage: 'url(' + task.image_url + ')' }}
-        ></div>
-      )}
-      {task?.content && (
-        <div className="markdown-body p-4">
-          <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
+        >
+          {task?.content && (
+            <div className="markdown-body mt-72 p-8 pb-52 rounded-tl-3xl rounded-tr-3xl relative">
+              <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
+            </div>
+          )}
         </div>
       )}
     </>
