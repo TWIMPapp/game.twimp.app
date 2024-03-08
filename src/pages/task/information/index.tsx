@@ -141,7 +141,7 @@ export default function Information() {
             />
           </SpeedDial>
           <Box
-            className="fixed rounded-3xl bg-white shadow-md m-auto top-4 right-4"
+            className="fixed rounded-3xl bg-white shadow-md m-auto top-8 right-4"
             sx={{ zIndex: 999 }}
           >
             <div className="flex justify-between p-2">
