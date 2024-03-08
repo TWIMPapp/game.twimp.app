@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react';
 import Loading from './Loading';
 import { TaskUnion } from '../typings/Task';
 import TaskList from './TaskList';
-import { Box, Button, Dialog, DialogActions, DialogContent } from '@mui/material';
+import { AppBar, Box, Dialog, IconButton, Toolbar } from '@mui/material';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import QueryParams from '@/typings/QueryParams';
+import CloseIcon from '@mui/icons-material/Close';
 
 export default function JournalDialog({
   open,
@@ -39,31 +40,33 @@ export default function JournalDialog({
   }, []);
 
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogContent>
-        {loaded ? (
-          tasks?.length > 0 ? (
-            <TaskList tasks={tasks} />
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                width: '100%',
-                height: '100%',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}
-            >
-              Nothing to see here just yet 👀
-            </Box>
-          )
+    <Dialog open={open} onClose={handleClose} fullScreen>
+      <AppBar sx={{ position: 'relative', paddingTop: '20px' }}>
+        <Toolbar>
+          <IconButton edge="start" sx={{ color: '#fff' }} onClick={handleClose} aria-label="close">
+            <CloseIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+      {loaded ? (
+        tasks?.length > 0 ? (
+          <TaskList tasks={tasks} />
         ) : (
-          <Loading />
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
-      </DialogActions>
+          <Box
+            sx={{
+              display: 'flex',
+              width: '100%',
+              height: '100%',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            Nothing to see here just yet 👀
+          </Box>
+        )
+      ) : (
+        <Loading />
+      )}
     </Dialog>
   );
 }

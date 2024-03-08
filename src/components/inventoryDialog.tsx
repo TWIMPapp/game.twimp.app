@@ -19,7 +19,7 @@ export default function InventoryDialog({
 }) {
   return (
     <Dialog open={open} onClose={handleClose} fullScreen>
-      <AppBar sx={{ position: 'relative' }}>
+      <AppBar sx={{ position: 'relative', paddingTop: '20px' }}>
         <Toolbar>
           <IconButton edge="start" sx={{ color: '#fff' }} onClick={handleClose} aria-label="close">
             <CloseIcon />
