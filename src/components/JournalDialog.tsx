@@ -41,7 +41,7 @@ export default function JournalDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} fullScreen>
-      <AppBar sx={{ position: 'relative', paddingTop: '20px' }}>
+      <AppBar sx={{ position: 'relative', paddingTop: '30px' }}>
         <Toolbar>
           <IconButton edge="start" sx={{ color: '#fff' }} onClick={handleClose} aria-label="close">
             <CloseIcon />
