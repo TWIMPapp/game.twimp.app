@@ -3,14 +3,19 @@
 @tailwind utilities;
 @import 'github-markdown-css/github-markdown-light.css';
 
-/*TODO: Detect usage of dark mode and apply dark theme*/
-
 $twimp-pink: #ff2e5b;
 $twimp-light-pink: #ff6c88;
 $twimp-yellow: #e2d46b;
 $twimp-green: #bac94a;
 $twimp-light-blue: #97d7c7;
 $twimp-blue: #59a7a7;
+
+.markdown-body {
+  ol,
+  ul {
+    list-style: auto !important;
+  }
+}
 
 .MuiSpeedDial-fab {
   background-color: $twimp-pink;
