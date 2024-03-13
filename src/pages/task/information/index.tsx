@@ -8,13 +8,14 @@ import { NextResponse } from '@/typings/NextResponse';
 import QueryParams from '@/typings/QueryParams';
 import { InformationTask, TaskUnion } from '@/typings/Task';
 import { InventoryItem } from '@/typings/inventoryItem';
-import { Box, Button, SpeedDial, SpeedDialAction, SpeedDialIcon, styled } from '@mui/material';
+import { Box, Button, SpeedDial, SpeedDialAction } from '@mui/material';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import BackpackIcon from '@mui/icons-material/Backpack';
 import MapIcon from '@mui/icons-material/Map';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import MenuIcon from '@mui/icons-material/Menu';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import InventoryDialog from '@/components/inventoryDialog';
 import MapDialog from '@/components/mapDialog';
@@ -112,7 +113,7 @@ export default function Information() {
           <SpeedDial
             ariaLabel={''}
             sx={{ position: 'absolute', top: 260, right: 16, zIndex: 99 }}
-            icon={<SpeedDialIcon />}
+            icon={<MenuIcon />}
             direction="down"
           >
             <SpeedDialAction
