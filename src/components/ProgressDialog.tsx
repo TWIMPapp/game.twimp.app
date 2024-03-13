@@ -21,10 +21,15 @@ const ProgressDialog = ({
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button color="primary" variant="outlined" onClick={() => handleClose(false)}>
+          <Button
+            className="cy-continue"
+            color="primary"
+            variant="outlined"
+            onClick={() => handleClose(false)}
+          >
             Continue
           </Button>
-          <Button color="error" onClick={() => handleClose(true)}>
+          <Button className="cy-restart" color="error" onClick={() => handleClose(true)}>
             Restart
           </Button>
         </DialogActions>

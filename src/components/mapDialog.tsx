@@ -21,7 +21,13 @@ export default function JournalDialog({
     <Dialog open={open} onClose={handleClose} fullScreen>
       <AppBar sx={{ position: 'relative', paddingTop: '30px' }}>
         <Toolbar>
-          <IconButton edge="start" sx={{ color: '#fff' }} onClick={handleClose} aria-label="close">
+          <IconButton
+            className="cy-map-dialog-close"
+            edge="start"
+            sx={{ color: '#fff' }}
+            onClick={handleClose}
+            aria-label="close"
+          >
             <CloseIcon />
           </IconButton>
         </Toolbar>

@@ -24,7 +24,7 @@ const TaskDialog = ({
           <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
         </CardContent>
         <CardActions className="flex justify-end">
-          <Button color="primary" onClick={handleClose}>
+          <Button className="cy-task-dialog-close" color="primary" onClick={handleClose}>
             Close
           </Button>
         </CardActions>

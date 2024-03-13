@@ -35,7 +35,6 @@ const ItemsDialog = ({
 }) => {
   return (
     <Dialog open={open} onClose={handleClose} TransitionComponent={Transition} keepMounted>
-      <DialogTitle></DialogTitle>
       <DialogContent>
         <DialogContentText>{message}</DialogContentText>
         <ul>
@@ -66,7 +65,7 @@ const ItemsDialog = ({
         </ul>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="primary" autoFocus>
+        <Button className="cy-items-dialog-close" onClick={handleClose} color="primary" autoFocus>
           {singleItem ? 'Close' : 'Got it!'}
         </Button>
       </DialogActions>

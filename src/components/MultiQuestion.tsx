@@ -56,7 +56,7 @@ const MultiQuestion = ({
             <button
               disabled={loadingOption !== undefined}
               key={index}
-              className={`text-white p-6 font-semibold rounded shadow ${
+              className={`cy-multi-option-${index} text-white p-6 font-semibold rounded shadow ${
                 option?.colour ? colourMap[option.colour] : getColour(index)
               } animate__animated ${isActiveAnswer(option) ? 'animate__bounce' : ''}`}
               onClick={() => handleClick(option)}

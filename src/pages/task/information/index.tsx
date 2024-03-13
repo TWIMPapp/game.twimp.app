@@ -111,30 +111,35 @@ export default function Information() {
           style={{ backgroundImage: 'url(' + task.image_url + ')' }}
         >
           <SpeedDial
+            className="cy-speeddial"
             ariaLabel={''}
             sx={{ position: 'absolute', top: 260, right: 16, zIndex: 99 }}
             icon={<MenuIcon />}
             direction="down"
           >
             <SpeedDialAction
+              className="cy-speeddial-journal"
               icon={<MenuBookIcon />}
               tooltipTitle="Journal"
               tooltipOpen
               onClick={() => setOpenJournal(true)}
             />
             <SpeedDialAction
+              className="cy-speeddial-inventory"
               icon={<BackpackIcon />}
               tooltipTitle="Inventory"
               tooltipOpen
               onClick={() => setOpenInventory(true)}
             />
             <SpeedDialAction
+              className="cy-speeddial-map"
               icon={<MapIcon />}
               tooltipTitle="Map"
               tooltipOpen
               onClick={() => setOpenMap(true)}
             />
             <SpeedDialAction
+              className="cy-speeddial-support"
               icon={<ContactSupportIcon />}
               tooltipTitle="Support"
               tooltipOpen
@@ -146,7 +151,7 @@ export default function Information() {
             sx={{ zIndex: 999, borderColor: 'rgba(255, 108, 136, 0.8)' }}
           >
             <div className="flex justify-between p-2">
-              <Button className="px-4 py-2" onClick={goToNextTask} variant="text">
+              <Button className="cy-next px-4 py-2" onClick={goToNextTask} variant="text">
                 Next →
               </Button>
             </div>
@@ -158,7 +163,7 @@ export default function Information() {
                 <audio
                   controls
                   controlsList="nodownload nofullscreen"
-                  className="w-full mb-4"
+                  className="cy-audio-player w-full mb-4"
                   src={task.audio_url}
                 ></audio>
               )}

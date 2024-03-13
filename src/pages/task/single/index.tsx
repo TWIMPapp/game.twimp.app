@@ -121,7 +121,7 @@ const Single = () => {
                     disabled={input.length === 0}
                     variant="contained"
                     color="primary"
-                    className="w-full"
+                    className="cy-single-submit w-full"
                     onClick={() => onValidate(input)}
                   >
                     {loading ? <CircularProgress /> : 'submit'}
