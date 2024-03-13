@@ -95,32 +95,36 @@ const Multi = () => {
     <>
       {task?.image_url && (
         <div
-          className="bg-cover bg-center bg-no-repeat absolute h-60"
+          className="bg-cover bg-center bg-no-repeat absolute h-60 w-full"
           style={{ backgroundImage: 'url(' + task.image_url + ')' }}
         >
           {task?.content ? (
-            <div className="markdown-body mt-52 rounded-tl-3xl rounded-tr-3xl relative">
-              <MultiQuestion
-                question={task.content}
-                hint={task.hint}
-                options={task.options}
-                loadingOption={loadingOption}
-                callback={optionCallback}
-              />
-              {outcome ? (
-                <SentimentSnackbar
-                  outcome={outcome}
-                  open={outcome !== undefined}
-                  autoHideDuration={10000}
-                  handleClose={() => {
-                    setOutcome(undefined);
-                  }}
-                ></SentimentSnackbar>
-              ) : (
-                ''
-              )}
-              <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
-            </div>
+            <>
+              <div className="markdown-body mt-52 rounded-tl-3xl rounded-tr-3xl relative">
+                <MultiQuestion
+                  question={task.content}
+                  hint={task.hint}
+                  options={task.options}
+                  loadingOption={loadingOption}
+                  callback={optionCallback}
+                />
+              </div>
+              <div>
+                {outcome ? (
+                  <SentimentSnackbar
+                    outcome={outcome}
+                    open={outcome !== undefined}
+                    autoHideDuration={10000}
+                    handleClose={() => {
+                      setOutcome(undefined);
+                    }}
+                  ></SentimentSnackbar>
+                ) : (
+                  ''
+                )}
+                <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
+              </div>
+            </>
           ) : (
             <Loading />
           )}

@@ -24,10 +24,10 @@ const SentimentSnackbar = ({
       open={open}
       autoHideDuration={autoHideDuration}
       onClose={handleClose}
-      sx={{ marginBottom: '60px' }}
+      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
     >
-      <Alert severity={severityMap[outcome.sentiment]} sx={{ width: '100%' }}>
-        <h3>{outcome.title}</h3>
+      <Alert severity={severityMap[outcome.sentiment]} sx={{ width: '100%', borderRadius: '16px' }}>
+        <h3 className="mt-0">{outcome.title}</h3>
         <p>{outcome.subtitle}</p>
       </Alert>
     </Snackbar>

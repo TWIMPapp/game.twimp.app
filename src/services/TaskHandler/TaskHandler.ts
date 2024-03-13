@@ -12,6 +12,7 @@ export class TaskHandlerService {
   }
 
   public goToTaskComponent(task: TaskUnion, params: QueryParams): void {
+    console.debug('[### TWIMP ###] goToTaskComponent', task, params);
     if (!task) return;
     const route = TaskTypeRouteMap[task.type];
 

@@ -153,6 +153,14 @@ export default function Information() {
 
           {task?.content && (
             <div className="markdown-body mt-72 p-8 pb-80 rounded-tl-3xl rounded-tr-3xl relative">
+              {task.audio_url && (
+                <audio
+                  controls
+                  controlsList="nodownload nofullscreen"
+                  className="w-full mb-4"
+                  src={task.audio_url}
+                ></audio>
+              )}
               <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
             </div>
           )}

@@ -97,7 +97,7 @@ const Single = () => {
     <>
       {task?.image_url && (
         <div
-          className="bg-cover bg-center bg-no-repeat absolute h-60"
+          className="bg-cover bg-center bg-no-repeat absolute h-60 w-full"
           style={{ backgroundImage: 'url(' + task.image_url + ')' }}
         >
           {task?.content ? (
