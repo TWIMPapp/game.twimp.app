@@ -34,7 +34,7 @@ export default function Finish() {
       {!task && <Loading></Loading>}
       {task?.image_url && (
         <div
-          className="bg-cover bg-center bg-no-repeat absolute h-80"
+          className="bg-cover bg-center bg-no-repeat absolute h-80 w-full"
           style={{ backgroundImage: 'url(' + task.image_url + ')' }}
         >
           {task?.content && (
