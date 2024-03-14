@@ -111,7 +111,7 @@ const Single = () => {
                       autoFocus
                       label="Answer"
                       variant="outlined"
-                      className="w-full"
+                      className="cy-single-input w-full"
                       value={input}
                       error={outcome?.sentiment && outcome.sentiment !== 'positive'}
                       onChange={(e) => setInput(e.target.value)}
