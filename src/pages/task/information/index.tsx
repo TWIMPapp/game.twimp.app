@@ -92,6 +92,7 @@ export default function Information() {
       if (_params?.task) {
         setParams(_params);
         const data = new TaskHandlerService().getTaskFromParams<InformationTask>();
+        console.log('########## data', data);
 
         if (data) {
           setTask(data);

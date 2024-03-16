@@ -1,14 +1,38 @@
 import QueryParams from '@/typings/QueryParams';
-import { TaskUnion } from '@/typings/Task';
+import { InformationTask, TaskUnion } from '@/typings/Task';
 import { TaskTypeRouteMap } from './TaskTypeRouteMap';
 import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
+import ErrorImage from '../../assets/images/error.jpeg';
 
 export class TaskHandlerService {
   public getTaskFromParams<T>(): T {
     const params = Object.fromEntries(
       new URLSearchParams(window.location.search)
     ) as unknown as QueryParams;
-    return params?.task ? JSON.parse(params.task as any) : null;
+    console.debug('[### TWIMP ###] getTaskFromParams', params, params?.task);
+
+    // try catch json parse and flag error on catch by returning the task error
+    if (!params?.task)
+      return {
+        ok: false,
+        image_url: ErrorImage.src,
+        type: 'information',
+        content: `I'm sorry we've encounted an error while trying to render this step. Please chat with us on support or click next to move on.`
+      } as T;
+
+    let parsedTask: T;
+    try {
+      parsedTask = JSON.parse(params.task as any) as T;
+    } catch (error) {
+      console.debug('[### TWIMP ###] Error parsing task from params', error);
+      return {
+        ok: false,
+        image_url: ErrorImage.src,
+        type: 'information',
+        content: `I'm sorry we've encounted an error while trying to render this step. Please chat with us on support or click next to move on.`
+      } as T;
+    }
+    return parsedTask;
   }
 
   public goToTaskComponent(task: TaskUnion, params: QueryParams): void {
