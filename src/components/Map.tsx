@@ -50,9 +50,9 @@ export default function MapComponent({
     const displayMarkers =
       taskMarkers?.map((marker) => ({
         ...marker,
-        image_url: marker.image_url
+        image_url: marker?.image_url
           ? marker.image_url
-          : marker.colour
+          : marker?.colour
           ? MarkerColourMap[marker.colour as Colour]
           : MarkerColourMap[Colour.Red]
       })) ?? [];

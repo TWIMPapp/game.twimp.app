@@ -23,6 +23,7 @@ import MapDialog from '@/components/mapDialog';
 export default function Information() {
   const [task, setTask] = useState<InformationTask>();
   const [nextTask, setNextTask] = useState<TaskUnion>();
+  const [nextTaskLoading, setNextTaskLoading] = useState<boolean>(false);
   const [params, setParams] = useState<QueryParams>();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [openItems, setOpenItems] = useState<boolean>(false);
@@ -49,6 +50,8 @@ export default function Information() {
   };
 
   const goToNextTask = async () => {
+    setNextTaskLoading(true);
+
     const body = {
       user_id: params?.user_id,
       trail_ref: params?.trail_ref,
@@ -92,7 +95,6 @@ export default function Information() {
       if (_params?.task) {
         setParams(_params);
         const data = new TaskHandlerService().getTaskFromParams<InformationTask>();
-        console.log('########## data', data);
 
         if (data) {
           setTask(data);
@@ -153,7 +155,8 @@ export default function Information() {
           >
             <div className="flex justify-between p-2">
               <Button className="cy-next px-4 py-2" onClick={goToNextTask} variant="text">
-                Next →
+                {/* show loader or text */}
+                {nextTaskLoading ? <Loading /> : 'Next →'}
               </Button>
             </div>
           </Box>
@@ -173,10 +176,12 @@ export default function Information() {
           )}
         </div>
       )}
-      <ItemsDialog items={items} open={openItems} handleClose={handleClose}></ItemsDialog>
-      <JournalDialog open={openJournal} handleClose={handleJournalClose} />
-      <InventoryDialog open={openInventory} handleClose={handleInventoryClose} />
-      <MapDialog open={openMap} handleClose={handleMapClose} />
+      {openItems && (
+        <ItemsDialog items={items} open={openItems} handleClose={handleClose}></ItemsDialog>
+      )}
+      {openJournal && <JournalDialog open={openJournal} handleClose={handleJournalClose} />}
+      {openInventory && <InventoryDialog open={openInventory} handleClose={handleInventoryClose} />}
+      {openMap && <MapDialog open={openMap} handleClose={handleMapClose} />}
     </>
   );
 }
