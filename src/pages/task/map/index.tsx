@@ -1,11 +1,8 @@
-import Loading from '../../../components/Loading';
-import { GoogleMap, LoadScript, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { useEffect, useState } from 'react';
-import MarkerIcon from '../../../assets/icons/marker-icon.png';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
-import { Box, Card, CardContent } from '@mui/material';
-import { MapTask, Marker, Outcome, TaskUnion } from '@/typings/Task';
+import { Box } from '@mui/material';
+import { MapTask, Outcome, TaskUnion } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
