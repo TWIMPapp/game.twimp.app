@@ -104,7 +104,7 @@ export default function Map() {
       setParams(_params);
 
       if (_params?.task) {
-        const mapTask = new TaskHandlerService().getTaskFromParams<MapTask>();
+        const mapTask = new TaskHandlerService().getTaskFromSession<MapTask>();
         if (mapTask) {
           setTask(mapTask);
         }

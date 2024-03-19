@@ -79,9 +79,9 @@ const Multi = () => {
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
 
-      if (_params?.task) {
+      if (_params) {
         setParams(_params);
-        const data = new TaskHandlerService().getTaskFromParams<QuestionMultiTask>();
+        const data = new TaskHandlerService().getTaskFromSession<QuestionMultiTask>();
         if (data) {
           setTask(data);
         }

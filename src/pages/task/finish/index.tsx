@@ -17,9 +17,9 @@ export default function Finish() {
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
 
-      if (_params?.task) {
+      if (_params) {
         setParams(_params);
-        const data = new TaskHandlerService().getTaskFromParams<FinishTask>();
+        const data = new TaskHandlerService().getTaskFromSession<FinishTask>();
         if (data) {
           setTask(data);
         }

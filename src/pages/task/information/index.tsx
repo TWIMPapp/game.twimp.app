@@ -92,9 +92,9 @@ export default function Information() {
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
 
-      if (_params?.task) {
+      if (_params) {
         setParams(_params);
-        const data = new TaskHandlerService().getTaskFromParams<InformationTask>();
+        const data = new TaskHandlerService().getTaskFromSession<InformationTask>();
 
         if (data) {
           setTask(data);
