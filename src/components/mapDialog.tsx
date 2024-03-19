@@ -1,12 +1,4 @@
-import {
-  AppBar,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  IconButton,
-  Toolbar
-} from '@mui/material';
+import { AppBar, Dialog, IconButton, Toolbar } from '@mui/material';
 import MapTab from '@/pages/task/mapTab';
 import CloseIcon from '@mui/icons-material/Close';
 

@@ -31,9 +31,7 @@ const MapTab = ({ refreshData }: { refreshData: boolean }) => {
         setParams(_params);
         const data = await getMarkers(_params);
 
-        if (data) {
-          setMarkers(data.markers);
-        }
+        setMarkers(data && data.markers.length > 0 ? data.markers : []);
       }
     };
 
