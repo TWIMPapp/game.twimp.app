@@ -6,10 +6,10 @@ import { MapTask, Outcome, TaskUnion } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
-import { TabBarHeight } from '@/components/TabBarHeight';
 import MapComponent from '@/components/Map';
 import { InventoryItem } from '@/typings/inventoryItem';
 import ItemsDialog from '@/components/ItemsDialog';
+import { TaskType } from '@/typings/TaskType.enum';
 
 const AWTY_INTERVAL = 5000;
 
@@ -36,10 +36,13 @@ const AWTYPost = async (
   position: GeolocationPosition,
   params: QueryParams
 ): Promise<AwtyResponse> => {
+  const prevTaskId = new TaskHandlerService().getPrevTaskIdFromSession();
+
   const body = {
     lat: position?.coords?.latitude,
     lng: position?.coords?.longitude,
     accuracy: position?.coords?.accuracy,
+    task_id: prevTaskId ?? null,
     user_id: params?.user_id,
     trail_ref: params?.trail_ref
   };

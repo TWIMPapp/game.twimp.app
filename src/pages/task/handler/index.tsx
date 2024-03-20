@@ -24,6 +24,7 @@ export default function Handler() {
   const handleProgressDialogClose = async (isRestarting: boolean) => {
     if (isRestarting && startTask) {
       const RestartAPI = new APIService(Endpoint.Restart);
+      new TaskHandlerService().clearSession();
       await RestartAPI.post({}, queryParams as QueryParams);
       goToTask(startTask, queryParams as QueryParams);
     } else if (continueTask) {
