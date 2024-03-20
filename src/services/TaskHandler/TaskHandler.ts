@@ -14,13 +14,13 @@ export class TaskHandlerService {
     return task ? (JSON.parse(task) as T) : null;
   }
 
-  public setPrevTaskIdInSession(taskId: string): void {
-    sessionStorage.setItem('prev_task_id', taskId);
+  public setPrevTaskIdInSession(taskId: number): void {
+    sessionStorage.setItem('prev_task_id', String(taskId));
   }
 
-  public getPrevTaskIdFromSession(): string | null {
+  public getPrevTaskIdFromSession(): number | null {
     const prevTaskId = sessionStorage.getItem('prev_task_id');
-    return prevTaskId ? JSON.parse(prevTaskId) : null;
+    return prevTaskId ? Number(prevTaskId) : null;
   }
 
   public clearSession(): void {
@@ -36,7 +36,7 @@ export class TaskHandlerService {
     if (route) {
       this.setTaskInSession(task);
 
-      if (task.id && task.type !== TaskType.Map) {
+      if (task?.id >= 0 && task?.type !== TaskType.Map) {
         this.setPrevTaskIdInSession(task.id);
       }
 

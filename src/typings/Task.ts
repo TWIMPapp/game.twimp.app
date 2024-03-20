@@ -6,7 +6,7 @@ import { InventoryItem } from './inventoryItem';
 
 export interface Task {
   ok: boolean;
-  id: string;
+  id: number;
   type: TaskType;
   content: string;
   required: boolean;
