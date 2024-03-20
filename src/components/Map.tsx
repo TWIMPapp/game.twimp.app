@@ -68,6 +68,7 @@ export default function MapComponent({
         };
 
         setMarkers([playerMarker, ...displayMarkers]);
+
         onPlayerMove(position);
       },
       (error) => {
@@ -80,7 +81,7 @@ export default function MapComponent({
       }
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskMarkers]);
+  }, []);
 
   return (
     <>

@@ -21,8 +21,9 @@ export class TaskHandlerService {
     if (route) {
       this.setTaskInSession(task);
 
-      // next js route to the task component
-      window.open(`${route}?${stringifyQueryParams(params)}`, '_self');
+      window.location.assign(
+        `${route}?${stringifyQueryParams(params, { includeStartAmp: false })}`
+      );
     } else {
       console.error(`Invalid task type: ${task.type}`);
     }

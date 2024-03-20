@@ -32,7 +32,7 @@ interface AwtyResponse {
   outcome?: Outcome;
 }
 
-const postData = async (
+const AWTYPost = async (
   position: GeolocationPosition,
   params: QueryParams
 ): Promise<AwtyResponse> => {
@@ -50,11 +50,6 @@ const postData = async (
   });
 };
 
-const containerStyle = {
-  width: '100vw',
-  height: `calc(100vh - ${TabBarHeight}px)`
-};
-
 export default function Map() {
   const [task, setTask] = useState<MapTask>();
   const [nextTask, setNextTask] = useState<TaskUnion>();
@@ -62,6 +57,25 @@ export default function Map() {
   const [params, setParams] = useState<QueryParams>();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [open, setOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchData = () => {
+      const _params = Object.fromEntries(
+        new URLSearchParams(window.location.search)
+      ) as unknown as QueryParams;
+
+      if (_params) {
+        setParams(_params);
+        const mapTask = new TaskHandlerService().getTaskFromSession<MapTask>();
+
+        if (mapTask) {
+          setTask(mapTask);
+        }
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleClose = () => {
     setOpen(false);
@@ -71,48 +85,25 @@ export default function Map() {
   };
 
   const handleOnPlayerMove = async (position: GeolocationPosition) => {
-    let canRun = true;
+    const data = await AWTYPost(position, params as QueryParams);
 
-    if (canRun) {
-      canRun = false;
-      const data = await postData(position, params as QueryParams);
-      if (data) {
-        if (data.task) {
-          setNextTask(data.task);
+    if (data) {
+      if (data.task) {
+        setNextTask(data.task);
 
-          if ((data.outcome?.items ?? [])?.length > 0) {
-            setItems(data?.outcome?.items ?? []);
-            setOpen(true);
-          } else {
-            new TaskHandlerService().goToTaskComponent(data.task, params as QueryParams);
-          }
+        if ((data.outcome?.items ?? [])?.length > 0) {
+          setItems(data?.outcome?.items ?? []);
+          setOpen(true);
         } else {
-          setTimeout(() => {
-            setAwtyResponse(data);
-            canRun = true;
-          }, AWTY_INTERVAL);
+          new TaskHandlerService().goToTaskComponent(data.task, params as QueryParams);
         }
+      } else {
+        setTimeout(() => {
+          setAwtyResponse(data);
+        }, AWTY_INTERVAL);
       }
     }
   };
-
-  useEffect(() => {
-    const fetchData = () => {
-      const _params = Object.fromEntries(
-        new URLSearchParams(window.location.search)
-      ) as unknown as QueryParams;
-      setParams(_params);
-
-      if (_params?.task) {
-        const mapTask = new TaskHandlerService().getTaskFromSession<MapTask>();
-        if (mapTask) {
-          setTask(mapTask);
-        }
-      }
-    };
-
-    fetchData();
-  }, []);
 
   return (
     <>
@@ -138,7 +129,7 @@ export default function Map() {
           </div>
         </Box>
       ) : null}
-      <MapComponent taskMarkers={task?.markers ?? []} onPlayerMove={handleOnPlayerMove} />
+      {task && <MapComponent taskMarkers={task?.markers ?? []} onPlayerMove={handleOnPlayerMove} />}
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
     </>
   );

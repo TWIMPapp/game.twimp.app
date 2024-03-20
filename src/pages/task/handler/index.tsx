@@ -38,12 +38,12 @@ export default function Handler() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const _queryParams = Object.fromEntries(
+      const _params = Object.fromEntries(
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
-      if (_queryParams) {
-        setQueryParams(_queryParams);
-        const data = await PlayAPI.get<PlayResponse>(_queryParams);
+      if (_params) {
+        setQueryParams(_params);
+        const data = await PlayAPI.get<PlayResponse>(_params);
 
         if (data) {
           setStartTask(data.start);
@@ -51,7 +51,7 @@ export default function Handler() {
           if (data?.continue) {
             setOpenProgressDialog(true);
           } else {
-            goToTask(data.start, _queryParams);
+            goToTask(data.start, _params);
           }
         } else {
           console.error('Error');
