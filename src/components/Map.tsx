@@ -57,6 +57,8 @@ export default function MapComponent({
           : MarkerColourMap[Colour.Red]
       })) ?? [];
 
+    let throttleTimeout: any = null;
+
     navigator.geolocation.watchPosition(
       (position) => {
         const playerMarker: Marker = {
@@ -69,13 +71,25 @@ export default function MapComponent({
 
         setMarkers([playerMarker, ...displayMarkers]);
 
-        onPlayerMove(position);
+        if (center.lat === 0 && center.lng === 0) {
+          setCenter({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        }
+
+        if (!throttleTimeout) {
+          throttleTimeout = setTimeout(() => {
+            onPlayerMove(position);
+            throttleTimeout = null;
+          }, 2000);
+        }
       },
       (error) => {
         console.log(error);
       },
       {
-        maximumAge: 10000,
+        maximumAge: 1000,
         timeout: 5000,
         enableHighAccuracy: true
       }
