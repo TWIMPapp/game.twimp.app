@@ -109,10 +109,11 @@ export default function MapComponent({
           <GoogleMap
             mapContainerStyle={containerStyle}
             center={center}
-            zoom={20}
+            zoom={18}
             options={{
               disableDefaultUI: true,
-              styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }]
+              styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
+              mapTypeId: 'hybrid'
             }}
           >
             {isGoogleMapsAPILoaded &&
