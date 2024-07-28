@@ -3,9 +3,7 @@ import axios from 'axios';
 import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import QueryParams from '@/typings/QueryParams';
-
-const baseUrl =
-  'https://script.google.com/macros/s/AKfycbx2Hnd9zQqpuO8dyP4ZouhmbpvO1S1cvO47tfhaXHRBCs_KxZHfkQGsFYdzJkFeWgiAJA/exec?q=trails';
+import { BASE_URL } from '@/constants';
 
 export class APIService {
   private _endpoint: Endpoint;
@@ -16,7 +14,7 @@ export class APIService {
 
   public async get<T>(params: QueryParams): Promise<T> {
     const response = await axios
-      .get(`${baseUrl}/${this._endpoint}${stringifyQueryParams(params)}`)
+      .get(`${BASE_URL}/${this._endpoint}${stringifyQueryParams(params)}`)
       .catch((error) => {
         console.error(error);
       });
@@ -26,7 +24,7 @@ export class APIService {
   public async post<T>(body: any, params: QueryParams): Promise<T> {
     const response = await axios
       .post(
-        `${baseUrl}/${this._endpoint}`,
+        `${BASE_URL}/${this._endpoint}`,
         { ...body, ...params },
         {
           headers: {
