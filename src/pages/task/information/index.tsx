@@ -108,74 +108,90 @@ export default function Information() {
   return (
     <>
       {!task && <Loading></Loading>}
-      {task?.image_url && (
-        <div
-          className="bg-cover bg-center bg-no-repeat absolute h-80 w-full"
-          style={{ backgroundImage: 'url(' + task.image_url + ')' }}
+      <div
+        className={task?.image_url ? 'bg-cover bg-center bg-no-repeat absolute h-80 w-full' : ''}
+        style={{ backgroundImage: task?.image_url ? 'url(' + task.image_url + ')' : undefined }}
+      >
+        {/* video tag to play a video by url */}
+        {task?.video_url && (
+          <video
+            className="absolute w-full top-0"
+            autoPlay
+            loop
+            muted
+            controls
+            controlsList="nodownload"
+            width="220"
+            height="auto"
+          >
+            <source
+              src="https://trail-video.s3.eu-west-2.amazonaws.com/tester2.mp4"
+              type="video/mp4"
+            />
+          </video>
+        )}
+        <SpeedDial
+          className="cy-speeddial"
+          ariaLabel={''}
+          sx={{ position: 'absolute', top: 260, right: 16, zIndex: 99 }}
+          icon={<MenuIcon />}
+          direction="down"
         >
-          <SpeedDial
-            className="cy-speeddial"
-            ariaLabel={''}
-            sx={{ position: 'absolute', top: 260, right: 16, zIndex: 99 }}
-            icon={<MenuIcon />}
-            direction="down"
-          >
-            <SpeedDialAction
-              className="cy-speeddial-journal"
-              icon={<MenuBookIcon />}
-              tooltipTitle="Journal"
-              tooltipOpen
-              onClick={() => setOpenJournal(true)}
-            />
-            <SpeedDialAction
-              className="cy-speeddial-inventory"
-              icon={<BackpackIcon />}
-              tooltipTitle="Inventory"
-              tooltipOpen
-              onClick={() => setOpenInventory(true)}
-            />
-            <SpeedDialAction
-              className="cy-speeddial-map"
-              icon={<MapIcon />}
-              tooltipTitle="Map"
-              tooltipOpen
-              onClick={() => setOpenMap(true)}
-            />
-            <SpeedDialAction
-              className="cy-speeddial-support"
-              icon={<ContactSupportIcon />}
-              tooltipTitle="Support"
-              tooltipOpen
-              onClick={() => handleOpenSupport()}
-            />
-          </SpeedDial>
-          <Box
-            className="fixed rounded-3xl bg-white shadow-md m-auto top-12 right-4 border-4"
-            sx={{ zIndex: 999, borderColor: 'rgba(255, 108, 136, 0.8)' }}
-          >
-            <div className="flex justify-between p-2">
-              <Button className="cy-next px-4 py-2" onClick={goToNextTask} variant="text">
-                {/* show loader or text */}
-                {nextTaskLoading ? <Loading /> : 'Next →'}
-              </Button>
-            </div>
-          </Box>
+          <SpeedDialAction
+            className="cy-speeddial-journal"
+            icon={<MenuBookIcon />}
+            tooltipTitle="Journal"
+            tooltipOpen
+            onClick={() => setOpenJournal(true)}
+          />
+          <SpeedDialAction
+            className="cy-speeddial-inventory"
+            icon={<BackpackIcon />}
+            tooltipTitle="Inventory"
+            tooltipOpen
+            onClick={() => setOpenInventory(true)}
+          />
+          <SpeedDialAction
+            className="cy-speeddial-map"
+            icon={<MapIcon />}
+            tooltipTitle="Map"
+            tooltipOpen
+            onClick={() => setOpenMap(true)}
+          />
+          <SpeedDialAction
+            className="cy-speeddial-support"
+            icon={<ContactSupportIcon />}
+            tooltipTitle="Support"
+            tooltipOpen
+            onClick={() => handleOpenSupport()}
+          />
+        </SpeedDial>
+        <Box
+          className="fixed rounded-3xl bg-white shadow-md m-auto top-12 right-4 border-4"
+          sx={{ zIndex: 999, borderColor: 'rgba(255, 108, 136, 0.8)' }}
+        >
+          <div className="flex justify-between p-2">
+            <Button className="cy-next px-4 py-2" onClick={goToNextTask} variant="text">
+              {/* show loader or text */}
+              {nextTaskLoading ? <Loading /> : 'Next →'}
+            </Button>
+          </div>
+        </Box>
 
-          {task?.content && (
-            <div className="markdown-body mt-72 p-8 pb-80 rounded-tl-3xl rounded-tr-3xl relative">
-              {task.audio_url && (
-                <audio
-                  controls
-                  controlsList="nodownload nofullscreen"
-                  className="cy-audio-player w-full mb-4"
-                  src={task.audio_url}
-                ></audio>
-              )}
-              <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
-            </div>
-          )}
-        </div>
-      )}
+        {task?.content && (
+          <div className="markdown-body mt-72 p-8 pb-80 rounded-tl-3xl rounded-tr-3xl relative">
+            {task.audio_url && (
+              <audio
+                controls
+                controlsList="nodownload nofullscreen"
+                className="cy-audio-player w-full mb-4"
+                src={task.audio_url}
+              ></audio>
+            )}
+            <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
+          </div>
+        )}
+      </div>
       {openItems && (
         <ItemsDialog items={items} open={openItems} handleClose={handleClose}></ItemsDialog>
       )}

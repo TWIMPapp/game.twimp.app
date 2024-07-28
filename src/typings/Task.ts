@@ -12,6 +12,7 @@ export interface Task {
   required: boolean;
   image_url?: string;
   audio_url?: string;
+  video_url?: string;
 }
 
 // Task sub properties
