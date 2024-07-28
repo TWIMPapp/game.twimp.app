@@ -7,6 +7,8 @@ export default function Document() {
         <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
         <meta httpEquiv="Content-Type" content="text/html; charset=utf-8"></meta>
         <meta name="referrer" content="same-origin"></meta>
+        <meta name="apple-mobile-web-app-capable" content="yes"></meta>
+        <meta name="mobile-web-app-capable" content="yes"></meta>
       </Head>
       <body>
         <Main />
