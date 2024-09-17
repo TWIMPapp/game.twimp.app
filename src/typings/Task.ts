@@ -2,6 +2,7 @@ import { Colour } from './Colour.enum';
 import { Sentiment } from './Sentiment.enum';
 import { Status } from './Status.enum';
 import { TaskType } from './TaskType.enum';
+import { ThemeStyle } from './ThemeStyle.enum';
 import { InventoryItem } from './inventoryItem';
 
 export interface Task {
@@ -15,6 +16,7 @@ export interface Task {
   video_url?: string;
   audio_autoplay?: boolean;
   audio_autonext?: boolean;
+  theme?: ThemeStyle;
 }
 
 // Task sub properties

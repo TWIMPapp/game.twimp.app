@@ -122,7 +122,7 @@ export default function Chat() {
           sending={sending}
           energy={energy}
           isTyping={isTyping}
-          theme={params?.theme}
+          // theme={params?.theme}
           // upsideDown={params?.upside_down}
           callback={messageCallback}
         />

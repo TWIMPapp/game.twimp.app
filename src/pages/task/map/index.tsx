@@ -53,7 +53,7 @@ const AWTYPost = async (
   });
 };
 
-export default function Map() {
+export default function Map({ testTask }: { testTask?: MapTask }) {
   const [task, setTask] = useState<MapTask>();
   const [nextTask, setNextTask] = useState<TaskUnion>();
   const [awtyResponse, setAwtyResponse] = useState<AwtyResponse>();
@@ -77,8 +77,12 @@ export default function Map() {
       }
     };
 
-    fetchData();
-  }, []);
+    if (testTask?.id) {
+      setTask(testTask);
+    } else {
+      fetchData();
+    }
+  }, [testTask]);
 
   const handleClose = () => {
     setOpen(false);
@@ -112,7 +116,7 @@ export default function Map() {
     <>
       {task?.content ? (
         <Box
-          className="animate__animated animate__bounce rounded-3xl bg-white shadow-md p-8"
+          className="animate__animated animate__bounce rounded-3xl bg-white shadow-md p-8 dark:bg-gray-800 dark:text-white"
           sx={{
             position: 'absolute',
             width: 'calc(100% - 32px)',
@@ -125,7 +129,7 @@ export default function Map() {
             <h2 className="text-2xl" dangerouslySetInnerHTML={{ __html: task?.content }}></h2>
             {awtyResponse?.message && (
               <p
-                className="pt-2 block bg-white"
+                className="pt-2 block bg-white dark:bg-gray-800 dark:text-white"
                 dangerouslySetInnerHTML={{ __html: awtyResponse?.message ?? '' }}
               ></p>
             )}

@@ -14,7 +14,7 @@ import { NEVIGATION_DELAY } from '@/constants';
 import ItemsDialog from '@/components/ItemsDialog';
 import { InventoryItem } from '@/typings/inventoryItem';
 
-const Single = () => {
+const Single = ({ testTask }: { testTask?: QuestionSingleTask }) => {
   const [task, setTask] = useState<QuestionSingleTask>();
   const [nextTask, setNextTask] = useState<TaskUnion>();
   const [params, setParams] = useState<QueryParams>();
@@ -49,8 +49,12 @@ const Single = () => {
       }
     };
 
-    fetchData();
-  }, []);
+    if (testTask?.id) {
+      setTask(testTask);
+    } else {
+      fetchData();
+    }
+  }, [testTask]);
 
   const onValidate = async (answer: string) => {
     setLoading(true);
@@ -101,7 +105,7 @@ const Single = () => {
           style={{ backgroundImage: 'url(' + task.image_url + ')' }}
         >
           {task?.content ? (
-            <div className="markdown-body mt-52 rounded-tl-3xl rounded-tr-3xl relative">
+            <div className="markdown-body mt-52 pb-80 bg-white dark:bg-gray-800 dark:text-white rounded-tl-3xl rounded-tr-3xl relative">
               <div className="pl-6 pr-6 pb-6">
                 <div className="max-h-64">
                   <Question question={task.content} />
@@ -111,7 +115,7 @@ const Single = () => {
                       autoFocus
                       label="Answer"
                       variant="outlined"
-                      className="cy-single-input w-full"
+                      className="cy-single-input w-full dark:text-white"
                       value={input}
                       error={outcome?.sentiment && outcome.sentiment !== 'positive'}
                       onChange={(e) => setInput(e.target.value)}

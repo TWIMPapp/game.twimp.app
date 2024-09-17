@@ -13,7 +13,7 @@ import { NEVIGATION_DELAY } from '@/constants';
 import ItemsDialog from '@/components/ItemsDialog';
 import { InventoryItem } from '@/typings/inventoryItem';
 
-const Multi = () => {
+const Multi = ({ testTask }: { testTask?: QuestionMultiTask }) => {
   const [task, setTask] = useState<QuestionMultiTask>();
   const [nextTask, setNextTask] = useState<TaskUnion>();
   const [params, setParams] = useState<QueryParams>();
@@ -88,8 +88,12 @@ const Multi = () => {
       }
     };
 
-    fetchData();
-  }, []);
+    if (testTask?.id) {
+      setTask(testTask);
+    } else {
+      fetchData();
+    }
+  }, [testTask]);
 
   return (
     <>
@@ -100,7 +104,7 @@ const Multi = () => {
         >
           {task?.content ? (
             <>
-              <div className="markdown-body mt-52 rounded-tl-3xl rounded-tr-3xl relative">
+              <div className="markdown-body mt-52 pb-60 bg-white dark:bg-gray-800 dark:text-white rounded-tl-3xl rounded-tr-3xl relative">
                 <MultiQuestion
                   question={task.content}
                   hint={task.hint}

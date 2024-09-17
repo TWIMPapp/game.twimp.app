@@ -3,6 +3,7 @@ import { TaskUnion } from '@/typings/Task';
 import { TaskTypeRouteMap } from './TaskTypeRouteMap';
 import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
 import { TaskType } from '@/typings/TaskType.enum';
+import { ThemeStyle } from '@/typings/ThemeStyle.enum';
 
 export class TaskHandlerService {
   public setTaskInSession<T>(task: T): void {
@@ -43,6 +44,13 @@ export class TaskHandlerService {
       window.location.assign(
         `${route}?${stringifyQueryParams(params, { includeStartAmp: false })}`
       );
+
+      // set dark theme
+      if (task.theme === ThemeStyle.Dark) {
+        document.documentElement.classList.add('dark');
+      } else if (task.theme === ThemeStyle.Light) {
+        document.documentElement.classList.remove('dark');
+      }
     } else {
       console.error(`Invalid task type: ${task.type}`);
     }

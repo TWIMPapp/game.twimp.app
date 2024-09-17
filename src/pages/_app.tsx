@@ -1,28 +1,14 @@
 import Loading from '../components/Loading';
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
-// import { Press_Start_2P, MedievalSharp } from 'next/font/google';
 import Script from 'next/script';
 import Head from 'next/head';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import QueryParams from '@/typings/QueryParams';
-import MainTabs from '@/components/MainTabs';
 
 import '@/styles/globals.scss';
 
 const GTM_ID = 'GTM-PJT9V98';
-
-// const family = Press_Start_2P({
-//   subsets: ['cyrillic'],
-//   display: 'swap',
-//   weight: '400'
-// });
-
-// const rpg = MedievalSharp({
-//   subsets: ['latin'],
-//   display: 'swap',
-//   weight: '400'
-// });
 
 export const theme = createTheme({
   palette: {
@@ -54,15 +40,6 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <>
-      {/* <style jsx global>{`
-        #game.theme-family {
-          font-family: ${family.style.fontFamily};
-        }
-
-        #game.theme-rpg {
-          font-family: ${rpg.style.fontFamily};
-        }
-      `}</style> */}
       <Script id="google-tag-manager" strategy="afterInteractive">
         {`
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -84,10 +61,8 @@ export default function App({ Component, pageProps }: AppProps) {
             ></meta>
           </Head>
           <ThemeProvider theme={theme}>
-            <main className={`game theme-${params.theme}`}>
-              {/* <MainTabs hidden={!isTaskPath}> */}
+            <main className={`game`}>
               <Component {...pageProps} />
-              {/* </MainTabs> */}
             </main>
           </ThemeProvider>
         </>

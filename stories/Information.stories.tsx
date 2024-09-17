@@ -2,11 +2,16 @@ import React from 'react';
 import { StoryFn } from '@storybook/react';
 
 import Information from '../src/pages/task/information';
-import { withQuery } from '@storybook/addon-queryparams';
+import { InformationTask } from '../src/typings/Task';
+import { TaskType } from '../src/typings/TaskType.enum';
+import { ThemeStyle } from '../src/typings/ThemeStyle.enum';
 
-const task = {
+const task: InformationTask = {
   ok: true,
-  type: 'information',
+  theme: ThemeStyle.Light,
+  required: true,
+  id: 1,
+  type: TaskType.Information,
   image_url:
     'https://media2.giphy.com/media/l41lPZpU2FncYBeH6/giphy.gif?cid=ecf05e47cxwmbshoe7m5z1eocmxzu8htrv7o7fsu3r260vzb&ep=v1_gifs_search&rid=giphy.gif&ct=g',
   content: `# The Tapestry of Life
@@ -91,17 +96,18 @@ In the end, the village found a way to weave the new threads into their tapestry
 
 export default {
   title: 'Tasks/Information',
-  component: Information,
-  decorators: [withQuery],
-  parameters: {
-    query: {
-      task: JSON.stringify(task)
-    }
-  }
+  component: Information
 };
 
-const InfoTemplate: StoryFn<typeof Information> = (args) => {
-  return <Information></Information>;
+const InfoTemplateLight: StoryFn<typeof Information> = (args) => {
+  document.documentElement.classList.remove('dark');
+  return <Information testTask={task}></Information>;
 };
 
-export const DefaultState = InfoTemplate.bind({});
+const InfoTemplateDark: StoryFn<typeof Information> = (args) => {
+  document.documentElement.classList.add('dark');
+  return <Information testTask={task}></Information>;
+};
+
+export const LightState = InfoTemplateLight.bind({});
+export const DarkState = InfoTemplateDark.bind({});

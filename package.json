@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "deploy": "next build && next export && aws s3 sync out/ s3://game.twimp.app --delete",
-    "storybook": "storybook dev -p 6006 --no-open",
+    "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
   "dependencies": {

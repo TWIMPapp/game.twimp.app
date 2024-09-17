@@ -20,7 +20,7 @@ import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import InventoryDialog from '@/components/inventoryDialog';
 import MapDialog from '@/components/mapDialog';
 
-export default function Information() {
+export default function Information({ testTask }: { testTask?: InformationTask }) {
   const [task, setTask] = useState<InformationTask>();
   const [nextTask, setNextTask] = useState<TaskUnion>();
   const [nextTaskLoading, setNextTaskLoading] = useState<boolean>(false);
@@ -102,8 +102,12 @@ export default function Information() {
       }
     };
 
-    fetchData();
-  }, []);
+    if (testTask?.id) {
+      setTask(testTask);
+    } else {
+      fetchData();
+    }
+  }, [testTask]);
 
   return (
     <>
@@ -164,8 +168,8 @@ export default function Information() {
           />
         </SpeedDial>
         <Box
-          className="fixed rounded-3xl bg-white shadow-md m-auto top-12 right-4 border-4"
-          sx={{ zIndex: 999, borderColor: 'rgba(255, 108, 136, 0.8)' }}
+          className="fixed rounded-3xl bg-white dark:bg-gray-800 dark:text-white shadow-md m-auto top-12 right-4"
+          sx={{ zIndex: 999 }}
         >
           <div className="flex justify-between p-2">
             <Button className="cy-next px-4 py-2" onClick={goToNextTask} variant="text">
@@ -176,7 +180,7 @@ export default function Information() {
         </Box>
 
         {task?.content && (
-          <div className="markdown-body mt-72 p-8 pb-80 rounded-tl-3xl rounded-tr-3xl relative">
+          <div className="markdown-body mt-72 p-8 pb-80 bg-white dark:bg-gray-800 dark:text-white rounded-tl-3xl rounded-tr-3xl relative">
             {task.audio_url && (
               <audio
                 controls

@@ -1,12 +1,14 @@
 import React from 'react';
-import { Meta, StoryFn } from '@storybook/react';
-import { withQuery } from '@storybook/addon-queryparams';
-
+import { StoryFn } from '@storybook/react';
+import { QuestionMultiTask } from '../src/typings/Task';
 import Multi from '../src/pages/task/multi';
+import { TaskType } from '../src/typings/TaskType.enum';
+import { Colour } from '../src/typings/Colour.enum';
 
-const task = {
+const task: QuestionMultiTask = {
   ok: true,
-  type: 'question_multi',
+  id: 1,
+  type: TaskType.Question_multi,
   image_url:
     'https://d3i6fh83elv35t.cloudfront.net/newshour/app/uploads/2016/07/apollogiftweet1.gif',
   content:
@@ -16,38 +18,36 @@ const task = {
   options: [
     {
       content: 'Apollo 11',
-      colour: 'blue'
+      colour: Colour.Blue
     },
     {
       content: 'Apollo 12',
-      colour: 'yellow'
+      colour: Colour.Green
     },
     {
       content: 'Apollo 13',
-      colour: 'purple'
+      colour: Colour.Yellow
     },
     {
       content: 'Apollo 14',
-      colour: 'red'
+      colour: Colour.Red
     }
   ]
 };
 
-const meta: Meta<typeof Multi> = {
+export default {
   title: 'Tasks/Question Multi',
-  component: Multi,
-  decorators: [withQuery],
-  parameters: {
-    query: {
-      task: JSON.stringify(task)
-    }
-  }
+  component: Multi
 };
 
-const MultiTemplate: StoryFn<typeof Multi> = (args) => {
-  return <Multi></Multi>;
+const MultiTemplateLight: StoryFn<typeof Multi> = (args) => {
+  document.documentElement.classList.remove('dark');
+  return <Multi testTask={task}></Multi>;
+};
+const MultiTemplateDark: StoryFn<typeof Multi> = (args) => {
+  document.documentElement.classList.add('dark');
+  return <Multi testTask={task}></Multi>;
 };
 
-export const DefaultState = MultiTemplate.bind({});
-
-export default meta;
+export const LightState = MultiTemplateLight.bind({});
+export const DarkState = MultiTemplateDark.bind({});
