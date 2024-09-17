@@ -124,10 +124,7 @@ export default function Information() {
             width="220"
             height="auto"
           >
-            <source
-              src="https://trail-video.s3.eu-west-2.amazonaws.com/tester2.mp4"
-              type="video/mp4"
-            />
+            <source src={task?.video_url} type="video/mp4" />
           </video>
         )}
         <SpeedDial
