@@ -183,6 +183,12 @@ export default function Information() {
                 controlsList="nodownload nofullscreen"
                 className="cy-audio-player w-full mb-4"
                 src={task.audio_url}
+                autoPlay={task.audio_autoplay}
+                onEnded={() => {
+                  if (task.audio_autonext) {
+                    setTimeout(() => goToNextTask(), 1000);
+                  }
+                }}
               ></audio>
             )}
             <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>

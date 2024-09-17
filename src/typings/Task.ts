@@ -13,6 +13,8 @@ export interface Task {
   image_url?: string;
   audio_url?: string;
   video_url?: string;
+  audio_autoplay?: boolean;
+  audio_autonext?: boolean;
 }
 
 // Task sub properties
