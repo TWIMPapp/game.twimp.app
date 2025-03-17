@@ -4,7 +4,6 @@ export default function Document() {
   return (
     <Html lang="en" className="h-full w-full">
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
         <meta httpEquiv="Content-Type" content="text/html; charset=utf-8"></meta>
         <meta name="referrer" content="same-origin"></meta>
         <meta name="apple-mobile-web-app-capable" content="yes"></meta>
