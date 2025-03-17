@@ -16,6 +16,7 @@ export default function EvadeGameMap({ playerPosition, searchCircles }: MapCompo
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const circlesRef = useRef<L.Circle[]>([]);
+  const zoomLevel = 19;
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -29,14 +30,15 @@ export default function EvadeGameMap({ playerPosition, searchCircles }: MapCompo
       iconSize: [38, 38]
     });
 
-    mapRef.current = L.map(mapContainerRef.current).setView(
-      [playerPosition.lat, playerPosition.lng],
-      18
-    );
+    mapRef.current = L.map(mapContainerRef.current, {
+      center: [playerPosition.lat, playerPosition.lng],
+      zoom: zoomLevel,
+      maxZoom: 24, // Set your desired max zoom level here
+    });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      attribution: '© Google',
+      maxZoom: 22
     }).addTo(mapRef.current);
 
     const marker = L.marker([playerPosition.lat, playerPosition.lng], { icon: customIcon }).addTo(
@@ -58,7 +60,7 @@ export default function EvadeGameMap({ playerPosition, searchCircles }: MapCompo
 
     const marker = markersRef.current[0];
     marker.setLatLng([playerPosition.lat, playerPosition.lng]);
-    mapRef.current.setView([playerPosition.lat, playerPosition.lng], mapRef.current.getZoom());
+    mapRef.current.setView([playerPosition.lat, playerPosition.lng], zoomLevel);
   }, [playerPosition]);
 
   // Update search circles
