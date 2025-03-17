@@ -76,6 +76,10 @@ export interface InformationTask extends Task {
   type: TaskType.Information;
 }
 
+export interface EvadeTask extends Task {
+  type: TaskType.Evade;
+}
+
 export interface ChatTask extends Task {
   type: TaskType.Chat;
   character: Character[];
@@ -92,4 +96,5 @@ export type TaskUnion =
   | MapTask
   | InformationTask
   | ChatTask
-  | FinishTask;
+  | FinishTask
+  | EvadeTask;

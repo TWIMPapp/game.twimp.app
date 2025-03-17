@@ -4,5 +4,6 @@ export enum TaskType {
   Map = 'map',
   Chat = 'chat',
   Information = 'information',
-  Finish = 'finish'
+  Finish = 'finish',
+  Evade = 'evade'
 }
