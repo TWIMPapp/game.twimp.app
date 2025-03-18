@@ -225,11 +225,29 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
     const currentPosition = keyboardPosition || position;
     if (!currentPosition) return;
 
+    // Only update if the position has actually changed
+    const prevPosition = gameState.playerPosition;
+    if (prevPosition &&
+        prevPosition.lat === currentPosition.lat &&
+        prevPosition.lng === currentPosition.lng) {
+      return;
+    }
+
     setGameState((prev) => ({
       ...prev,
       playerPosition: currentPosition
     }));
   }, [gameState.isPlaying, position, keyboardPosition]);
+
+  // Update keyboard position when GPS position changes significantly
+  useEffect(() => {
+    if (!gameState.isPlaying || !position) return;
+
+    // Only update keyboard position if it's not being controlled by keys
+    if (activeKeys.size === 0) {
+      setKeyboardPosition(position);
+    }
+  }, [gameState.isPlaying, position, activeKeys]);
 
   const startGame = () => {
     if (!position) return;
