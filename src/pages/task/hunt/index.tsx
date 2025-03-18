@@ -60,12 +60,11 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
 
   const [keyboardPosition, setKeyboardPosition] = useState<Position | null>(null);
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
+  const [startingPosition, setStartingPosition] = useState<Position | null>(null);
 
   // Use refs to track the latest position and game state without triggering re-renders
   const latestPosition = useRef(position);
   const latestGameState = useRef(gameState);
-
-  const [startingPosition, setStartingPosition] = useState<Position | null>(null);
 
   const handleJournalClose = () => {
     setOpenJournal(false);
@@ -204,57 +203,36 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
       let newLat = keyboardPosition.lat;
       let newLng = keyboardPosition.lng;
 
-	  console.log(activeKeys);
-
       if (activeKeys.has('w')) newLat += MOVEMENT_SPEED;
       if (activeKeys.has('s')) newLat -= MOVEMENT_SPEED;
       if (activeKeys.has('a')) newLng -= MOVEMENT_SPEED;
       if (activeKeys.has('d')) newLng += MOVEMENT_SPEED;
 
       setKeyboardPosition({ lat: newLat, lng: newLng });
+      setGameState(prev => ({
+        ...prev,
+        playerPosition: { lat: newLat, lng: newLng }
+      }));
     };
 
     const interval = setInterval(updatePosition, CIRCLE_UPDATE_INTERVAL);
     return () => clearInterval(interval);
   }, [gameState.isPlaying, keyboardPosition, activeKeys]);
 
-  // Update player position based on keyboard or GPS
+  // Update player position based on GPS when no keys are pressed
   useEffect(() => {
-    if (!gameState.isPlaying) return;
+    if (!gameState.isPlaying || !position || activeKeys.size > 0) return;
 
-    const currentPosition = keyboardPosition || position;
-    if (!currentPosition) return;
-
-    // Only update if the position has actually changed
-    const prevPosition = gameState.playerPosition;
-    if (prevPosition &&
-        prevPosition.lat === currentPosition.lat &&
-        prevPosition.lng === currentPosition.lng) {
-      return;
-    }
-
-    setGameState((prev) => ({
+    setGameState(prev => ({
       ...prev,
-      playerPosition: currentPosition
+      playerPosition: position
     }));
-  }, [gameState.isPlaying, position, keyboardPosition]);
-
-  // Update keyboard position when GPS position changes significantly
-  useEffect(() => {
-    if (!gameState.isPlaying || !position) return;
-
-    // Only update keyboard position if it's not being controlled by keys
-    if (activeKeys.size === 0) {
-      setKeyboardPosition(position);
-    }
   }, [gameState.isPlaying, position, activeKeys]);
 
   const startGame = () => {
     if (!position) return;
 
-    // Store the starting position when the game begins
     setStartingPosition(position);
-
     setGameState({
       level: 1,
       timeRemaining: WAVE_DURATION,
