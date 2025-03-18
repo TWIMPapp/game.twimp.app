@@ -18,7 +18,8 @@ import HuntGame from '@/components/HuntGame';
 import { MapPin } from 'lucide-react';
 
 const WAVE_DURATION = 30; // 30 seconds per treasure
-const COLLISION_DISTANCE = 0.0001; // Distance in degrees for collision detection
+const CIRCLE_UPDATE_INTERVAL = 100; // Update every 100ms
+const COLLISION_DISTANCE = 0.00002; // Distance in degrees for collision detection (about 2 meters)
 const MOVEMENT_SPEED = 0.00001; // Movement speed in degrees
 
 export interface GameState {
@@ -27,6 +28,7 @@ export interface GameState {
   isPlaying: boolean;
   playerPosition: Position | null;
   treasurePosition: Position | null;
+  score: number;
 }
 
 function calculateDistance(pos1: Position, pos2: Position): number {
@@ -52,14 +54,18 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
     timeRemaining: WAVE_DURATION,
     isPlaying: false,
     playerPosition: null,
-    treasurePosition: null
+    treasurePosition: null,
+    score: 0
   });
 
   const [keyboardPosition, setKeyboardPosition] = useState<Position | null>(null);
+  const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
 
   // Use refs to track the latest position and game state without triggering re-renders
   const latestPosition = useRef(position);
   const latestGameState = useRef(gameState);
+
+  const [startingPosition, setStartingPosition] = useState<Position | null>(null);
 
   const handleJournalClose = () => {
     setOpenJournal(false);
@@ -150,14 +156,18 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
   }, [gameState]);
 
   const spawnTreasure = (playerPos: Position): Position => {
-    // Spawn treasure within a reasonable distance from the player
-    const maxDistance = 0.002; // Maximum distance in degrees
+    if (!startingPosition) return playerPos; // Fallback if starting position not set
+
+    // Convert 100 meters to degrees (approximate)
+    // At the equator, 1 degree is about 111,320 meters
+    // So 100 meters is approximately 0.0009 degrees
+    const maxDistance = 0.0009; // Maximum distance in degrees (100 meters)
     const angle = Math.random() * Math.PI * 2;
     const distance = Math.random() * maxDistance;
 
     return {
-      lat: playerPos.lat + Math.cos(angle) * distance,
-      lng: playerPos.lng + Math.sin(angle) * distance
+      lat: startingPosition.lat + Math.cos(angle) * distance,
+      lng: startingPosition.lng + Math.sin(angle) * distance
     };
   };
 
@@ -167,33 +177,46 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!keyboardPosition) return;
+      setActiveKeys(prev => new Set(prev).add(e.key.toLowerCase()));
+    };
 
+    const handleKeyUp = (e: KeyboardEvent) => {
+      setActiveKeys(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(e.key.toLowerCase());
+        return newSet;
+      });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [gameState.isPlaying, keyboardPosition]);
+
+  // Update position based on active keys
+  useEffect(() => {
+    if (!gameState.isPlaying || !keyboardPosition || activeKeys.size === 0) return;
+
+    const updatePosition = () => {
       let newLat = keyboardPosition.lat;
       let newLng = keyboardPosition.lng;
 
-      switch (e.key.toLowerCase()) {
-        case 'w':
-          newLat += MOVEMENT_SPEED;
-          break;
-        case 's':
-          newLat -= MOVEMENT_SPEED;
-          break;
-        case 'a':
-          newLng -= MOVEMENT_SPEED;
-          break;
-        case 'd':
-          newLng += MOVEMENT_SPEED;
-          break;
-        default:
-          return;
-      }
+	  console.log(activeKeys);
+
+      if (activeKeys.has('w')) newLat += MOVEMENT_SPEED;
+      if (activeKeys.has('s')) newLat -= MOVEMENT_SPEED;
+      if (activeKeys.has('a')) newLng -= MOVEMENT_SPEED;
+      if (activeKeys.has('d')) newLng += MOVEMENT_SPEED;
 
       setKeyboardPosition({ lat: newLat, lng: newLng });
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState.isPlaying, keyboardPosition]);
+    const interval = setInterval(updatePosition, CIRCLE_UPDATE_INTERVAL);
+    return () => clearInterval(interval);
+  }, [gameState.isPlaying, keyboardPosition, activeKeys]);
 
   // Update player position based on keyboard or GPS
   useEffect(() => {
@@ -211,12 +234,16 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
   const startGame = () => {
     if (!position) return;
 
+    // Store the starting position when the game begins
+    setStartingPosition(position);
+
     setGameState({
       level: 1,
       timeRemaining: WAVE_DURATION,
       isPlaying: true,
       playerPosition: position,
-      treasurePosition: spawnTreasure(position)
+      treasurePosition: spawnTreasure(position),
+      score: 0
     });
     setKeyboardPosition(position);
   };
@@ -234,21 +261,26 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
     return () => clearInterval(gameInterval);
   }, [gameState.isPlaying]);
 
+  // Check for collisions and update game state
   useEffect(() => {
-    if (!gameState.isPlaying || !position) return;
+    if (!gameState.isPlaying) return;
+
+    const currentPosition = keyboardPosition || position;
+    if (!currentPosition || !gameState.treasurePosition) return;
 
     // Check for collision with treasure
-    if (gameState.treasurePosition) {
-      const distance = calculateDistance(position, gameState.treasurePosition);
-      if (distance < COLLISION_DISTANCE) {
-        // Treasure collected! Spawn new treasure
-        setGameState((prev) => ({
-          ...prev,
-          timeRemaining: WAVE_DURATION,
-          treasurePosition: spawnTreasure(position)
-        }));
-        alert('Treasure collected! Find the next one!');
-      }
+    const distance = calculateDistance(currentPosition, gameState.treasurePosition);
+    if (distance < COLLISION_DISTANCE) {
+      // Clear active keys when treasure is collected
+      setActiveKeys(new Set());
+
+      // Treasure collected! Spawn new treasure
+      setGameState((prev) => ({
+        ...prev,
+        timeRemaining: WAVE_DURATION,
+        treasurePosition: spawnTreasure(currentPosition),
+        score: prev.score + 1
+      }));
     }
 
     // Check for time running out
@@ -257,9 +289,9 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
         ...prev,
         isPlaying: false
       }));
-      alert('Time ran out! Game Over!');
+      alert(`Game Over! Final Score: ${gameState.score}`);
     }
-  }, [position, gameState.isPlaying, gameState.timeRemaining, gameState.treasurePosition]);
+  }, [gameState.isPlaying, gameState.timeRemaining, gameState.treasurePosition, keyboardPosition, position, gameState.score]);
 
   if (error) {
     return (
@@ -312,6 +344,7 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
             <div className="bg-white p-4 shadow-md">
               <div className="flex justify-between items-center max-w-4xl mx-auto">
                 <div className="text-lg font-semibold">Level: {gameState.level}</div>
+                <div className="text-lg font-semibold">Score: {gameState.score}</div>
                 <div className="text-lg font-semibold">Time: {gameState.timeRemaining}s</div>
               </div>
             </div>

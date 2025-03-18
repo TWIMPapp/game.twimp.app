@@ -16,7 +16,7 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
-  const zoomLevel = 19;
+  const zoomLevel = 20;
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -46,9 +46,10 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
       maxZoom: 22
     }).addTo(mapRef.current);
 
-    const playerMarker = L.marker([playerPosition.lat, playerPosition.lng], { icon: playerIcon }).addTo(
-      mapRef.current
-    );
+    const playerMarker = L.marker([playerPosition.lat, playerPosition.lng], {
+      icon: playerIcon,
+      zIndexOffset: 1000
+    }).addTo(mapRef.current);
     markersRef.current = [playerMarker];
 
     return () => {
@@ -64,8 +65,8 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
     if (!mapRef.current || !markersRef.current[0]) return;
 
     const marker = markersRef.current[0];
-    marker.setLatLng([playerPosition.lat, playerPosition.lng]);
-    mapRef.current.setView([playerPosition.lat, playerPosition.lng], zoomLevel);
+    const newLatLng = L.latLng(playerPosition.lat, playerPosition.lng);
+    marker.setLatLng(newLatLng);
   }, [playerPosition]);
 
   // Update treasure position
@@ -88,7 +89,8 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
       });
 
       const treasureMarker = L.marker([treasurePosition.lat, treasurePosition.lng], {
-        icon: treasureIcon
+        icon: treasureIcon,
+        zIndexOffset: 0
       }).addTo(mapRef.current);
 
       markersRef.current.push(treasureMarker);
