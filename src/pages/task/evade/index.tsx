@@ -175,9 +175,9 @@ export default function Evade({ testTask }: { testTask?: EvadeTask }) {
         lat: playerPos.lat + (Math.random() - 0.5) * 0.002,
         lng: playerPos.lng + (Math.random() - 0.5) * 0.002
       },
-      radius: 10,
+      radius: 5,
       direction: Math.random() * Math.PI * 2,
-      speed: 0.000002 * (1 + level * 0.5),
+      speed: 0.000002,
       turnRate: (Math.random() - 0.5) * 0.1
     }));
   };

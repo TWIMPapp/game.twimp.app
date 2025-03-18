@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
+import PlayerIcon from '@/assets/icons/fox.png';
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
@@ -22,12 +23,10 @@ export default function EvadeGameMap({ playerPosition, searchCircles }: MapCompo
     if (!mapContainerRef.current || mapRef.current) return;
 
     const customIcon = new L.Icon({
-      iconUrl:
-        'data:image/svg+xml,' +
-        encodeURIComponent(
-          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-fox"><path d="M19 12c.6 0 1.1.2 1.4.6L22 11l-3-3l-1-8l-3 6l-3-3l-3 3l-3-6l-1 8l-3 3l1.6 1.6c.3-.4.8-.6 1.4-.6c.9 0 1.7.5 2 1.2c.3-.7 1.1-1.2 2-1.2s1.7.5 2 1.2c.3-.7 1.1-1.2 2-1.2s1.7.5 2 1.2c.3-.7 1.1-1.2 2-1.2Z"/><path d="M19 12V19A2 2 0 0 1 17 21H7A2 2 0 0 1 5 19V12"/></svg>'
-        ),
-      iconSize: [38, 38]
+      iconUrl: PlayerIcon.src, // Use the imported PNG file
+      iconSize: [38, 38], // Adjust size as needed
+      iconAnchor: [19, 38], // Centers the icon correctly
+      popupAnchor: [0, -38], // Adjusts the popup position if needed
     });
 
     mapRef.current = L.map(mapContainerRef.current, {
