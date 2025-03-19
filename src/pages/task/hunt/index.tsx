@@ -1,29 +1,18 @@
-import ItemsDialog from '@/components/ItemsDialog';
-import JournalDialog from '@/components/JournalDialog';
 import Loading from '@/components/Loading';
-import { APIService } from '@/services/API';
 import { TaskHandlerService } from '@/services/TaskHandler';
-import { Endpoint } from '@/typings/Endpoint.enum';
-import { NextResponse } from '@/typings/NextResponse';
 import QueryParams from '@/typings/QueryParams';
 import { HuntTask, TaskUnion } from '@/typings/Task';
-import { InventoryItem } from '@/typings/inventoryItem';
 import { useEffect, useRef, useState } from 'react';
-
-import InventoryDialog from '@/components/inventoryDialog';
-import MapDialog from '@/components/mapDialog';
 import { Position } from '@/hooks/useGeolocation';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import HuntGame from '@/components/HuntGame';
 import { MapPin } from 'lucide-react';
+import { BaseTask } from '@/components/BaseTask';
 
 const WAVE_DURATION = 30; // 30 seconds per treasure
-const CIRCLE_UPDATE_INTERVAL = 100; // Update every 100ms
 const COLLISION_DISTANCE = 0.00002; // Distance in degrees for collision detection (about 2 meters)
-const MOVEMENT_SPEED = 0.00001; // Movement speed in degrees
 
 export interface GameState {
-  level: number;
   timeRemaining: number;
   isPlaying: boolean;
   playerPosition: Position | null;
@@ -39,18 +28,10 @@ function calculateDistance(pos1: Position, pos2: Position): number {
 
 export default function Hunt({ testTask }: { testTask?: HuntTask }) {
   const [task, setTask] = useState<HuntTask>();
-  const [nextTask, setNextTask] = useState<TaskUnion>();
-  const [nextTaskLoading, setNextTaskLoading] = useState<boolean>(false);
   const [params, setParams] = useState<QueryParams>();
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [openItems, setOpenItems] = useState<boolean>(false);
-  const [openJournal, setOpenJournal] = useState<boolean>(false);
-  const [openInventory, setOpenInventory] = useState<boolean>(false);
-  const [openMap, setOpenMap] = useState<boolean>(false);
 
   const { position, error, isLoading } = useGeolocation();
   const [gameState, setGameState] = useState<GameState>({
-    level: 1,
     timeRemaining: WAVE_DURATION,
     isPlaying: false,
     playerPosition: null,
@@ -58,68 +39,10 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
     score: 0
   });
 
-  const [keyboardPosition, setKeyboardPosition] = useState<Position | null>(null);
-  const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
-  const [startingPosition, setStartingPosition] = useState<Position | null>(null);
-
-  // Use refs to track the latest position and game state without triggering re-renders
-  const latestPosition = useRef(position);
+  // Use ref to track the latest game state without triggering re-renders
   const latestGameState = useRef(gameState);
 
-  const handleJournalClose = () => {
-    setOpenJournal(false);
-  };
-
-  const handleInventoryClose = () => {
-    setOpenInventory(false);
-  };
-
-  const handleMapClose = () => {
-    setOpenMap(false);
-  };
-
-  const handleOpenSupport = () => {
-    if ((window as any).$crisp) {
-      (window as any).$crisp.push(['do', 'chat:open']);
-    }
-  };
-
-  const goToNextTask = async () => {
-    setNextTaskLoading(true);
-
-    const body = {
-      user_id: params?.user_id,
-      trail_ref: params?.trail_ref,
-      debug: true
-    };
-    const data = await new APIService(Endpoint.Next).post<NextResponse>(
-      { body },
-      {
-        user_id: params?.user_id ?? '',
-        trail_ref: params?.trail_ref ?? ''
-      }
-    );
-
-    if (data) {
-      if (data.task) {
-        setNextTask(data.task);
-
-        if ((data.outcome?.items ?? [])?.length > 0) {
-          setItems(data?.outcome?.items ?? []);
-          setOpenItems(true);
-        } else {
-          new TaskHandlerService().goToTaskComponent(data.task as TaskUnion, params as QueryParams);
-        }
-      }
-    }
-  };
-
-  const handleClose = () => {
-    setOpenItems(false);
-    if (nextTask) {
-      new TaskHandlerService().goToTaskComponent(nextTask, params as QueryParams);
-    }
-  };
+  const [startingPosition, setStartingPosition] = useState<Position | null>(null);
 
   useEffect(() => {
     const fetchData = () => {
@@ -146,20 +69,9 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
     }
   }, [testTask]);
 
-  useEffect(() => {
-    latestPosition.current = position;
-  }, [position]);
-
-  useEffect(() => {
-    latestGameState.current = gameState;
-  }, [gameState]);
-
   const spawnTreasure = (playerPos: Position): Position => {
-    if (!startingPosition) return playerPos; // Fallback if starting position not set
+    if (!startingPosition) return playerPos;
 
-    // Convert 100 meters to degrees (approximate)
-    // At the equator, 1 degree is about 111,320 meters
-    // So 100 meters is approximately 0.0009 degrees
     const maxDistance = 0.0009; // Maximum distance in degrees (100 meters)
     const angle = Math.random() * Math.PI * 2;
     const distance = Math.random() * maxDistance;
@@ -170,88 +82,40 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
     };
   };
 
-  // Handle keyboard input
+  // Update player position based on GPS
   useEffect(() => {
-    if (!gameState.isPlaying) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!keyboardPosition) return;
-      setActiveKeys(prev => new Set(prev).add(e.key.toLowerCase()));
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      setActiveKeys(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(e.key.toLowerCase());
-        return newSet;
-      });
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [gameState.isPlaying, keyboardPosition]);
-
-  // Update position based on active keys
-  useEffect(() => {
-    if (!gameState.isPlaying || !keyboardPosition || activeKeys.size === 0) return;
-
-    const updatePosition = () => {
-      let newLat = keyboardPosition.lat;
-      let newLng = keyboardPosition.lng;
-
-      if (activeKeys.has('w')) newLat += MOVEMENT_SPEED;
-      if (activeKeys.has('s')) newLat -= MOVEMENT_SPEED;
-      if (activeKeys.has('a')) newLng -= MOVEMENT_SPEED;
-      if (activeKeys.has('d')) newLng += MOVEMENT_SPEED;
-
-      setKeyboardPosition({ lat: newLat, lng: newLng });
-      setGameState(prev => ({
-        ...prev,
-        playerPosition: { lat: newLat, lng: newLng }
-      }));
-    };
-
-    const interval = setInterval(updatePosition, CIRCLE_UPDATE_INTERVAL);
-    return () => clearInterval(interval);
-  }, [gameState.isPlaying, keyboardPosition, activeKeys]);
-
-  // Update player position based on GPS when no keys are pressed
-  useEffect(() => {
-    if (!gameState.isPlaying || !position || activeKeys.size > 0) return;
+    if (!gameState.isPlaying || !position) return;
 
     setGameState(prev => ({
       ...prev,
       playerPosition: position
     }));
-  }, [gameState.isPlaying, position, activeKeys]);
+  }, [gameState.isPlaying, position]);
 
   const startGame = () => {
     if (!position) return;
 
     setStartingPosition(position);
     setGameState({
-      level: 1,
       timeRemaining: WAVE_DURATION,
       isPlaying: true,
       playerPosition: position,
       treasurePosition: spawnTreasure(position),
       score: 0
     });
-    setKeyboardPosition(position);
   };
 
   useEffect(() => {
     if (!gameState.isPlaying) return;
 
     const gameInterval = setInterval(() => {
-      setGameState((prev) => ({
-        ...prev,
-        timeRemaining: prev.timeRemaining - 1
-      }));
+      setGameState((prev) => {
+        latestGameState.current = {
+          ...prev,
+          timeRemaining: prev.timeRemaining - 1
+        };
+        return latestGameState.current;
+      });
     }, 1000);
 
     return () => clearInterval(gameInterval);
@@ -259,35 +123,38 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
 
   // Check for collisions and update game state
   useEffect(() => {
-    if (!gameState.isPlaying) return;
-
-    const currentPosition = keyboardPosition || position;
-    if (!currentPosition || !gameState.treasurePosition) return;
+    if (!gameState.isPlaying || !gameState.playerPosition || !gameState.treasurePosition) return;
 
     // Check for collision with treasure
-    const distance = calculateDistance(currentPosition, gameState.treasurePosition);
+    const distance = calculateDistance(gameState.playerPosition, gameState.treasurePosition);
     if (distance < COLLISION_DISTANCE) {
-      // Clear active keys when treasure is collected
-      setActiveKeys(new Set());
-
       // Treasure collected! Spawn new treasure
-      setGameState((prev) => ({
-        ...prev,
-        timeRemaining: WAVE_DURATION,
-        treasurePosition: spawnTreasure(currentPosition),
-        score: prev.score + 1
-      }));
+      setGameState((prev) => {
+        const newState = {
+          ...prev,
+          timeRemaining: WAVE_DURATION,
+          treasurePosition: spawnTreasure(prev.playerPosition!),
+          score: prev.score + 1
+        };
+        latestGameState.current = newState;
+        return newState;
+      });
+      alert(`Treasure collected! Score: ${gameState.score + 1}`);
     }
 
     // Check for time running out
     if (gameState.timeRemaining <= 0) {
-      setGameState((prev) => ({
-        ...prev,
-        isPlaying: false
-      }));
+      setGameState((prev) => {
+        const newState = {
+          ...prev,
+          isPlaying: false
+        };
+        latestGameState.current = newState;
+        return newState;
+      });
       alert(`Game Over! Final Score: ${gameState.score}`);
     }
-  }, [gameState.isPlaying, gameState.timeRemaining, gameState.treasurePosition, keyboardPosition, position, gameState.score]);
+  }, [gameState.isPlaying, gameState.timeRemaining, gameState.treasurePosition, gameState.score]);
 
   if (error) {
     return (
@@ -316,8 +183,8 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
   }
 
   return (
-    <>
-      {!task && <Loading></Loading>}
+    <BaseTask params={params} testTask={testTask}>
+      {!task && <Loading />}
       <div className="min-h-screen bg-gray-100 flex flex-col">
         {!gameState.isPlaying ? (
           <div className="flex-1 flex items-center justify-center p-4">
@@ -326,7 +193,7 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
               <p className="text-gray-600 mb-6">
                 Find the treasure before the timer runs out!
               </p>
-              <p className="text-gray-600 mb-6">Use WASD keys to move the fox</p>
+              <p className="text-gray-600 mb-6">Move around to find the treasure</p>
               <button
                 onClick={startGame}
                 className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
@@ -339,7 +206,6 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
           <>
             <div className="bg-white p-4 shadow-md">
               <div className="flex justify-between items-center max-w-4xl mx-auto">
-                <div className="text-lg font-semibold">Level: {gameState.level}</div>
                 <div className="text-lg font-semibold">Score: {gameState.score}</div>
                 <div className="text-lg font-semibold">Time: {gameState.timeRemaining}s</div>
               </div>
@@ -355,12 +221,6 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
           </>
         )}
       </div>
-      {openItems && (
-        <ItemsDialog items={items} open={openItems} handleClose={handleClose}></ItemsDialog>
-      )}
-      {openJournal && <JournalDialog open={openJournal} handleClose={handleJournalClose} />}
-      {openInventory && <InventoryDialog open={openInventory} handleClose={handleInventoryClose} />}
-      {openMap && <MapDialog open={openMap} handleClose={handleMapClose} />}
-    </>
+    </BaseTask>
   );
 }

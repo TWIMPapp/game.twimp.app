@@ -46,11 +46,18 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
       maxZoom: 22
     }).addTo(mapRef.current);
 
+    // Create both markers at initialization
     const playerMarker = L.marker([playerPosition.lat, playerPosition.lng], {
       icon: playerIcon,
       zIndexOffset: 1000
     }).addTo(mapRef.current);
-    markersRef.current = [playerMarker];
+
+    const treasureMarker = L.marker([treasurePosition!.lat, treasurePosition!.lng], {
+      icon: treasureIcon,
+      zIndexOffset: 0
+    }).addTo(mapRef.current);
+
+    markersRef.current = [playerMarker, treasureMarker];
 
     return () => {
       if (mapRef.current) {
@@ -71,30 +78,9 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
 
   // Update treasure position
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !markersRef.current[1] || !treasurePosition) return;
 
-    // Remove old treasure marker if it exists
-    if (markersRef.current[1]) {
-      markersRef.current[1].remove();
-      markersRef.current = [markersRef.current[0]];
-    }
-
-    // Add new treasure marker if treasure position exists
-    if (treasurePosition) {
-      const treasureIcon = new L.Icon({
-        iconUrl: TreasureIcon.src,
-        iconSize: [38, 38],
-        iconAnchor: [19, 38],
-        popupAnchor: [0, -38],
-      });
-
-      const treasureMarker = L.marker([treasurePosition.lat, treasurePosition.lng], {
-        icon: treasureIcon,
-        zIndexOffset: 0
-      }).addTo(mapRef.current);
-
-      markersRef.current.push(treasureMarker);
-    }
+    markersRef.current[1].setLatLng([treasurePosition.lat, treasurePosition.lng]);
   }, [treasurePosition]);
 
   return <div ref={mapContainerRef} className="absolute inset-0" />;
