@@ -1,9 +1,11 @@
 import { GoogleMap, LoadScript, MarkerF, InfoWindowF } from '@react-google-maps/api';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import MarkerIcon from '@/assets/icons/marker-icon.png';
 import { Marker } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import Loading from './Loading';
+import { Box, IconButton } from '@mui/material';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
 
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
@@ -17,7 +19,8 @@ const MarkerColourMap: Record<Colour, string> = {
 
 const containerStyle = {
   width: '100vw',
-  height: `100vh`
+  height: `100vh`,
+  position: 'relative' as 'relative'
 };
 
 export default function MapComponent({
@@ -32,17 +35,33 @@ export default function MapComponent({
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [markerInfoBox, setMarkerInfoBox] = useState<Marker>();
   const [heading, setHeading] = useState<number>(0);
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  const onLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+    if (center.lat !== 0 && center.lng !== 0) {
+      map.panTo(center);
+    }
+  }, [center]);
+
+  const onUnmount = useCallback(() => {
+    mapRef.current = null;
+  }, []);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setCenter({
+        const initialCenter = {
           lat: position.coords.latitude,
           lng: position.coords.longitude
-        });
+        };
+        setCenter(initialCenter);
+        if (mapRef.current) {
+          mapRef.current.panTo(initialCenter);
+        }
       },
       (error) => {
-        console.error(error);
+        console.error("Error getting initial position:", error);
       }
     );
   }, []);
@@ -58,9 +77,9 @@ export default function MapComponent({
           : MarkerColourMap[Colour.Red]
       })) ?? [];
 
-    let throttleTimeout: any = null;
+    let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    navigator.geolocation.watchPosition(
+    const watchId = navigator.geolocation.watchPosition(
       (position) => {
         const playerMarker: Marker = {
           lat: Number(position.coords.latitude),
@@ -72,22 +91,21 @@ export default function MapComponent({
 
         setMarkers([playerMarker, ...displayMarkers]);
 
-        if (center.lat === 0 && center.lng === 0) {
-          setCenter({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
+        if (center.lat === 0 && center.lng === 0 && mapRef.current) {
+           const currentPos = { lat: position.coords.latitude, lng: position.coords.longitude };
+           setCenter(currentPos);
+           mapRef.current.panTo(currentPos);
         }
 
         if (!throttleTimeout) {
-          throttleTimeout = setTimeout(() => {
             onPlayerMove(position);
-            throttleTimeout = null;
-          }, 2000);
-        }
+            throttleTimeout = setTimeout(() => {
+              throttleTimeout = null;
+            }, 2000);
+          }
       },
       (error) => {
-        console.log(error);
+        console.log("Geolocation watch error:", error);
       },
       {
         maximumAge: 1000,
@@ -96,79 +114,102 @@ export default function MapComponent({
       }
     );
 
-    // Device Orientation Listener
     const handleOrientation = (event: Event) => {
-      // Cast the event to DeviceOrientationEvent
       const orientationEvent = event as DeviceOrientationEvent;
       if (orientationEvent.absolute && orientationEvent.alpha !== null) {
-        // Use alpha directly as Google Maps heading takes degrees 0-360
         setHeading(orientationEvent.alpha);
       }
     };
 
     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
 
-    // Cleanup function to remove the listener
     return () => {
+      navigator.geolocation.clearWatch(watchId);
       window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
       if (throttleTimeout) {
         clearTimeout(throttleTimeout);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [taskMarkers, onPlayerMove, center.lat, center.lng]);
+
+  const handleMyLocationClick = () => {
+    if (mapRef.current && markers.length > 0) {
+      const playerLocation = { lat: markers[0].lat, lng: markers[0].lng };
+      mapRef.current.panTo(playerLocation);
+      mapRef.current.setZoom(18);
+    }
+  };
 
   return (
     <>
-      {center?.lat && center?.lng ? (
-        <LoadScript
-          googleMapsApiKey="AIzaSyCPlJtyG0WSQJbM48Nbi980bzBixe2hbYQ"
-          onLoad={() => {
-            setIsGoogleMapsAPILoaded(true);
-          }}
-        >
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={center}
-            zoom={18}
-            options={{
-              disableDefaultUI: false,
-              zoomControl: false,
-              mapTypeControl: false,
-              streetViewControl: false,
-              fullscreenControl: false,
-              styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
-              mapTypeId: 'hybrid',
-            }}
+      {isGoogleMapsAPILoaded || center?.lat !== 0 ? (
+         <Box sx={containerStyle}>
+          <LoadScript
+            googleMapsApiKey={process.env.NEXT_PUBLIC_MAPS_API_KEY as string}
+            onLoad={() => setIsGoogleMapsAPILoaded(true)}
           >
-            {isGoogleMapsAPILoaded &&
-              markers?.map((marker: Marker, index: number) => {
-                return (
-                  <MarkerF
-                    key={index}
-                    position={{ lat: marker.lat, lng: marker.lng }}
-                    icon={{
-                      url: marker.image_url as string,
-                      scaledSize: new google.maps.Size(48, 48)
-                    }}
-                    onClick={() => setMarkerInfoBox(marker)}
-                  />
-                );
-              })}
-            {markerInfoBox && (
-              <InfoWindowF
-                position={{ lat: markerInfoBox.lat, lng: markerInfoBox.lng }}
-                options={{ pixelOffset: new google.maps.Size(0, -48) }}
-              >
-                <div>
-                  <h3 className="text-xl">{markerInfoBox.title}</h3>
-                  <p className="text-gray-500 pt-2 block">{markerInfoBox.subtitle}</p>
-                  <p className="text-gray-400 pt-1 block text-sm">Heading: {heading?.toFixed(2)}</p>
-                </div>
-              </InfoWindowF>
-            )}
-          </GoogleMap>
-        </LoadScript>
+            <GoogleMap
+              mapContainerStyle={{ width: '100%', height: '100%' }}
+              zoom={18}
+              options={{
+                disableDefaultUI: false,
+                zoomControl: false,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                clickableIcons: false,
+                styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
+                mapTypeId: 'hybrid',
+              }}
+              onLoad={onLoad}
+              onUnmount={onUnmount}
+            >
+              {isGoogleMapsAPILoaded &&
+                markers?.map((marker: Marker, index: number) => {
+                  return (
+                    <MarkerF
+                      key={index}
+                      position={{ lat: marker.lat, lng: marker.lng }}
+                      icon={{
+                        url: marker.image_url as string,
+                        scaledSize: new google.maps.Size(48, 48)
+                      }}
+                      onClick={() => setMarkerInfoBox(marker)}
+                    />
+                  );
+                })}
+              {markerInfoBox && (
+                <InfoWindowF
+                  position={{ lat: markerInfoBox.lat, lng: markerInfoBox.lng }}
+                  options={{ pixelOffset: new google.maps.Size(0, -48) }}
+                  onCloseClick={() => setMarkerInfoBox(undefined)}
+                >
+                  <div>
+                    <h3 className="text-xl">{markerInfoBox.title}</h3>
+                    <p className="text-gray-500 pt-2 block">{markerInfoBox.subtitle}</p>
+                    <p className="text-gray-400 pt-1 block text-sm">Heading: {heading?.toFixed(2)}</p>
+                  </div>
+                </InfoWindowF>
+              )}
+            </GoogleMap>
+          </LoadScript>
+          <IconButton
+            onClick={handleMyLocationClick}
+            sx={{
+              position: 'absolute',
+              bottom: 16,
+              right: 16,
+              backgroundColor: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)'
+              },
+              zIndex: 10
+            }}
+            aria-label="center map on my location"
+          >
+            <MyLocationIcon />
+          </IconButton>
+        </Box>
       ) : (
         <Loading />
       )}
