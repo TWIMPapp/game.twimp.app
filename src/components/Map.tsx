@@ -115,15 +115,19 @@ export default function MapComponent({
     );
 
     const handleOrientation = (event: Event) => {
+      console.log('Orientation Event:', event);
       const orientationEvent = event as DeviceOrientationEvent;
       if (orientationEvent.absolute && orientationEvent.alpha !== null) {
+        console.log('Updating heading:', orientationEvent.alpha);
         setHeading(orientationEvent.alpha);
       }
     };
 
+    console.log('Adding orientation listener');
     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
 
     return () => {
+      console.log('Removing orientation listener');
       navigator.geolocation.clearWatch(watchId);
       window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
       if (throttleTimeout) {
@@ -145,7 +149,7 @@ export default function MapComponent({
       {isGoogleMapsAPILoaded || center?.lat !== 0 ? (
          <Box sx={containerStyle}>
           <LoadScript
-            googleMapsApiKey={process.env.NEXT_PUBLIC_MAPS_API_KEY as string}
+            googleMapsApiKey="AIzaSyCPlJtyG0WSQJbM48Nbi980bzBixe2hbYQ"
             onLoad={() => setIsGoogleMapsAPILoaded(true)}
           >
             <GoogleMap
