@@ -132,10 +132,13 @@ export default function MapComponent({
             center={center}
             zoom={18}
             options={{
-              disableDefaultUI: true,
+              disableDefaultUI: false,
+              zoomControl: false,
+              mapTypeControl: false,
+              streetViewControl: false,
+              fullscreenControl: false,
               styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
               mapTypeId: 'hybrid',
-              heading: heading
             }}
           >
             {isGoogleMapsAPILoaded &&
@@ -160,6 +163,7 @@ export default function MapComponent({
                 <div>
                   <h3 className="text-xl">{markerInfoBox.title}</h3>
                   <p className="text-gray-500 pt-2 block">{markerInfoBox.subtitle}</p>
+                  <p className="text-gray-400 pt-1 block text-sm">Heading: {heading?.toFixed(2)}</p>
                 </div>
               </InfoWindowF>
             )}
