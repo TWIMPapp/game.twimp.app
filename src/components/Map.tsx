@@ -97,10 +97,12 @@ export default function MapComponent({
     );
 
     // Device Orientation Listener
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      if (event.absolute && event.alpha !== null) {
-        // Use negative alpha for counter-clockwise rotation needed by Google Maps API
-        setHeading(event.alpha);
+    const handleOrientation = (event: Event) => {
+      // Cast the event to DeviceOrientationEvent
+      const orientationEvent = event as DeviceOrientationEvent;
+      if (orientationEvent.absolute && orientationEvent.alpha !== null) {
+        // Use alpha directly as Google Maps heading takes degrees 0-360
+        setHeading(orientationEvent.alpha);
       }
     };
 
