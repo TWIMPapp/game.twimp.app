@@ -37,6 +37,7 @@ export default function MapComponent({
   const [heading, setHeading] = useState<number>(0);
   const mapRef = useRef<google.maps.Map | null>(null);
   const headingUpdateThrottleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAppliedHeadingRef = useRef<number | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
@@ -133,13 +134,34 @@ export default function MapComponent({
     };
   }, [taskMarkers, onPlayerMove, center.lat, center.lng]);
 
-  // Effect to programmatically update map heading when state changes (throttled)
+  // Effect to programmatically update map heading when state changes (throttled and conditional)
   useEffect(() => {
-    // Only update map heading if the map exists and we're not currently throttled
+    // Only proceed if the map exists and we're not currently throttled
     if (mapRef.current && !headingUpdateThrottleTimeoutRef.current) {
-      mapRef.current.setHeading(heading);
+      const currentHeading = heading;
+      const lastHeading = lastAppliedHeadingRef.current;
 
-      // Set a throttle timeout to prevent updates for the next 100ms
+      let shouldUpdate = false;
+      if (lastHeading === null) {
+        // Always update on the first run
+        shouldUpdate = true;
+      } else {
+        // Calculate the shortest difference (handling wrap-around)
+        const diff = Math.abs(currentHeading - lastHeading);
+        const angleDifference = Math.min(diff, 360 - diff);
+
+        // Only update if the difference is more than 1 degree
+        if (angleDifference > 1) {
+          shouldUpdate = true;
+        }
+      }
+
+      if (shouldUpdate) {
+        mapRef.current.setHeading(currentHeading);
+        lastAppliedHeadingRef.current = currentHeading;
+      }
+
+      // Set a throttle timeout regardless of whether we updated, to limit check frequency
       headingUpdateThrottleTimeoutRef.current = setTimeout(() => {
         headingUpdateThrottleTimeoutRef.current = null;
       }, 100); // Throttle interval: 100ms
