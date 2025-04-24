@@ -116,5 +116,3 @@ export type TaskUnion =
   | MetalDetectorTask
   | HuntTask
   | AdventureAntsTask;
-
-export type Task = MetalDetectorTask | AdventureAntsTask;
