@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import PlayerIcon from '@/assets/icons/fox.png';
-import TreasureIcon from '@/assets/icons/treasure.png';
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
@@ -10,12 +9,14 @@ import { Position } from '@/hooks/useGeolocation';
 interface MapComponentProps {
   playerPosition: Position;
   treasurePosition: Position | null;
+  isDebugMode: boolean;
 }
 
-export default function HuntGameMap({ playerPosition, treasurePosition }: MapComponentProps) {
+export default function MetalDetectorGameMap({ playerPosition, treasurePosition, isDebugMode }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const treasureMarkerRef = useRef<L.Circle | null>(null);
   const zoomLevel = 20;
 
   useEffect(() => {
@@ -23,13 +24,6 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
 
     const playerIcon = new L.Icon({
       iconUrl: PlayerIcon.src,
-      iconSize: [38, 38],
-      iconAnchor: [19, 38],
-      popupAnchor: [0, -38],
-    });
-
-    const treasureIcon = new L.Icon({
-      iconUrl: TreasureIcon.src,
       iconSize: [38, 38],
       iconAnchor: [19, 38],
       popupAnchor: [0, -38],
@@ -71,33 +65,39 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
     marker.setLatLng(newLatLng);
   }, [playerPosition]);
 
-  // Update treasure position
+  // Update treasure marker
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !treasurePosition) return;
 
-    // Remove existing treasure marker if it exists
-    if (markersRef.current[1]) {
-      markersRef.current[1].remove();
-      markersRef.current = [markersRef.current[0]];
+    // Only show treasure marker in debug mode
+    if (isDebugMode) {
+      // Create new marker if it doesn't exist
+      if (!treasureMarkerRef.current) {
+        treasureMarkerRef.current = L.circle([treasurePosition.lat, treasurePosition.lng], {
+          color: 'red',
+          fillColor: '#f03',
+          fillOpacity: 0.5,
+          radius: 5
+        }).addTo(mapRef.current);
+      } else {
+        // Update existing marker position
+        treasureMarkerRef.current.setLatLng([treasurePosition.lat, treasurePosition.lng]);
+      }
+    } else {
+      // Remove marker if debug mode is disabled
+      if (treasureMarkerRef.current) {
+        treasureMarkerRef.current.remove();
+        treasureMarkerRef.current = null;
+      }
     }
 
-    // Add new treasure marker if treasure position exists
-    if (treasurePosition) {
-      const treasureIcon = new L.Icon({
-        iconUrl: TreasureIcon.src,
-        iconSize: [38, 38],
-        iconAnchor: [19, 38],
-        popupAnchor: [0, -38],
-      });
-
-      const treasureMarker = L.marker([treasurePosition.lat, treasurePosition.lng], {
-        icon: treasureIcon,
-        zIndexOffset: 0
-      }).addTo(mapRef.current);
-
-      markersRef.current.push(treasureMarker);
-    }
-  }, [treasurePosition]);
+    return () => {
+      if (treasureMarkerRef.current) {
+        treasureMarkerRef.current.remove();
+        treasureMarkerRef.current = null;
+      }
+    };
+  }, [treasurePosition, isDebugMode]);
 
   return <div ref={mapContainerRef} className="absolute inset-0" />;
 }

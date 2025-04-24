@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import { Box } from '@mui/material';
@@ -60,6 +60,8 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
   const [params, setParams] = useState<QueryParams>();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [open, setOpen] = useState<boolean>(false);
+  const isAwtyRequestPending = useRef<boolean>(false);
+  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchData = () => {
@@ -82,6 +84,13 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
     } else {
       fetchData();
     }
+
+    // Cleanup function to clear the timeout when the component unmounts
+    return () => {
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+      }
+    };
   }, [testTask]);
 
   const handleClose = () => {
@@ -92,23 +101,40 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
   };
 
   const handleOnPlayerMove = async (position: GeolocationPosition) => {
-    const data = await AWTYPost(position, params as QueryParams);
+    // Check if a request is already pending or in cooldown
+    if (isAwtyRequestPending.current) {
+      return;
+    }
 
-    if (data) {
-      if (data.task) {
-        setNextTask(data.task);
+    // Mark as pending
+    isAwtyRequestPending.current = true;
 
-        if ((data.outcome?.items ?? [])?.length > 0) {
-          setItems(data?.outcome?.items ?? []);
-          setOpen(true);
+    try {
+      const data = await AWTYPost(position, params as QueryParams);
+
+      if (data) {
+        if (data.task) {
+          setNextTask(data.task);
+
+          if ((data.outcome?.items ?? [])?.length > 0) {
+            setItems(data?.outcome?.items ?? []);
+            setOpen(true);
+          } else {
+            new TaskHandlerService().goToTaskComponent(data.task, params as QueryParams);
+          }
         } else {
-          new TaskHandlerService().goToTaskComponent(data.task, params as QueryParams);
-        }
-      } else {
-        setTimeout(() => {
+          // Update awtyResponse immediately if no task
           setAwtyResponse(data);
-        }, AWTY_INTERVAL);
+        }
       }
+    } catch (error) {
+        console.error("Error during AWTY post:", error);
+        // Optional: handle error state if needed
+    } finally {
+        // Start cooldown timer and store its ID
+        timeoutIdRef.current = setTimeout(() => {
+          isAwtyRequestPending.current = false;
+        }, AWTY_INTERVAL);
     }
   };
 

@@ -6,5 +6,7 @@ export enum TaskType {
   Information = 'information',
   Finish = 'finish',
   Evade = 'evade',
-  Hunt = 'hunt'
+  Hunt = 'hunt',
+  MetalDetector = 'metal-detector',
+  AdventureAnts = 'adventure-ants'
 }

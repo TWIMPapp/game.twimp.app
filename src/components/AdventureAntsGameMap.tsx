@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import PlayerIcon from '@/assets/icons/fox.png';
-import TreasureIcon from '@/assets/icons/treasure.png';
 
 // Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
@@ -9,13 +8,17 @@ import { Position } from '@/hooks/useGeolocation';
 
 interface MapComponentProps {
   playerPosition: Position;
-  treasurePosition: Position | null;
+  colonyPosition: Position;
+  obstacles: Position[];
+  isDebugMode: boolean;
 }
 
-export default function HuntGameMap({ playerPosition, treasurePosition }: MapComponentProps) {
+export default function AdventureAntsGameMap({ playerPosition, colonyPosition, obstacles, isDebugMode }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const colonyMarkerRef = useRef<L.Circle | null>(null);
+  const obstacleMarkersRef = useRef<L.Circle[]>([]);
   const zoomLevel = 20;
 
   useEffect(() => {
@@ -23,13 +26,6 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
 
     const playerIcon = new L.Icon({
       iconUrl: PlayerIcon.src,
-      iconSize: [38, 38],
-      iconAnchor: [19, 38],
-      popupAnchor: [0, -38],
-    });
-
-    const treasureIcon = new L.Icon({
-      iconUrl: TreasureIcon.src,
       iconSize: [38, 38],
       iconAnchor: [19, 38],
       popupAnchor: [0, -38],
@@ -71,33 +67,55 @@ export default function HuntGameMap({ playerPosition, treasurePosition }: MapCom
     marker.setLatLng(newLatLng);
   }, [playerPosition]);
 
-  // Update treasure position
+  // Update colony marker
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Remove existing treasure marker if it exists
-    if (markersRef.current[1]) {
-      markersRef.current[1].remove();
-      markersRef.current = [markersRef.current[0]];
+    // Remove existing colony marker if it exists
+    if (colonyMarkerRef.current) {
+      colonyMarkerRef.current.remove();
     }
 
-    // Add new treasure marker if treasure position exists
-    if (treasurePosition) {
-      const treasureIcon = new L.Icon({
-        iconUrl: TreasureIcon.src,
-        iconSize: [38, 38],
-        iconAnchor: [19, 38],
-        popupAnchor: [0, -38],
-      });
+    // Create new colony marker
+    colonyMarkerRef.current = L.circle([colonyPosition.lat, colonyPosition.lng], {
+      color: 'green',
+      fillColor: '#0f0',
+      fillOpacity: 0.5,
+      radius: 10
+    }).addTo(mapRef.current);
 
-      const treasureMarker = L.marker([treasurePosition.lat, treasurePosition.lng], {
-        icon: treasureIcon,
-        zIndexOffset: 0
-      }).addTo(mapRef.current);
+    return () => {
+      if (colonyMarkerRef.current) {
+        colonyMarkerRef.current.remove();
+        colonyMarkerRef.current = null;
+      }
+    };
+  }, [colonyPosition]);
 
-      markersRef.current.push(treasureMarker);
-    }
-  }, [treasurePosition]);
+  // Update obstacle markers
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove existing obstacle markers
+    obstacleMarkersRef.current.forEach(marker => marker.remove());
+    obstacleMarkersRef.current = [];
+
+    // Create new obstacle markers
+    obstacles.forEach(obstacle => {
+      const marker = L.circle([obstacle.lat, obstacle.lng], {
+        color: 'red',
+        fillColor: '#f00',
+        fillOpacity: 0.5,
+        radius: 5
+      }).addTo(mapRef.current!);
+      obstacleMarkersRef.current.push(marker);
+    });
+
+    return () => {
+      obstacleMarkersRef.current.forEach(marker => marker.remove());
+      obstacleMarkersRef.current = [];
+    };
+  }, [obstacles]);
 
   return <div ref={mapContainerRef} className="absolute inset-0" />;
 }

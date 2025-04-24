@@ -4,6 +4,7 @@ import { Status } from './Status.enum';
 import { TaskType } from './TaskType.enum';
 import { ThemeStyle } from './ThemeStyle.enum';
 import { InventoryItem } from './inventoryItem';
+import { Position } from '@/hooks/useGeolocation';
 
 export interface Task {
   ok: boolean;
@@ -80,10 +81,6 @@ export interface EvadeTask extends Task {
   type: TaskType.Evade;
 }
 
-export interface HuntTask extends Task {
-  type: TaskType.Hunt;
-}
-
 export interface ChatTask extends Task {
   type: TaskType.Chat;
   character: Character[];
@@ -94,6 +91,20 @@ export interface FinishTask extends Task {
   type: TaskType.Finish;
 }
 
+export interface MetalDetectorTask extends Task {
+  type: TaskType.MetalDetector;
+}
+
+export interface HuntTask extends Task {
+  type: TaskType.Hunt;
+}
+
+export interface AdventureAntsTask extends Task {
+  type: TaskType.AdventureAnts;
+  colonyPosition: Position;
+  obstacles: Position[];
+}
+
 export type TaskUnion =
   | QuestionMultiTask
   | QuestionSingleTask
@@ -102,4 +113,8 @@ export type TaskUnion =
   | ChatTask
   | FinishTask
   | EvadeTask
-  | HuntTask;
+  | MetalDetectorTask
+  | HuntTask
+  | AdventureAntsTask;
+
+export type Task = MetalDetectorTask | AdventureAntsTask;

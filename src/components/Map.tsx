@@ -31,6 +31,7 @@ export default function MapComponent({
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [markerInfoBox, setMarkerInfoBox] = useState<Marker>();
+  const [heading, setHeading] = useState<number>(0);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -94,6 +95,24 @@ export default function MapComponent({
         enableHighAccuracy: true
       }
     );
+
+    // Device Orientation Listener
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      if (event.absolute && event.alpha !== null) {
+        // Use negative alpha for counter-clockwise rotation needed by Google Maps API
+        setHeading(event.alpha);
+      }
+    };
+
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+
+    // Cleanup function to remove the listener
+    return () => {
+      window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
+      if (throttleTimeout) {
+        clearTimeout(throttleTimeout);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -113,7 +132,8 @@ export default function MapComponent({
             options={{
               disableDefaultUI: true,
               styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
-              mapTypeId: 'hybrid'
+              mapTypeId: 'hybrid',
+              heading: heading
             }}
           >
             {isGoogleMapsAPILoaded &&

@@ -10,6 +10,7 @@ export function useGeolocation() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const watchIdRef = useRef<number | null>(null);
+  const lastUpdateRef = useRef<number>(Date.now());
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -19,6 +20,54 @@ export function useGeolocation() {
     }
 
     console.log('Starting geolocation...');
+
+    const startWatching = (options: PositionOptions) => {
+      if (watchIdRef.current) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+
+      console.log('Starting position watch with options:', options);
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (pos) => {
+          const now = Date.now();
+          const timeSinceLastUpdate = now - lastUpdateRef.current;
+          lastUpdateRef.current = now;
+
+          console.log(`Position update received (${timeSinceLastUpdate}ms since last update):`, {
+            coords: pos.coords,
+            timestamp: new Date(pos.timestamp).toISOString()
+          });
+
+          setPosition({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy
+          });
+          setError(null);
+        },
+        (error) => {
+          console.error('Watch position error:', error);
+          let errorMessage = 'Unable to get your location';
+
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location permission denied. Please enable location services in your browser settings.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information is unavailable. Please check your GPS settings.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out. Please try again.';
+              break;
+            default:
+              errorMessage = 'An unknown error occurred while getting your location.';
+          }
+
+          setError(errorMessage);
+        },
+        options
+      );
+    };
 
     // First try to get the current position
     navigator.geolocation.getCurrentPosition(
@@ -32,51 +81,12 @@ export function useGeolocation() {
         setError(null);
         setIsLoading(false);
 
-        // Only start watching after we have an initial position
-        console.log('Starting position watch...');
-        watchIdRef.current = navigator.geolocation.watchPosition(
-          (pos) => {
-            console.log('Position update received:', pos.coords);
-            setPosition({
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              accuracy: pos.coords.accuracy
-            });
-            setError(null);
-          },
-          (error) => {
-            console.error('Watch position error:', error);
-            // Try to restart the watch with more lenient settings
-            if (watchIdRef.current) {
-              navigator.geolocation.clearWatch(watchIdRef.current);
-            }
-            console.log('Retrying watch with lenient settings...');
-            watchIdRef.current = navigator.geolocation.watchPosition(
-              (pos) => {
-                console.log('Position update received (lenient):', pos.coords);
-                setPosition({
-                  lat: pos.coords.latitude,
-                  lng: pos.coords.longitude,
-                  accuracy: pos.coords.accuracy
-                });
-                setError(null);
-              },
-              (error) => {
-                console.error('Watch position error (lenient):', error);
-              },
-              {
-                enableHighAccuracy: false,
-                timeout: 30000,
-                maximumAge: 30000
-              }
-            );
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 30000,
-            maximumAge: 10000
-          }
-        );
+        // Start watching with high accuracy
+        startWatching({
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
       },
       (error) => {
         console.error('Initial position error:', error);
@@ -98,6 +108,13 @@ export function useGeolocation() {
 
         setError(errorMessage);
         setIsLoading(false);
+
+        // Try with lenient settings
+        startWatching({
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 10000
+        });
       },
       {
         enableHighAccuracy: true,
@@ -106,7 +123,26 @@ export function useGeolocation() {
       }
     );
 
+    // Set up a periodic check for stale updates
+    const staleCheckInterval = setInterval(() => {
+      const now = Date.now();
+      const timeSinceLastUpdate = now - lastUpdateRef.current;
+
+      if (timeSinceLastUpdate > 30000) { // 30 seconds
+        console.log('No position updates received for 30 seconds, restarting watch...');
+        if (watchIdRef.current) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+        }
+        startWatching({
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 10000
+        });
+      }
+    }, 10000); // Check every 10 seconds
+
     return () => {
+      clearInterval(staleCheckInterval);
       if (watchIdRef.current) {
         console.log('Cleaning up geolocation watch...');
         navigator.geolocation.clearWatch(watchIdRef.current);

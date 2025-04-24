@@ -8,10 +8,13 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import HuntGame from '@/components/HuntGame';
 import { MapPin } from 'lucide-react';
 import { BaseTask } from '@/components/BaseTask';
+import { useRouter } from 'next/router';
 
-const WAVE_DURATION = 30; // 30 seconds per treasure
-const COLLISION_DISTANCE = 0.00002; // Distance in degrees for collision detection (about 2 meters)
-const MIN_ACCURACY = 10; // Minimum accuracy in meters (10 meters is a good balance for outdoor GPS)
+const WAVE_DURATION = 60; // 60 seconds per treasure
+const COLLISION_DISTANCE = 0.0001; // Increased distance in degrees (about 10 meters)
+const MIN_ACCURACY = 25; // Increased minimum accuracy threshold to 25 meters
+const DEBUG_MODE = true; // Debug mode flag
+const TREASURE_RADIUS = 0.00045; // Maximum distance in degrees (50 meters)
 
 export interface GameState {
   timeRemaining: number;
@@ -19,6 +22,8 @@ export interface GameState {
   playerPosition: Position | null;
   treasurePosition: Position | null;
   score: number;
+  lastUpdateTime: number;
+  distanceToTreasure: number;
 }
 
 function calculateDistance(pos1: Position, pos2: Position): number {
@@ -28,6 +33,7 @@ function calculateDistance(pos1: Position, pos2: Position): number {
 }
 
 export default function Hunt({ testTask }: { testTask?: HuntTask }) {
+  const router = useRouter();
   const [task, setTask] = useState<HuntTask>();
   const [params, setParams] = useState<QueryParams>();
 
@@ -37,10 +43,10 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
     isPlaying: false,
     playerPosition: null,
     treasurePosition: null,
-    score: 0
+    score: -1,
+    lastUpdateTime: Date.now(),
+    distanceToTreasure: 0
   });
-
-  console.log("POSITION",position);
 
   // Use ref to track the latest game state without triggering re-renders
   const latestGameState = useRef(gameState);
@@ -49,18 +55,17 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
 
   useEffect(() => {
     const fetchData = () => {
-      const _params = Object.fromEntries(
-        new URLSearchParams(window.location.search)
-      ) as unknown as QueryParams;
+      if (router.isReady) {
+        const _params = router.query as unknown as QueryParams;
+        if (_params) {
+          setParams(_params);
+          const data = new TaskHandlerService().getTaskFromSession<HuntTask>();
 
-      if (_params) {
-        setParams(_params);
-        const data = new TaskHandlerService().getTaskFromSession<HuntTask>();
+          console.log('###########', data);
 
-        console.log('###########', data);
-
-        if (data) {
-          setTask(data);
+          if (data) {
+            setTask(data);
+          }
         }
       }
     };
@@ -70,12 +75,11 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
     } else {
       fetchData();
     }
-  }, [testTask]);
+  }, [testTask, router.isReady, router.query]);
 
   const spawnTreasure = (playerPos: Position): Position => {
-    const maxDistance = 0.0009; // Maximum distance in degrees (100 meters)
     const angle = Math.random() * Math.PI * 2;
-    const distance = Math.random() * maxDistance;
+    const distance = Math.random() * TREASURE_RADIUS;
 
     return {
       lat: startingPosition!.lat + Math.cos(angle) * distance,
@@ -86,12 +90,6 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
   const startGame = () => {
     if (!position) return;
 
-    // Only start if we have an accurate position
-    if (position.accuracy && position.accuracy > MIN_ACCURACY) {
-      alert('Please wait for better GPS accuracy before starting the game.');
-      return;
-    }
-
     // Set starting position first
     setStartingPosition(position);
 
@@ -101,7 +99,9 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
       isPlaying: true,
       playerPosition: position,
       treasurePosition: null, // We'll set this in the effect
-      score: 0
+      score: 0,
+      lastUpdateTime: Date.now(),
+      distanceToTreasure: 0
     });
   };
 
@@ -119,11 +119,20 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
   useEffect(() => {
     if (!gameState.isPlaying || !position) return;
 
+    // Update last update time
+    const now = Date.now();
+    const timeSinceLastUpdate = now - gameState.lastUpdateTime;
+
+	console.log(position.accuracy, MIN_ACCURACY);
+
     // Only update position if accuracy is good enough or not provided
     if (!position.accuracy || position.accuracy <= MIN_ACCURACY) {
+		console.log("UPDATING POSITION");
       setGameState(prev => ({
         ...prev,
-        playerPosition: position
+        playerPosition: position,
+        lastUpdateTime: now,
+        distanceToTreasure: prev.treasurePosition ? calculateDistance(position, prev.treasurePosition) : 0
       }));
     }
   }, [gameState.isPlaying, position]);
@@ -176,7 +185,6 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
         latestGameState.current = newState;
         return newState;
       });
-      alert(`Game Over! Final Score: ${gameState.score}`);
     }
   }, [gameState.isPlaying, gameState.timeRemaining, gameState.playerPosition]);
 
@@ -208,12 +216,13 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
 
   return (
     <BaseTask params={params} testTask={testTask}>
-      {!task && <Loading />}
       <div className="min-h-screen bg-gray-100 flex flex-col">
         {!gameState.isPlaying ? (
           <div className="flex-1 flex items-center justify-center p-4">
             <div className="bg-white p-8 rounded-lg shadow-md text-center">
-              <h1 className="text-3xl font-bold text-gray-800 mb-6">Treasure Hunt</h1>
+              <h1 className="text-3xl font-bold text-gray-800 mb-6">
+                {gameState.score > -1 ? `You Scored ${gameState.score} points` : 'Treasure Hunt'}
+              </h1>
               <p className="text-gray-600 mb-6">
                 Find the treasure before the timer runs out!
               </p>
@@ -228,7 +237,7 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
                 className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={Boolean(position?.accuracy && position.accuracy > MIN_ACCURACY)}
               >
-                Start Game
+                {gameState.score > -1 ? 'Play Again' : 'Start Game'}
               </button>
             </div>
           </div>
@@ -251,6 +260,16 @@ export default function Hunt({ testTask }: { testTask?: HuntTask }) {
                 />
               )}
             </div>
+            {DEBUG_MODE && (
+              <div className="bg-black bg-opacity-75 text-white p-2 text-xs">
+                <div className="max-w-4xl mx-auto flex justify-between">
+                  <div>Distance to Treasure: {Math.round(gameState.distanceToTreasure * 111000)}m</div>
+                  <div>Last Update: {Math.round((Date.now() - gameState.lastUpdateTime) / 1000)}s ago</div>
+                  <div>Accuracy: {gameState.playerPosition?.accuracy ? Math.round(gameState.playerPosition.accuracy) + 'm' : 'N/A'}</div>
+                  <div>High Accuracy: {gameState.playerPosition?.accuracy && gameState.playerPosition.accuracy <= MIN_ACCURACY ? 'Yes' : 'No'}</div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
