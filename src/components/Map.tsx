@@ -36,6 +36,7 @@ export default function MapComponent({
   const [markerInfoBox, setMarkerInfoBox] = useState<Marker>();
   const [heading, setHeading] = useState<number>(0);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const headingUpdateThrottleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
@@ -132,6 +133,27 @@ export default function MapComponent({
     };
   }, [taskMarkers, onPlayerMove, center.lat, center.lng]);
 
+  // Effect to programmatically update map heading when state changes (throttled)
+  useEffect(() => {
+    // Only update map heading if the map exists and we're not currently throttled
+    if (mapRef.current && !headingUpdateThrottleTimeoutRef.current) {
+      mapRef.current.setHeading(heading);
+
+      // Set a throttle timeout to prevent updates for the next 100ms
+      headingUpdateThrottleTimeoutRef.current = setTimeout(() => {
+        headingUpdateThrottleTimeoutRef.current = null;
+      }, 100); // Throttle interval: 100ms
+    }
+
+    // Cleanup function for the throttle timeout
+    return () => {
+      if (headingUpdateThrottleTimeoutRef.current) {
+        clearTimeout(headingUpdateThrottleTimeoutRef.current);
+        headingUpdateThrottleTimeoutRef.current = null; // Ensure ref is cleared on cleanup
+      }
+    };
+  }, [heading]); // Run this effect whenever the heading state changes
+
   const handleMyLocationClick = () => {
     if (mapRef.current && markers.length > 0) {
       const playerLocation = { lat: markers[0].lat, lng: markers[0].lng };
@@ -160,7 +182,6 @@ export default function MapComponent({
                 clickableIcons: false,
                 styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
                 mapTypeId: 'hybrid',
-                heading: heading
               }}
               onLoad={onLoad}
               onUnmount={onUnmount}
