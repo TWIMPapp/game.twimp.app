@@ -8,5 +8,7 @@ export const TaskTypeRouteMap: Record<TaskType, string> = {
   [TaskType.Chat]: '/task/chat',
   [TaskType.Finish]: '/task/finish',
   [TaskType.Evade]: '/task/evade',
-  [TaskType.Hunt]: '/task/hunt'
+  [TaskType.Hunt]: '/task/hunt',
+  [TaskType.MetalDetector]: '/task/metal-detector',
+  [TaskType.AdventureAnts]: '/task/adventure-ants'
 };
