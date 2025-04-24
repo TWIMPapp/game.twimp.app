@@ -115,19 +115,15 @@ export default function MapComponent({
     );
 
     const handleOrientation = (event: Event) => {
-      console.log('Orientation Event:', event);
       const orientationEvent = event as DeviceOrientationEvent;
       if (orientationEvent.absolute && orientationEvent.alpha !== null) {
-        console.log('Updating heading:', orientationEvent.alpha);
         setHeading(orientationEvent.alpha);
       }
     };
 
-    console.log('Adding orientation listener');
     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
 
     return () => {
-      console.log('Removing orientation listener');
       navigator.geolocation.clearWatch(watchId);
       window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
       if (throttleTimeout) {
@@ -164,6 +160,7 @@ export default function MapComponent({
                 clickableIcons: false,
                 styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
                 mapTypeId: 'hybrid',
+                heading: heading
               }}
               onLoad={onLoad}
               onUnmount={onUnmount}
@@ -191,7 +188,6 @@ export default function MapComponent({
                   <div>
                     <h3 className="text-xl">{markerInfoBox.title}</h3>
                     <p className="text-gray-500 pt-2 block">{markerInfoBox.subtitle}</p>
-                    <p className="text-gray-400 pt-1 block text-sm">Heading: {heading?.toFixed(2)}</p>
                   </div>
                 </InfoWindowF>
               )}
