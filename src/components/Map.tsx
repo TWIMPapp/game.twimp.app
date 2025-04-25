@@ -1,4 +1,4 @@
-import { GoogleMap, LoadScript, MarkerF, InfoWindowF } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, MarkerF, InfoWindowF, OverlayViewF } from '@react-google-maps/api';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import MarkerIcon from '@/assets/icons/marker-icon.png';
 import { Marker } from '@/typings/Task';
@@ -6,6 +6,48 @@ import { Colour } from '@/typings/Colour.enum';
 import Loading from './Loading';
 import { Box, IconButton } from '@mui/material';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
+
+// --- Heading Indicator Component ---
+const HeadingIndicator = ({ heading }: { heading: number }) => {
+  const circleSize = 60; // Diameter of the circle
+  const pointerSize = 8; // Size of the pointer triangle base/height
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        width: `${circleSize}px`,
+        height: `${circleSize}px`,
+        // Center the circle over the marker's anchor point
+        marginLeft: `-${circleSize / 2}px`,
+        marginTop: `-${circleSize / 2}px`,
+        // Optional: Add a visual circle outline
+        // border: '2px solid rgba(0, 150, 255, 0.7)',
+        // borderRadius: '50%',
+        // pointerEvents: 'none', // Allow clicks to pass through
+      }}
+    >
+      {/* Pointer Element (Triangle pointing up initially) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: `-${pointerSize / 2}px`, // Position slightly above the center
+          left: '50%',
+          width: '0',
+          height: '0',
+          borderLeft: `${pointerSize / 2}px solid transparent`,
+          borderRight: `${pointerSize / 2}px solid transparent`,
+          borderBottom: `${pointerSize}px solid #ff2e5b`, // Use brand pink
+          transformOrigin: `50% ${circleSize / 2 + pointerSize / 2}px`, // Rotate around the circle's center
+          transform: `translateX(-50%) rotate(${heading}deg)`,
+          transition: 'transform 0.1s linear', // Smooth rotation
+          pointerEvents: 'none',
+        }}
+      />
+    </div>
+  );
+};
+// --- End Heading Indicator Component ---
 
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
@@ -36,8 +78,6 @@ export default function MapComponent({
   const [markerInfoBox, setMarkerInfoBox] = useState<Marker>();
   const [heading, setHeading] = useState<number>(0);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const headingUpdateThrottleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastAppliedHeadingRef = useRef<number | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
@@ -69,6 +109,7 @@ export default function MapComponent({
   }, []);
 
   useEffect(() => {
+    console.log("Is Google Maps API Loaded?", isGoogleMapsAPILoaded);
     const displayMarkers =
       taskMarkers?.map((marker) => ({
         ...marker,
@@ -94,6 +135,7 @@ export default function MapComponent({
         setMarkers([playerMarker, ...displayMarkers]);
 
         if (center.lat === 0 && center.lng === 0 && mapRef.current) {
+            console.log("set original centre");
            const currentPos = { lat: position.coords.latitude, lng: position.coords.longitude };
            setCenter(currentPos);
            mapRef.current.panTo(currentPos);
@@ -119,6 +161,7 @@ export default function MapComponent({
     const handleOrientation = (event: Event) => {
       const orientationEvent = event as DeviceOrientationEvent;
       if (orientationEvent.absolute && orientationEvent.alpha !== null) {
+        console.log("set heading", orientationEvent.alpha)
         setHeading(orientationEvent.alpha);
       }
     };
@@ -133,48 +176,6 @@ export default function MapComponent({
       }
     };
   }, [taskMarkers, onPlayerMove, center.lat, center.lng]);
-
-  // Effect to programmatically update map heading when state changes (throttled and conditional)
-  useEffect(() => {
-    // Only proceed if the map exists and we're not currently throttled
-    if (mapRef.current && !headingUpdateThrottleTimeoutRef.current) {
-      const currentHeading = heading;
-      const lastHeading = lastAppliedHeadingRef.current;
-
-      let shouldUpdate = false;
-      if (lastHeading === null) {
-        // Always update on the first run
-        shouldUpdate = true;
-      } else {
-        // Calculate the shortest difference (handling wrap-around)
-        const diff = Math.abs(currentHeading - lastHeading);
-        const angleDifference = Math.min(diff, 360 - diff);
-
-        // Only update if the difference is more than 1 degree
-        if (angleDifference > 1) {
-          shouldUpdate = true;
-        }
-      }
-
-      if (shouldUpdate) {
-        mapRef.current.setHeading(currentHeading);
-        lastAppliedHeadingRef.current = currentHeading;
-      }
-
-      // Set a throttle timeout regardless of whether we updated, to limit check frequency
-      headingUpdateThrottleTimeoutRef.current = setTimeout(() => {
-        headingUpdateThrottleTimeoutRef.current = null;
-      }, 100); // Throttle interval: 100ms
-    }
-
-    // Cleanup function for the throttle timeout
-    return () => {
-      if (headingUpdateThrottleTimeoutRef.current) {
-        clearTimeout(headingUpdateThrottleTimeoutRef.current);
-        headingUpdateThrottleTimeoutRef.current = null; // Ensure ref is cleared on cleanup
-      }
-    };
-  }, [heading]); // Run this effect whenever the heading state changes
 
   const handleMyLocationClick = () => {
     if (mapRef.current && markers.length > 0) {
@@ -218,10 +219,19 @@ export default function MapComponent({
                         url: marker.image_url as string,
                         scaledSize: new google.maps.Size(48, 48)
                       }}
+                      zIndex={index === 0 ? 10 : 1}
                       onClick={() => setMarkerInfoBox(marker)}
                     />
                   );
                 })}
+              {isGoogleMapsAPILoaded && markers.length > 0 && (
+                <OverlayViewF
+                  position={{ lat: markers[0].lat, lng: markers[0].lng }}
+                  mapPaneName="overlayMouseTarget"
+                >
+                  <HeadingIndicator heading={heading} />
+                </OverlayViewF>
+              )}
               {markerInfoBox && (
                 <InfoWindowF
                   position={{ lat: markerInfoBox.lat, lng: markerInfoBox.lng }}
