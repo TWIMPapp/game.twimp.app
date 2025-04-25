@@ -9,7 +9,7 @@ import MyLocationIcon from '@mui/icons-material/MyLocation';
 
 // --- Heading Indicator Component ---
 const HeadingIndicator = ({ heading }: { heading: number }) => {
-  const circleSize = 60; // Diameter of the circle
+  const circleSize = 64; // Diameter of the circle (match marker size)
   const pointerSize = 8; // Size of the pointer triangle base/height
 
   return (
@@ -203,6 +203,7 @@ export default function MapComponent({
                 streetViewControl: false,
                 fullscreenControl: false,
                 clickableIcons: false,
+                rotateControl: false,
                 styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
                 mapTypeId: 'hybrid',
               }}
@@ -211,13 +212,15 @@ export default function MapComponent({
             >
               {isGoogleMapsAPILoaded &&
                 markers?.map((marker: Marker, index: number) => {
+                  const isPlayer = marker.image_url === MarkerIcon.src;
+                  const iconSize = isPlayer ? 64 : 48; // Player is 64x64, others 48x48
                   return (
                     <MarkerF
                       key={index}
                       position={{ lat: marker.lat, lng: marker.lng }}
                       icon={{
                         url: marker.image_url as string,
-                        scaledSize: new google.maps.Size(48, 48)
+                        scaledSize: new google.maps.Size(iconSize, iconSize)
                       }}
                       zIndex={index === 0 ? 10 : 1}
                       onClick={() => setMarkerInfoBox(marker)}
