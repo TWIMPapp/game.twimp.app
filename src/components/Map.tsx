@@ -18,9 +18,10 @@ const HeadingIndicator = ({ heading }: { heading: number }) => {
         position: 'absolute',
         width: `${circleSize}px`,
         height: `${circleSize}px`,
-        // Center the circle over the marker's anchor point
+        // Center the circle horizontally over the marker's anchor point
         marginLeft: `-${circleSize / 2}px`,
-        marginTop: `-${circleSize / 2}px`,
+        // Shift indicator up to align with the visual center of the marker image (whose anchor is bottom-center)
+        marginTop: `-${circleSize}px`,
         // Optional: Add a visual circle outline
         // border: '2px solid rgba(0, 150, 255, 0.7)',
         // borderRadius: '50%',
@@ -220,7 +221,7 @@ export default function MapComponent({
                       position={{ lat: marker.lat, lng: marker.lng }}
                       icon={{
                         url: marker.image_url as string,
-                        scaledSize: new google.maps.Size(iconSize, iconSize)
+                        scaledSize: new google.maps.Size(iconSize, iconSize),
                       }}
                       zIndex={index === 0 ? 10 : 1}
                       onClick={() => setMarkerInfoBox(marker)}
