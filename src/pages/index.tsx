@@ -17,12 +17,12 @@ interface CategorizedGames {
     all: Game[];
 }
 
+type GameStatus = 'active' | 'featured' | 'pending' | 'inactive';
+
 interface GameConfig {
     ref: string;
     gameType: 'trail' | 'universal';
-    active: boolean;
-    featured: boolean;
-    displayOrder: number;
+    status: GameStatus;
 }
 
 export default function Home() {
@@ -87,16 +87,17 @@ export default function Home() {
 
     }, [router]);
 
-    // Get featured games from data based on config
-    const featuredRefs = new Set(featuredConfig.map(c => c.ref));
-    const featuredGames = data.all.filter(g => featuredRefs.has(g.ref))
-        .sort((a, b) => {
-            const aOrder = featuredConfig.find(c => c.ref === a.ref)?.displayOrder ?? 0;
-            const bOrder = featuredConfig.find(c => c.ref === b.ref)?.displayOrder ?? 0;
-            return aOrder - bOrder;
-        });
+    // Featured games (top section only, sorted by distance)
+    const featuredRefs = new Set(featuredConfig.filter(c => c.status === 'featured').map(c => c.ref));
+    const featuredGames = data.all
+        .filter(g => featuredRefs.has(g.ref))
+        .sort((a, b) => (a.distanceInMiles ?? 999) - (b.distanceInMiles ?? 999));
 
-    // Filter non-featured games for regular display
+    // Pending games (shown but not clickable, "COMING SOON")
+    const pendingRefs = new Set(featuredConfig.filter(c => c.status === 'pending').map(c => c.ref));
+    const isPending = (ref: string) => pendingRefs.has(ref);
+
+    // Non-featured active games for regular display
     const nonFeaturedGames = data.all.filter(g => !featuredRefs.has(g.ref));
     const nonFeaturedNearYou = data.nearYou.filter(g => !featuredRefs.has(g.ref));
     const nonFeaturedPlayAgain = data.playAgain.filter(g => !featuredRefs.has(g.ref));
@@ -238,7 +239,7 @@ export default function Home() {
                                 <Grid container spacing={2}>
                                     {filteredGames.map(game => (
                                         <Grid item key={game.ref} xs={12} sm={6}>
-                                            <TrailCard game={game} onPlay={handlePlay} fullWidth />
+                                            <TrailCard game={game} onPlay={handlePlay} fullWidth isPending={isPending(game.ref)} />
                                         </Grid>
                                     ))}
                                 </Grid>
@@ -264,7 +265,7 @@ export default function Home() {
                                         <Grid container spacing={2} className="mb-8">
                                             {nonFeaturedPlayAgain.map((game) => (
                                                 <Grid item key={game.ref} xs={6}>
-                                                    <TrailCard game={game} onPlay={handlePlay} />
+                                                    <TrailCard game={game} onPlay={handlePlay} isPending={isPending(game.ref)} />
                                                 </Grid>
                                             ))}
                                         </Grid>
@@ -277,7 +278,7 @@ export default function Home() {
                                 <Grid container spacing={3}>
                                     {(nonFeaturedNearYou.length > 0 ? nonFeaturedNearYou : nonFeaturedGames).map((game) => (
                                         <Grid item key={game.ref} xs={12} sm={6}>
-                                            <TrailCard game={game} onPlay={handlePlay} fullWidth />
+                                            <TrailCard game={game} onPlay={handlePlay} fullWidth isPending={isPending(game.ref)} />
                                         </Grid>
                                     ))}
                                 </Grid>
@@ -293,15 +294,16 @@ export default function Home() {
     );
 }
 
-function TrailCard({ game, onPlay, fullWidth = false }: { game: Game, onPlay: (g: Game) => void, fullWidth?: boolean }) {
+function TrailCard({ game, onPlay, fullWidth = false, isPending = false }: { game: Game, onPlay: (g: Game) => void, fullWidth?: boolean, isPending?: boolean }) {
     return (
         <Card
-            className="h-full flex flex-col shadow-sm hover:shadow-xl transition-all duration-500 rounded-[28px] overflow-hidden border-none cursor-pointer relative group"
-            onClick={() => onPlay(game)}
+            className={`h-full flex flex-col shadow-sm hover:shadow-xl transition-all duration-500 rounded-[28px] overflow-hidden border-none relative group ${isPending ? 'cursor-default' : 'cursor-pointer'}`}
+            onClick={() => !isPending && onPlay(game)}
             sx={{
                 aspectRatio: fullWidth ? 'unset' : '1/1',
                 minHeight: fullWidth ? '180px' : 'unset',
-                backgroundColor: 'white'
+                backgroundColor: 'white',
+                opacity: isPending ? 0.8 : 1
             }}
         >
             <Box className="absolute inset-0 z-0">
@@ -309,7 +311,8 @@ function TrailCard({ game, onPlay, fullWidth = false }: { game: Game, onPlay: (g
                     component="img"
                     image={game.image_url}
                     alt={game.name}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className={`h-full w-full object-cover transition-transform duration-700 ${isPending ? '' : 'group-hover:scale-110'}`}
+                    sx={{ filter: isPending ? 'grayscale(30%)' : 'none' }}
                 />
                 <Box
                     className="absolute inset-0"
@@ -329,9 +332,9 @@ function TrailCard({ game, onPlay, fullWidth = false }: { game: Game, onPlay: (g
                 </Typography>
                 <Box className="flex items-center justify-between mt-1">
                     <Typography variant="caption" className="opacity-90 font-semibold tracking-wide uppercase text-[10px]">
-                        {game.isFree ? 'Free Adventure' : 'Premium Experience'}
+                        {isPending ? 'COMING SOON' : (game.isFree ? 'Free Adventure' : 'Premium Experience')}
                     </Typography>
-                    {game.distanceInMiles !== null && game.distanceInMiles !== undefined && (
+                    {!isPending && game.distanceInMiles !== null && game.distanceInMiles !== undefined && (
                         <Typography variant="caption" className="opacity-90 font-medium bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
                             {game.distanceInMiles.toFixed(1)} mi
                         </Typography>
