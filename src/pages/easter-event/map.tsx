@@ -51,20 +51,13 @@ export default function EasterEventMap() {
         return { collected: todayEggs.length, max: 5 };
     };
 
-    const fetchSpawnRadius = async () => {
-        const userId = localStorage.getItem('twimp_user_id');
-        if (!userId) return;
-
-        try {
-            const res: any = await EasterEventAPI.getSpawnRadius(userId);
-            if (res.ok && res.center) {
-                setSpawnRadius({
-                    center: res.center,
-                    radiusMeters: res.radiusMeters
-                });
-            }
-        } catch (err) {
-            console.error('Failed to fetch spawn radius:', err);
+    // Update spawn radius from any response that includes it
+    const updateSpawnRadius = (res: any) => {
+        if (res?.spawnRadius?.center) {
+            setSpawnRadius({
+                center: res.spawnRadius.center,
+                radiusMeters: res.spawnRadius.radiusMeters
+            });
         }
     };
 
@@ -110,7 +103,7 @@ export default function EasterEventMap() {
             try {
                 const res: any = await EasterEventAPI.start(userId, lat, lng);
                 setSession(res);
-                fetchSpawnRadius();
+                updateSpawnRadius(res);
 
                 // Calculate daily progress immediately from session
                 setDailyProgress(calculateDailyProgress(res));
@@ -182,6 +175,9 @@ export default function EasterEventMap() {
                 if (res.dailyProgress) {
                     setDailyProgress(res.dailyProgress);
                 }
+
+                // Update spawn radius if included in response
+                updateSpawnRadius(res);
 
                 // User arrived at egg - show celebration popup first
                 if (res.arrived) {
