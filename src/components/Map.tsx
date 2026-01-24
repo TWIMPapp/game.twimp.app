@@ -1,11 +1,18 @@
-import { GoogleMap, LoadScript, MarkerF, InfoWindowF, OverlayViewF } from '@react-google-maps/api';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { GoogleMap, LoadScript, MarkerF, InfoWindowF, OverlayViewF, CircleF } from '@react-google-maps/api';
+import { useEffect, useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import MarkerIcon from '@/assets/icons/marker-icon.png';
 import { Marker } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import Loading from './Loading';
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
+
+// Expose map control methods via ref
+export interface MapRef {
+  panTo: (location: { lat: number; lng: number }) => void;
+  setZoom: (zoom: number) => void;
+  panAndZoom: (location: { lat: number; lng: number }, zoom: number) => void;
+}
 
 // --- Heading Indicator Component ---
 const HeadingIndicator = ({ heading }: { heading: number }) => {
@@ -18,37 +25,29 @@ const HeadingIndicator = ({ heading }: { heading: number }) => {
         position: 'absolute',
         width: `${circleSize}px`,
         height: `${circleSize}px`,
-        // Center the circle horizontally over the marker's anchor point
         marginLeft: `-${circleSize / 2}px`,
-        // Shift indicator up to align with the visual center of the marker image (whose anchor is bottom-center)
         marginTop: `-${circleSize}px`,
-        // Optional: Add a visual circle outline
-        // border: '2px solid rgba(0, 150, 255, 0.7)',
-        // borderRadius: '50%',
-        // pointerEvents: 'none', // Allow clicks to pass through
       }}
     >
-      {/* Pointer Element (Triangle pointing up initially) */}
       <div
         style={{
           position: 'absolute',
-          top: `-${pointerSize / 2}px`, // Position slightly above the center
+          top: `-${pointerSize / 2}px`,
           left: '50%',
           width: '0',
           height: '0',
           borderLeft: `${pointerSize / 2}px solid transparent`,
           borderRight: `${pointerSize / 2}px solid transparent`,
-          borderBottom: `${pointerSize}px solid #ff2e5b`, // Use brand pink
-          transformOrigin: `50% ${circleSize / 2 + pointerSize / 2}px`, // Rotate around the circle's center
+          borderBottom: `${pointerSize}px solid #ff2e5b`,
+          transformOrigin: `50% ${circleSize / 2 + pointerSize / 2}px`,
           transform: `translateX(-50%) rotate(${heading}deg)`,
-          transition: 'transform 0.1s linear', // Smooth rotation
+          transition: 'transform 0.1s linear',
           pointerEvents: 'none',
         }}
       />
     </div>
   );
 };
-// --- End Heading Indicator Component ---
 
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
@@ -60,143 +59,155 @@ const MarkerColourMap: Record<Colour, string> = {
   [Colour.Orange]: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png'
 };
 
+const colorToHex: Record<string, string> = {
+  'blue': '#3B82F6',
+  'orange': '#F97316',
+  'green': '#22C55E',
+  'red': '#EF4444',
+  'gold': '#FFD700',
+  'yellow': '#EAB308',
+  'purple': '#A855F7',
+  'pink': '#EC4899'
+};
+
+// Returns the correct SVG egg icon from public folder
+const getColoredEggIcon = (color: string): string => {
+  const c = color.toLowerCase();
+  if (c === 'blue') return '/eggs/egg-blue.svg';
+  if (c === 'orange') return '/eggs/egg-orange.svg';
+  if (c === 'green') return '/eggs/egg-green.svg';
+  if (c === 'red') return '/eggs/egg-red.svg';
+  if (c === 'gold' || c === 'yellow') return '/eggs/egg-gold.svg';
+  if (c === 'pink') return '/eggs/egg-red.svg'; // fallback to red for pink
+  return '/eggs/egg-blue.svg'; // default
+};
+
 const containerStyle = {
   width: '100vw',
   height: `100vh`,
   position: 'relative' as 'relative'
 };
 
-export default function MapComponent({
-  taskMarkers,
-  onPlayerMove
-}: {
+export interface SpawnRadius {
+  center: { lat: number, lng: number };
+  radiusMeters: number;
+}
+
+const MapComponent = forwardRef<MapRef, {
   taskMarkers: Marker[];
-  onPlayerMove: (position: GeolocationPosition) => void;
-}) {
+  userLocation: { lat: number, lng: number } | null;
+  testMode?: boolean;
+  onPlayerMove: (lat: number, lng: number) => void;
+  zoom?: number;
+  spawnRadius?: SpawnRadius;
+}>(function MapComponent({
+  taskMarkers,
+  userLocation,
+  testMode = false,
+  onPlayerMove,
+  zoom = 20,
+  spawnRadius
+}, ref) {
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
-  const [markers, setMarkers] = useState<Marker[]>([]);
   const [markerInfoBox, setMarkerInfoBox] = useState<Marker>();
   const [heading, setHeading] = useState<number>(0);
+  const [viewportBounds, setViewportBounds] = useState<google.maps.LatLngBounds | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+
+  // Expose map control methods via ref for tutorial
+  useImperativeHandle(ref, () => ({
+    panTo: (location: { lat: number; lng: number }) => {
+      if (mapRef.current) {
+        mapRef.current.panTo(location);
+      }
+    },
+    setZoom: (zoomLevel: number) => {
+      if (mapRef.current) {
+        mapRef.current.setZoom(zoomLevel);
+      }
+    },
+    panAndZoom: (location: { lat: number; lng: number }, zoomLevel: number) => {
+      if (mapRef.current) {
+        mapRef.current.panTo(location);
+        mapRef.current.setZoom(zoomLevel);
+      }
+    }
+  }), []);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
-    if (center.lat !== 0 && center.lng !== 0) {
+    if (userLocation) {
+      map.panTo(userLocation);
+    } else if (center.lat !== 0 && center.lng !== 0) {
       map.panTo(center);
     }
-  }, [center]);
+    setViewportBounds(map.getBounds() || null);
+  }, [center, userLocation]);
 
   const onUnmount = useCallback(() => {
     mapRef.current = null;
   }, []);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const initialCenter = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-        setCenter(initialCenter);
-        if (mapRef.current) {
-          mapRef.current.panTo(initialCenter);
-        }
-      },
-      (error) => {
-        console.error("Error getting initial position:", error);
-      }
-    );
-  }, []);
+    // Initial center
+    if (userLocation && center.lat === 0) {
+      setCenter(userLocation);
+    } else if (taskMarkers && taskMarkers.length > 0 && center.lat === 0) {
+      setCenter({ lat: taskMarkers[0].lat, lng: taskMarkers[0].lng });
+    }
+  }, [taskMarkers, userLocation]);
 
   useEffect(() => {
-    console.log("Is Google Maps API Loaded?", isGoogleMapsAPILoaded);
-    const displayMarkers =
-      taskMarkers?.map((marker) => ({
-        ...marker,
-        image_url: marker?.image_url
-          ? marker.image_url
-          : marker?.colour
-          ? MarkerColourMap[marker.colour as Colour]
-          : MarkerColourMap[Colour.Red]
-      })) ?? [];
-
-    let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const playerMarker: Marker = {
-          lat: Number(position.coords.latitude),
-          lng: Number(position.coords.longitude),
-          title: 'You are here',
-          subtitle: 'Run about and it will update',
-          image_url: MarkerIcon.src
-        };
-
-        setMarkers([playerMarker, ...displayMarkers]);
-
-        if (center.lat === 0 && center.lng === 0 && mapRef.current) {
-            console.log("set original centre");
-           const currentPos = { lat: position.coords.latitude, lng: position.coords.longitude };
-           setCenter(currentPos);
-           mapRef.current.panTo(currentPos);
-        }
-
-        if (!throttleTimeout) {
-            onPlayerMove(position);
-            throttleTimeout = setTimeout(() => {
-              throttleTimeout = null;
-            }, 2000);
-          }
-      },
-      (error) => {
-        console.log("Geolocation watch error:", error);
-      },
-      {
-        maximumAge: 1000,
-        timeout: 5000,
-        enableHighAccuracy: true
-      }
-    );
-
     const handleOrientation = (event: Event) => {
       const orientationEvent = event as DeviceOrientationEvent;
       if (orientationEvent.absolute && orientationEvent.alpha !== null) {
-        console.log("set heading", orientationEvent.alpha)
         setHeading(orientationEvent.alpha);
       }
     };
 
     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-      window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
-      if (throttleTimeout) {
-        clearTimeout(throttleTimeout);
-      }
-    };
-  }, [taskMarkers, onPlayerMove, center.lat, center.lng]);
+    return () => window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
+  }, []);
 
   const handleMyLocationClick = () => {
-    if (mapRef.current && markers.length > 0) {
-      const playerLocation = { lat: markers[0].lat, lng: markers[0].lng };
-      mapRef.current.panTo(playerLocation);
-      mapRef.current.setZoom(18);
+    if (mapRef.current && userLocation) {
+      mapRef.current.panTo(userLocation);
+      mapRef.current.setZoom(zoom);
     }
   };
+
+  const displayMarkers =
+    taskMarkers?.map((marker) => ({
+      ...marker,
+      image_url: marker?.image_url
+        ? marker.image_url
+        : marker.title?.toLowerCase().includes('egg')
+          ? getColoredEggIcon(marker.colour || 'blue')
+          : marker?.colour
+            ? MarkerColourMap[marker.colour as Colour]
+            : MarkerColourMap[Colour.Red]
+    })) ?? [];
+
+  const playerMarker: Marker | null = userLocation ? {
+    lat: userLocation.lat,
+    lng: userLocation.lng,
+    title: 'You are here',
+    subtitle: testMode ? 'Drag me to test!' : 'Run about and it will update',
+    image_url: MarkerIcon.src
+  } : null;
 
   return (
     <>
       {isGoogleMapsAPILoaded || center?.lat !== 0 ? (
-         <Box sx={containerStyle}>
+        <Box sx={containerStyle}>
           <LoadScript
-            googleMapsApiKey="AIzaSyCPlJtyG0WSQJbM48Nbi980bzBixe2hbYQ"
+            googleMapsApiKey="AIzaSyAhvDuo2DTlkrAXr5mrFhWOwdvoMvocgDM"
             onLoad={() => setIsGoogleMapsAPILoaded(true)}
           >
             <GoogleMap
               mapContainerStyle={{ width: '100%', height: '100%' }}
-              zoom={18}
+              zoom={zoom}
               options={{
                 disableDefaultUI: false,
                 zoomControl: false,
@@ -207,49 +218,156 @@ export default function MapComponent({
                 rotateControl: false,
                 styles: [{ featureType: 'poi.business', stylers: [{ visibility: 'off' }] }],
                 mapTypeId: 'hybrid',
+                gestureHandling: 'greedy'
               }}
               onLoad={onLoad}
               onUnmount={onUnmount}
+              onBoundsChanged={() => {
+                if (mapRef.current) {
+                  setViewportBounds(mapRef.current.getBounds() || null);
+                }
+              }}
             >
               {isGoogleMapsAPILoaded &&
-                markers?.map((marker: Marker, index: number) => {
-                  const isPlayer = marker.image_url === MarkerIcon.src;
-                  const iconSize = isPlayer ? 64 : 48; // Player is 64x64, others 48x48
+                displayMarkers.map((marker: Marker, index: number) => {
+                  // Use larger size for colored eggs
+                  const isColoredEgg = marker.title?.toLowerCase().includes('egg') && marker.colour;
+                  const iconSize = isColoredEgg ? 64 : 48;
+
                   return (
                     <MarkerF
-                      key={index}
+                      key={`marker-${index}`}
                       position={{ lat: marker.lat, lng: marker.lng }}
                       icon={{
                         url: marker.image_url as string,
                         scaledSize: new google.maps.Size(iconSize, iconSize),
                       }}
-                      zIndex={index === 0 ? 10 : 1}
+                      zIndex={1}
                       onClick={() => setMarkerInfoBox(marker)}
                     />
                   );
                 })}
-              {isGoogleMapsAPILoaded && markers.length > 0 && (
+
+              {isGoogleMapsAPILoaded && playerMarker && (
+                <MarkerF
+                  position={{ lat: playerMarker.lat, lng: playerMarker.lng }}
+                  icon={{
+                    url: playerMarker.image_url as string,
+                    scaledSize: new google.maps.Size(64, 64),
+                  }}
+                  zIndex={10}
+                  draggable={testMode}
+                  onDragEnd={(e) => {
+                    if (e.latLng) {
+                      onPlayerMove(e.latLng.lat(), e.latLng.lng());
+                    }
+                  }}
+                  onClick={() => setMarkerInfoBox(playerMarker)}
+                />
+              )}
+
+              {isGoogleMapsAPILoaded && userLocation && (
                 <OverlayViewF
-                  position={{ lat: markers[0].lat, lng: markers[0].lng }}
+                  position={{ lat: userLocation.lat, lng: userLocation.lng }}
                   mapPaneName="overlayMouseTarget"
                 >
                   <HeadingIndicator heading={heading} />
                 </OverlayViewF>
               )}
+
+              {/* Spawn Radius Circle */}
+              {isGoogleMapsAPILoaded && spawnRadius && spawnRadius.center && (
+                <CircleF
+                  center={spawnRadius.center}
+                  radius={spawnRadius.radiusMeters}
+                  options={{
+                    fillColor: '#ffffff',
+                    fillOpacity: 0.1,
+                    strokeColor: '#ffffff',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    clickable: false,
+                    zIndex: 0
+                  }}
+                />
+              )}
+
               {markerInfoBox && (
                 <InfoWindowF
                   position={{ lat: markerInfoBox.lat, lng: markerInfoBox.lng }}
                   options={{ pixelOffset: new google.maps.Size(0, -48) }}
                   onCloseClick={() => setMarkerInfoBox(undefined)}
                 >
-                  <div>
-                    <h3 className="text-xl">{markerInfoBox.title}</h3>
+                  <div style={{ color: 'black' }}>
+                    <h3 className="text-xl font-bold">{markerInfoBox.title}</h3>
                     <p className="text-gray-500 pt-2 block">{markerInfoBox.subtitle}</p>
                   </div>
                 </InfoWindowF>
               )}
             </GoogleMap>
           </LoadScript>
+
+          {/* Off-screen Indicators */}
+          {viewportBounds && userLocation && taskMarkers.map((marker, idx) => {
+            const pos = new google.maps.LatLng(marker.lat, marker.lng);
+            if (viewportBounds.contains(pos)) return null;
+
+            // Calculate distance and bearing from player
+            const dist = Math.sqrt(Math.pow(marker.lat - userLocation.lat, 2) + Math.pow(marker.lng - userLocation.lng, 2)) * 111320; // rough meters
+            const angle = Math.atan2(marker.lng - userLocation.lng, marker.lat - userLocation.lat) * (180 / Math.PI);
+
+            // Correct angle for rotate
+            const rotation = angle;
+
+            return (
+              <Box
+                key={`ind-${idx}`}
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: '100vw',
+                  height: '100vh',
+                  pointerEvents: 'none',
+                  transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+                  zIndex: 5
+                }}
+              >
+                <Box sx={{
+                  position: 'absolute',
+                  top: 'calc(50% - min(35vh, 35vw))',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <Box sx={{
+                    width: 0,
+                    height: 0,
+                    borderLeft: '10px solid transparent',
+                    borderRight: '10px solid transparent',
+                    borderBottom: `14px solid ${marker.colour ? colorToHex[marker.colour.toLowerCase()] || '#FF2E5B' : '#FF2E5B'}`,
+                  }} />
+                  <Box sx={{
+                    backgroundColor: marker.colour ? colorToHex[marker.colour.toLowerCase()] || '#FF2E5B' : '#FF2E5B',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
+                    border: '2px solid white',
+                    minWidth: '60px',
+                    textAlign: 'center'
+                  }}>
+                    <Typography variant="caption" sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>
+                      {dist > 1000 ? `${(dist / 1000).toFixed(1)}km` : `${Math.round(dist)}m`}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            );
+          })}
           <IconButton
             onClick={handleMyLocationClick}
             sx={{
@@ -266,10 +384,13 @@ export default function MapComponent({
           >
             <MyLocationIcon />
           </IconButton>
-        </Box>
+        </Box >
       ) : (
         <Loading />
-      )}
+      )
+      }
     </>
   );
-}
+});
+
+export default MapComponent;

@@ -39,11 +39,6 @@ export function BaseTask({ params, testTask, children }: BaseTaskProps) {
     setOpenMap(false);
   };
 
-  const handleOpenSupport = () => {
-    if ((window as any).$crisp) {
-      (window as any).$crisp.push(['do', 'chat:open']);
-    }
-  };
 
   const goToNextTask = async () => {
     setNextTaskLoading(true);

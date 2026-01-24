@@ -6,6 +6,13 @@ const nextConfig = {
   sassOptions: {
     includePaths: [path.join(__dirname, 'styles')],
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Don't include backend code in client bundle
+      config.resolve.alias['@/backend'] = false;
+    }
+    return config;
+  },
 }
 
 module.exports = nextConfig

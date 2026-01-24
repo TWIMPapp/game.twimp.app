@@ -49,9 +49,6 @@ export default function App({ Component, pageProps }: AppProps) {
         })(window,document,'script','dataLayer','${GTM_ID}');
       `}
       </Script>
-      <Script id="crisp" strategy="afterInteractive">
-        {`window.$crisp=[];window.CRISP_WEBSITE_ID="8660295b-581a-4dc3-ba91-24c10dc89ab9";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`}
-      </Script>
       {params ? (
         <>
           <Head>

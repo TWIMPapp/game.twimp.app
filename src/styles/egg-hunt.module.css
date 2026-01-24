@@ -1,0 +1,65 @@
+/* Egg color themes */
+.egg-blue {
+    background-color: #3B82F6;
+    color: white;
+}
+
+.egg-orange {
+    background-color: #F97316;
+    color: white;
+}
+
+.egg-green {
+    background-color: #22C55E;
+    color: white;
+}
+
+.egg-red {
+    background-color: #EF4444;
+    color: white;
+}
+
+.egg-gold {
+    background-color: #FFD700;
+    color: white;
+}
+
+/* Button states */
+.submit-button {
+    border-radius: 16px;
+    height: 56px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: white !important;
+    transition: all 0.2s ease;
+}
+
+.submit-button.egg-blue {
+    background-color: #3B82F6;
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.submit-button.egg-orange {
+    background-color: #F97316;
+    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+}
+
+.submit-button.egg-green {
+    background-color: #22C55E;
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+}
+
+.submit-button.egg-red {
+    background-color: #EF4444;
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+.submit-button.egg-gold {
+    background-color: #FFD700;
+    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+}
+
+.submit-button:disabled {
+    opacity: 0.5;
+    color: white !important;
+}

@@ -6,6 +6,18 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  theme: {
+    extend: {
+      colors: {
+        'twimp-pink': '#FF2E5B',
+        'twimp-teal': '#A9D1C1',
+        'twimp-pink-light': '#FF6C88',
+      },
+      borderRadius: {
+        'twimp': '20px',
+      }
+    },
+  },
   plugins: [
     require('tailwindcss-animatecss'),
   ],
