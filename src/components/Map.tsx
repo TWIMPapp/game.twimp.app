@@ -202,7 +202,7 @@ const MapComponent = forwardRef<MapRef, {
       {isGoogleMapsAPILoaded || center?.lat !== 0 ? (
         <Box sx={containerStyle}>
           <LoadScript
-            googleMapsApiKey="AIzaSyAhvDuo2DTlkrAXr5mrFhWOwdvoMvocgDM"
+            googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
             onLoad={() => setIsGoogleMapsAPILoaded(true)}
           >
             <GoogleMap

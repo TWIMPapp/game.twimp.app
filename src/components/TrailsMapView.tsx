@@ -69,7 +69,7 @@ export default function TrailsMapView({ games, onPlayGame }: TrailsMapViewProps)
 
     return (
         <Box sx={{ width: '100%', height: '100%' }}>
-            <LoadScript googleMapsApiKey="AIzaSyCPlJtyG0WSQJbM48Nbi980bzBixe2hbYQ">
+            <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}>
                 <GoogleMap
                     mapContainerStyle={containerStyle}
                     zoom={12}
