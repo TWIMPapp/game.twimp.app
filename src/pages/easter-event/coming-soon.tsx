@@ -1,7 +1,7 @@
 import { Box, Typography, Button } from '@mui/material';
 import { useRouter } from 'next/router';
 
-export default function EasterEventPage() {
+export default function EasterEventComingSoon() {
     const router = useRouter();
 
     return (
