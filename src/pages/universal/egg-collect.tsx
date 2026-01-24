@@ -13,11 +13,12 @@ export default function EggCollectView() {
     const router = useRouter();
 
     useEffect(() => {
-        let userId = localStorage.getItem('twimp_user_id');
-        if (!userId) {
-            userId = crypto.randomUUID();
-            localStorage.setItem('twimp_user_id', userId);
+        let visitorId = localStorage.getItem('twimp_user_id');
+        if (!visitorId) {
+            visitorId = crypto.randomUUID();
+            localStorage.setItem('twimp_user_id', visitorId);
         }
+        const userId = visitorId; // Capture for closure
 
         const fetchStatus = async () => {
             try {

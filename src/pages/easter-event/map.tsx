@@ -99,11 +99,12 @@ export default function EasterEventMap() {
 
     // Initial load
     useEffect(() => {
-        let userId = localStorage.getItem('twimp_user_id');
-        if (!userId) {
-            userId = crypto.randomUUID();
-            localStorage.setItem('twimp_user_id', userId);
+        let visitorId = localStorage.getItem('twimp_user_id');
+        if (!visitorId) {
+            visitorId = crypto.randomUUID();
+            localStorage.setItem('twimp_user_id', visitorId);
         }
+        const userId = visitorId; // Capture for closure
 
         const fetchInitialData = async (lat: number, lng: number) => {
             try {
