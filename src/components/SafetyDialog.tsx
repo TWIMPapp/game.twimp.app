@@ -79,7 +79,7 @@ export default function SafetyDialog({ open, onAcknowledge }: SafetyDialogProps)
                             Your Responsibility
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Twimp has no knowledge of where you are choosing to play this game. We have not checked the area and we don't know what hazards may exist. As a parent or guardian, please check the play area to confirm it is safe for your family before starting.
+                            Twimp has no knowledge of where you are choosing to play this game. We have not checked the area and we don&apos;t know what hazards may exist. As a parent or guardian, please check the play area to confirm it is safe for your family before starting.
                         </Typography>
                     </Box>
                 </Box>

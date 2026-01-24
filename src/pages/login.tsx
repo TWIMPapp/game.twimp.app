@@ -62,7 +62,7 @@ export default function Login() {
             <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
                 <Paper className="p-8 text-center max-w-sm w-full rounded-2xl shadow-lg">
                     <Typography variant="h5" gutterBottom className="font-bold text-gray-900">Check your email</Typography>
-                    <Typography className="text-gray-600 mb-6">We've sent a magic link to <span className="font-semibold text-gray-900">{email}</span>.</Typography>
+                    <Typography className="text-gray-600 mb-6">We&apos;ve sent a magic link to <span className="font-semibold text-gray-900">{email}</span>.</Typography>
                     <Typography variant="body2" className="text-gray-500">Click the link in the email to sign in to Twimp.</Typography>
                 </Paper>
             </div>

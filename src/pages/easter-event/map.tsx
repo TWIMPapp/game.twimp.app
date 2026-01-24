@@ -482,7 +482,7 @@ export default function EasterEventMap() {
                                 Great Job!
                             </Typography>
                             <Typography sx={{ color: '#6B7280', mb: 4, lineHeight: 1.6 }}>
-                                Thank you! You've done enough for today, come back tomorrow!
+                                Thank you! You&apos;ve done enough for today, come back tomorrow!
                             </Typography>
                             <Button
                                 variant="contained"
