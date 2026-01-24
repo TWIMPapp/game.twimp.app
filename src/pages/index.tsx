@@ -29,6 +29,7 @@ export default function Home() {
     const [data, setData] = useState<CategorizedGames>({ playAgain: [], nearYou: [], all: [] });
     const [featuredConfig, setFeaturedConfig] = useState<GameConfig[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [view, setView] = useState<'list' | 'map'>('list');
     const [searchQuery, setSearchQuery] = useState('');
     const router = useRouter();
@@ -60,11 +61,17 @@ export default function Home() {
             if (userId) params.append('user_id', userId);
 
             fetch(`${BASE_URL}/trails/list?${params.toString()}`)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('API unavailable');
+                    return res.json();
+                })
                 .then(resData => {
                     setData(resData);
+                    setError(null);
                 })
-                .catch(err => console.error(err))
+                .catch(() => {
+                    setError('Unable to load games. Please check back soon!');
+                })
                 .finally(() => setLoading(false));
         };
 
@@ -136,6 +143,34 @@ export default function Home() {
             <Box className="h-screen flex flex-col items-center justify-center bg-gray-50">
                 <CircularProgress sx={{ color: '#FF2E5B' }} />
                 <Typography className="mt-4 font-medium text-gray-500">Loading Twimp Library...</Typography>
+            </Box>
+        );
+    }
+
+    if (error && data.all.length === 0) {
+        return (
+            <Box className="h-screen flex flex-col items-center justify-center bg-gray-50 px-6">
+                <Typography variant="h5" className="font-extrabold text-[#FF2E5B] mb-4">twimp</Typography>
+                <Typography variant="h6" className="font-bold text-gray-700 mb-2 text-center">
+                    We&apos;re setting things up!
+                </Typography>
+                <Typography className="text-gray-500 text-center mb-6">
+                    {error}
+                </Typography>
+                <Button
+                    variant="contained"
+                    onClick={() => window.location.reload()}
+                    sx={{
+                        backgroundColor: '#FF2E5B',
+                        borderRadius: '16px',
+                        px: 4,
+                        py: 1.5,
+                        fontWeight: 'bold',
+                        '&:hover': { backgroundColor: '#e6284f' }
+                    }}
+                >
+                    Try Again
+                </Button>
             </Box>
         );
     }
