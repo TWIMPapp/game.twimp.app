@@ -38,7 +38,7 @@ const MapTab = ({ refreshData }: { refreshData: boolean }) => {
     fetchData();
   }, [refreshData]);
 
-  return <MapComponent taskMarkers={markers} onPlayerMove={() => null} />;
+  return <MapComponent taskMarkers={markers} userLocation={null} onPlayerMove={() => null} />;
 };
 
 export default MapTab;

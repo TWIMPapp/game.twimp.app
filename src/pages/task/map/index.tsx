@@ -168,7 +168,7 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
           </div>
         </Box>
       ) : null}
-      {task && <MapComponent taskMarkers={task?.markers ?? []} onPlayerMove={handleOnPlayerMove} />}
+      {task && <MapComponent taskMarkers={task?.markers ?? []} userLocation={null} onPlayerMove={handleOnPlayerMove} />}
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
     </>
   );
