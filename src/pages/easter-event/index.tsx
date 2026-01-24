@@ -205,14 +205,14 @@ export default function EasterEventHub() {
     }, [gameData?.puzzleStatus, dataFetchedAt]);
 
     useEffect(() => {
-        const userId = localStorage.getItem('twimp_user_id');
+        let userId = localStorage.getItem('twimp_user_id');
         if (!userId) {
-            router.push('/login');
-            return;
+            userId = crypto.randomUUID();
+            localStorage.setItem('twimp_user_id', userId);
         }
 
         fetchGameData();
-    }, [router]);
+    }, []);
 
     const fetchGameData = async () => {
         const userId = localStorage.getItem('twimp_user_id');

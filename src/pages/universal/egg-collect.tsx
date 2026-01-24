@@ -13,10 +13,10 @@ export default function EggCollectView() {
     const router = useRouter();
 
     useEffect(() => {
-        const userId = localStorage.getItem('twimp_user_id');
+        let userId = localStorage.getItem('twimp_user_id');
         if (!userId) {
-            router.push('/login');
-            return;
+            userId = crypto.randomUUID();
+            localStorage.setItem('twimp_user_id', userId);
         }
 
         const fetchStatus = async () => {

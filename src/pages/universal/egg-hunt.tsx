@@ -119,10 +119,10 @@ export default function EggHuntView() {
 
     // Initial load
     useEffect(() => {
-        const userId = localStorage.getItem('twimp_user_id');
+        let userId = localStorage.getItem('twimp_user_id');
         if (!userId) {
-            router.push('/login');
-            return;
+            userId = crypto.randomUUID();
+            localStorage.setItem('twimp_user_id', userId);
         }
 
         const fetchInitialData = async (lat: number, lng: number) => {

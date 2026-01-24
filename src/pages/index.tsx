@@ -36,14 +36,10 @@ export default function Home() {
     useEffect(() => {
         let userId = localStorage.getItem('twimp_user_id');
 
-        if (!userId && process.env.NODE_ENV === 'development') {
-            userId = 'dev-user';
-            localStorage.setItem('twimp_user_id', userId);
-        }
-
+        // Auto-generate anonymous user ID if none exists
         if (!userId) {
-            router.push('/login');
-            return;
+            userId = crypto.randomUUID();
+            localStorage.setItem('twimp_user_id', userId);
         }
 
         // Fetch featured games config
