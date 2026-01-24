@@ -91,13 +91,13 @@ export default function TrailsMapView({ games, onPlayGame }: TrailsMapViewProps)
                     {gamesWithLocation.map((game) => (
                         <MarkerF
                             key={game.ref}
-                            position={{ lat: game.lat, lng: game.lng }}
+                            position={{ lat: game.lat!, lng: game.lng! }}
                             onClick={() => setSelectedGame(game)}
                             title={game.name}
                         />
                     ))}
 
-                    {selectedGame && (
+                    {selectedGame && selectedGame.lat && selectedGame.lng && (
                         <InfoWindowF
                             position={{ lat: selectedGame.lat, lng: selectedGame.lng }}
                             onCloseClick={() => setSelectedGame(null)}
