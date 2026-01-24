@@ -100,7 +100,7 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
     }
   };
 
-  const handleOnPlayerMove = async (position: GeolocationPosition) => {
+  const handleOnPlayerMove = async (lat: number, lng: number) => {
     // Check if a request is already pending or in cooldown
     if (isAwtyRequestPending.current) {
       return;
@@ -108,6 +108,12 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
 
     // Mark as pending
     isAwtyRequestPending.current = true;
+
+    // Create a position-like object for the API
+    const position = {
+      coords: { latitude: lat, longitude: lng, accuracy: 10, altitude: null, altitudeAccuracy: null, heading: null, speed: null },
+      timestamp: Date.now()
+    } as GeolocationPosition;
 
     try {
       const data = await AWTYPost(position, params as QueryParams);
