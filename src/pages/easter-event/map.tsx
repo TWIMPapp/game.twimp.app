@@ -34,8 +34,8 @@ export default function EasterEventMap() {
     const [answer, setAnswer] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-    const [exitDialogOpen, setExitDialogOpen] = useState(false);
     const [letterPopup, setLetterPopup] = useState<{ letter: string; symbol: string; isDuplicate: boolean } | null>(null);
+    const [letterRevealed, setLetterRevealed] = useState(false);
     const [goldenEggResult, setGoldenEggResult] = useState<any>(null);
     const [spawnRadius, setSpawnRadius] = useState<SpawnRadius | null>(null);
     const [safetyDialogOpen, setSafetyDialogOpen] = useState(false);
@@ -212,6 +212,15 @@ export default function EasterEventMap() {
 
         return () => clearInterval(interval);
     }, [session]);
+
+    // Letter reveal animation effect
+    useEffect(() => {
+        if (letterPopup) {
+            setLetterRevealed(false);
+            const timer = setTimeout(() => setLetterRevealed(true), 800);
+            return () => clearTimeout(timer);
+        }
+    }, [letterPopup]);
 
     const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60);
@@ -390,7 +399,7 @@ export default function EasterEventMap() {
                         <ReportProblemIcon />
                     </IconButton>
                     <IconButton
-                        onClick={() => setExitDialogOpen(true)}
+                        onClick={() => router.push('/easter-event')}
                         size="small"
                         sx={{
                             color: '#22C55E',
@@ -774,29 +783,121 @@ export default function EasterEventMap() {
                 maxWidth="xs"
                 fullWidth
                 PaperProps={{
-                    sx: { borderRadius: '24px', p: 3, textAlign: 'center' }
+                    sx: { borderRadius: '24px', p: 3, textAlign: 'center', overflow: 'hidden' }
                 }}
             >
                 {letterPopup && (
                     <Box className="flex flex-col items-center">
-                        <Typography variant="h3" className="mb-3">
+                        <Typography
+                            variant="h3"
+                            sx={{
+                                mb: 2,
+                                transition: 'all 0.5s ease-out',
+                                opacity: letterRevealed ? 1 : 0,
+                                transform: letterRevealed ? 'scale(1)' : 'scale(0.5)'
+                            }}
+                        >
                             {letterPopup.isDuplicate ? '😅' : '✨'}
                         </Typography>
-                        <Typography variant="h5" className={`font-extrabold mb-2 ${letterPopup.isDuplicate ? 'text-orange-600' : 'text-green-600'}`}>
+                        <Typography
+                            variant="h5"
+                            sx={{
+                                fontWeight: 800,
+                                mb: 1,
+                                color: letterPopup.isDuplicate ? '#EA580C' : '#16A34A',
+                                transition: 'all 0.5s ease-out 0.1s',
+                                opacity: letterRevealed ? 1 : 0,
+                                transform: letterRevealed ? 'translateY(0)' : 'translateY(-10px)'
+                            }}
+                        >
                             {letterPopup.isDuplicate ? 'Duplicate!' : 'Added to Codex!'}
                         </Typography>
-                        <Typography variant="body2" className="text-gray-600 mb-6">
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                color: '#6B7280',
+                                mb: 4,
+                                transition: 'all 0.5s ease-out 0.2s',
+                                opacity: letterRevealed ? 1 : 0
+                            }}
+                        >
                             {letterPopup.isDuplicate
                                 ? `Oh no! We already have ${letterPopup.letter}!`
                                 : `You unlocked a new symbol!`
                             }
                         </Typography>
-                        <Box className={`p-6 rounded-3xl border-2 mb-6 w-full ${letterPopup.isDuplicate ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'}`}>
-                            <Typography className="text-6xl mb-3">{letterPopup.symbol}</Typography>
-                            <Typography className={`text-3xl font-black ${letterPopup.isDuplicate ? 'text-orange-600' : 'text-green-600'}`}>
-                                {letterPopup.letter}
-                            </Typography>
+
+                        {/* Flip Card Container */}
+                        <Box
+                            sx={{
+                                perspective: '1000px',
+                                width: '100%',
+                                height: '140px',
+                                mb: 4
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    position: 'relative',
+                                    width: '100%',
+                                    height: '100%',
+                                    transformStyle: 'preserve-3d',
+                                    transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    transform: letterRevealed ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                                }}
+                            >
+                                {/* Front - Symbol */}
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        width: '100%',
+                                        height: '100%',
+                                        backfaceVisibility: 'hidden',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: '24px',
+                                        border: '2px solid',
+                                        borderColor: letterPopup.isDuplicate ? '#FDBA74' : '#86EFAC',
+                                        backgroundColor: letterPopup.isDuplicate ? '#FFF7ED' : '#F0FDF4'
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: '5rem', lineHeight: 1 }}>
+                                        {letterPopup.symbol}
+                                    </Typography>
+                                </Box>
+
+                                {/* Back - Letter */}
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        width: '100%',
+                                        height: '100%',
+                                        backfaceVisibility: 'hidden',
+                                        transform: 'rotateY(180deg)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: '24px',
+                                        border: '2px solid',
+                                        borderColor: letterPopup.isDuplicate ? '#FDBA74' : '#86EFAC',
+                                        backgroundColor: letterPopup.isDuplicate ? '#FFF7ED' : '#F0FDF4'
+                                    }}
+                                >
+                                    <Typography
+                                        sx={{
+                                            fontSize: '5rem',
+                                            fontWeight: 900,
+                                            color: letterPopup.isDuplicate ? '#EA580C' : '#16A34A',
+                                            lineHeight: 1
+                                        }}
+                                    >
+                                        {letterPopup.letter}
+                                    </Typography>
+                                </Box>
+                            </Box>
                         </Box>
+
                         <Button
                             variant="contained"
                             fullWidth
@@ -807,60 +908,16 @@ export default function EasterEventMap() {
                                 background: letterPopup.isDuplicate
                                     ? 'linear-gradient(45deg, #F97316 0%, #EA580C 100%)'
                                     : 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%)',
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                transition: 'all 0.5s ease-out 0.3s',
+                                opacity: letterRevealed ? 1 : 0.5,
+                                transform: letterRevealed ? 'translateY(0)' : 'translateY(10px)'
                             }}
                         >
                             Continue
                         </Button>
                     </Box>
                 )}
-            </Dialog>
-
-            {/* Exit Confirmation Dialog */}
-            <Dialog
-                open={exitDialogOpen}
-                onClose={() => setExitDialogOpen(false)}
-                maxWidth="xs"
-                fullWidth
-                PaperProps={{
-                    sx: { borderRadius: '24px', p: 2 }
-                }}
-            >
-                <DialogTitle component="div">
-                    <Typography variant="h6" component="p" className="font-bold text-center">
-                        Leave Easter Hunt?
-                    </Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <Typography className="text-center text-gray-600">
-                        Are you sure you want to exit? Your progress will be saved.
-                    </Typography>
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 3, gap: 2 }}>
-                    <Button
-                        variant="outlined"
-                        fullWidth
-                        onClick={() => setExitDialogOpen(false)}
-                        sx={{
-                            borderRadius: '12px',
-                            borderColor: '#22C55E',
-                            color: '#22C55E'
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        fullWidth
-                        onClick={() => router.push('/easter-event')}
-                        sx={{
-                            borderRadius: '12px',
-                            background: 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%)'
-                        }}
-                    >
-                        Exit Game
-                    </Button>
-                </DialogActions>
             </Dialog>
 
             {/* Safety Dialog */}

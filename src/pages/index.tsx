@@ -43,17 +43,6 @@ export default function Home() {
             localStorage.setItem('twimp_user_id', userId);
         }
 
-        // Fetch featured games config
-        fetch(`${BASE_URL}/config/featured`)
-            .then(res => res.json())
-            .then(resData => {
-                const result = resData.body || resData;
-                if (result.ok && result.featured) {
-                    setFeaturedConfig(result.featured);
-                }
-            })
-            .catch(err => console.error('Failed to fetch featured config:', err));
-
         const fetchTrails = (lat?: number, lng?: number) => {
             const params = new URLSearchParams();
             if (lat) params.append('lat', lat.toString());
@@ -67,6 +56,10 @@ export default function Home() {
                 })
                 .then(resData => {
                     setData(resData);
+                    // Featured config is now included in trails response
+                    if (resData.featured) {
+                        setFeaturedConfig(resData.featured);
+                    }
                     setError(null);
                 })
                 .catch(() => {
