@@ -49,6 +49,7 @@ interface MissionUpdate {
     title: string;
     message: string;
     iconEmoji: string;
+    hoursAgo?: number;
 }
 
 interface PuzzleStatus {
@@ -405,7 +406,7 @@ export default function EasterEventHub() {
                         MISSING<br />
                         EGGS
                     </Typography>
-                    {gameData?.dailyProgress && (
+                    {gameData?.eventDay && (
                         <Box
                             sx={{
                                 mt: 1.5,
@@ -419,7 +420,7 @@ export default function EasterEventHub() {
                             }}
                         >
                             <Typography variant="body2" sx={{ fontWeight: 700, textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}>
-                                Today: {gameData.dailyProgress.collected} / {gameData.dailyProgress.max} eggs
+                                DAY {gameData.eventDay}
                             </Typography>
                         </Box>
                     )}
@@ -501,10 +502,19 @@ export default function EasterEventHub() {
                                     >
                                         <Box className="flex items-start gap-2">
                                             <Typography className="text-lg">{update.iconEmoji}</Typography>
-                                            <Box>
-                                                <Typography className="font-bold text-sm text-gray-800">
-                                                    {update.title}
-                                                </Typography>
+                                            <Box className="flex-1">
+                                                <Box className="flex items-center justify-between">
+                                                    <Typography className="font-bold text-sm text-gray-800">
+                                                        {update.title}
+                                                    </Typography>
+                                                    <Typography variant="caption" className="text-amber-600 font-medium">
+                                                        {update.hoursAgo !== undefined && (
+                                                            update.hoursAgo === 0 ? 'Just now' :
+                                                            update.hoursAgo < 24 ? `${update.hoursAgo}h ago` :
+                                                            `${Math.floor(update.hoursAgo / 24)}d ago`
+                                                        )}
+                                                    </Typography>
+                                                </Box>
                                                 <Typography variant="caption" className="text-gray-600">
                                                     {update.message}
                                                 </Typography>
@@ -701,7 +711,7 @@ export default function EasterEventHub() {
                         alt=""
                         sx={{ width: 28, height: 28, mr: 1 }}
                     />
-                    Find The Eggs
+                    Find The Eggs ({gameData?.dailyProgress?.collected || 0}/{gameData?.dailyProgress?.max || 5})
                 </Button>
             </Box>
 

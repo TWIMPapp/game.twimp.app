@@ -14,7 +14,6 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
-import HomeIcon from '@mui/icons-material/Home';
 import { EasterEventAPI } from '@/services/API';
 import Map, { SpawnRadius, MapRef } from '@/components/Map';
 import SafetyDialog from '@/components/SafetyDialog';
@@ -28,7 +27,8 @@ export default function EasterEventMap() {
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [testMode, setTestMode] = useState(true);
-    const [celebrationPopup, setCelebrationPopup] = useState<{ subject: string; isGoldenEgg: boolean } | null>(null);
+    const [celebrationPopup, setCelebrationPopup] = useState<{ subject: string; isGoldenEgg: boolean; task?: any } | null>(null);
+    const [collecting, setCollecting] = useState(false);
     const [questionPopup, setQuestionPopup] = useState<any>(null);
     const [goldenEggPopup, setGoldenEggPopup] = useState(false);
     const [answer, setAnswer] = useState('');
@@ -180,10 +180,11 @@ export default function EasterEventMap() {
                 updateSpawnRadius(res);
 
                 // User arrived at egg - show celebration popup first
+                // Task is included in AWTY response, no need to call confirmArrival
                 if (res.arrived) {
                     const subject = res.session?.currentEgg?.subject || 'SCIENCE';
                     const isGoldenEgg = res.isGoldenEgg || false;
-                    setCelebrationPopup({ subject, isGoldenEgg });
+                    setCelebrationPopup({ subject, isGoldenEgg, task: res.task });
                 }
 
                 lastSentLocationRef.current = currentLoc;
@@ -273,29 +274,28 @@ export default function EasterEventMap() {
         }
     };
 
-    const handleCelebrationCollect = async () => {
-        const userId = localStorage.getItem('twimp_user_id');
-        if (!userId || !celebrationPopup) return;
+    const handleCelebrationCollect = () => {
+        if (!celebrationPopup || collecting) return;
 
-        try {
-            const res: any = await EasterEventAPI.confirmArrival(userId);
+        // Start collecting animation
+        setCollecting(true);
 
-            if (res.dailyProgress) {
-                setDailyProgress(res.dailyProgress);
-            }
+        // Egg collection already recorded by AWTY - show next popup after delay
+        const task = celebrationPopup.task;
+        const isGolden = celebrationPopup.isGoldenEgg;
 
+        setTimeout(() => {
             setCelebrationPopup(null);
+            setCollecting(false);
 
-            if (celebrationPopup.isGoldenEgg) {
+            if (isGolden) {
                 // Golden egg - show golden egg popup (no question)
                 setGoldenEggPopup(true);
-            } else if (res.task) {
-                // Regular egg - show question popup
-                setQuestionPopup(res.task);
+            } else if (task) {
+                // Regular egg - show question popup (task from AWTY response)
+                setQuestionPopup(task);
             }
-        } catch (err) {
-            console.error('Failed to confirm arrival:', err);
-        }
+        }, 800);
     };
 
     const handleCollectGoldenEgg = async () => {
@@ -303,7 +303,7 @@ export default function EasterEventMap() {
         if (!userId) return;
 
         try {
-            const res: any = await EasterEventAPI.collectGolden(userId);
+            const res: any = await EasterEventAPI.collect(userId);
             if (res.ok) {
                 setGoldenEggPopup(false);
                 setGoldenEggResult(res);
@@ -353,70 +353,42 @@ export default function EasterEventMap() {
         <Box className="h-screen flex flex-col bg-gray-50 overflow-hidden">
             {/* Header */}
             <Box className="px-4 py-3 bg-white shadow-sm flex items-center justify-between z-10" sx={{ flexShrink: 0 }}>
-                {/* Left: Title and Progress */}
-                <Box sx={{ minWidth: '140px' }}>
-                    <Typography className="text-xs font-bold text-green-500 uppercase tracking-widest">Easter Event</Typography>
-                    <Typography variant="body1" className="font-extrabold text-gray-800">
-                        {progress.collected} / {progress.max} Eggs Today
+                {/* Left: Remaining Eggs */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box
+                        component="img"
+                        src="/eggs/egg-green.svg"
+                        alt="Eggs remaining"
+                        sx={{ width: 24, height: 24 }}
+                    />
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#22C55E' }}>
+                        {progress.max - progress.collected}
                     </Typography>
                 </Box>
 
-                {/* Center: Timer and Buttons */}
-                <Box className="flex items-center gap-2">
+                {/* Center: Timer (perfectly centered) */}
+                <Box sx={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
                     <Box className="bg-green-100 px-2 py-1 rounded-xl text-center">
                         <Typography className="text-[9px] font-bold text-green-600 leading-tight">RESPAWN</Typography>
                         <Typography className="text-sm font-black text-green-600 tabular-nums leading-tight">{formatTime(timeLeft)}</Typography>
                     </Box>
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => router.push('/easter-event')}
-                        sx={{
-                            borderRadius: '12px',
-                            borderColor: '#22C55E',
-                            color: '#22C55E',
-                            fontWeight: 'bold',
-                            fontSize: '0.75rem',
-                            px: 2,
-                            py: 0.75,
-                            textTransform: 'none',
-                            minWidth: 'auto',
-                            '&:hover': {
-                                borderColor: '#16A34A',
-                                backgroundColor: 'rgba(34, 197, 94, 0.05)'
-                            }
-                        }}
-                        title="Back to HQ"
-                    >
-                        <HomeIcon sx={{ fontSize: '1rem' }} />
-                    </Button>
-                    <Button
-                        variant="outlined"
+                </Box>
+
+                {/* Right: Hazard + Close Buttons */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <IconButton
                         size="small"
                         onClick={handleReportHazard}
                         sx={{
-                            borderRadius: '12px',
-                            borderColor: '#FF9800',
-                            color: '#FF9800',
-                            fontWeight: 'bold',
-                            fontSize: '0.75rem',
-                            px: 2,
-                            py: 0.75,
-                            textTransform: 'none',
-                            minWidth: 'auto',
+                            color: '#EF4444',
                             '&:hover': {
-                                borderColor: '#F57C00',
-                                backgroundColor: 'rgba(255, 152, 0, 0.05)'
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)'
                             }
                         }}
                         title="Report hazard - respawn eggs"
                     >
-                        <ReportProblemIcon sx={{ fontSize: '1rem' }} />
-                    </Button>
-                </Box>
-
-                {/* Right: Close Button */}
-                <Box sx={{ minWidth: '48px', display: 'flex', justifyContent: 'flex-end' }}>
+                        <ReportProblemIcon />
+                    </IconButton>
                     <IconButton
                         onClick={() => setExitDialogOpen(true)}
                         size="small"
@@ -540,7 +512,10 @@ export default function EasterEventMap() {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    mb: 2
+                                    mb: 2,
+                                    transition: 'all 0.5s ease-out',
+                                    transform: collecting ? 'scale(0.3)' : 'scale(1)',
+                                    opacity: collecting ? 0 : 1
                                 }}
                             >
                                 <img
@@ -554,10 +529,29 @@ export default function EasterEventMap() {
                                     }}
                                 />
                             </Box>
-                            <Typography component="p" variant="h4" sx={{ fontWeight: 800, color: colors.text, mb: 1 }}>
+                            <Typography
+                                component="p"
+                                variant="h4"
+                                sx={{
+                                    fontWeight: 800,
+                                    color: colors.text,
+                                    mb: 1,
+                                    transition: 'opacity 0.3s ease-out',
+                                    opacity: collecting ? 0 : 1
+                                }}
+                            >
                                 {celebrationPopup.isGoldenEgg ? 'GOLDEN EGG!' : 'Woohoo!'}
                             </Typography>
-                            <Typography component="p" variant="h6" sx={{ color: '#6B7280', mb: 4 }}>
+                            <Typography
+                                component="p"
+                                variant="h6"
+                                sx={{
+                                    color: '#6B7280',
+                                    mb: 4,
+                                    transition: 'opacity 0.3s ease-out',
+                                    opacity: collecting ? 0 : 1
+                                }}
+                            >
                                 {celebrationPopup.isGoldenEgg
                                     ? 'You found the legendary Golden Egg!'
                                     : 'You found an egg!'}
@@ -565,6 +559,7 @@ export default function EasterEventMap() {
                             <Button
                                 variant="contained"
                                 fullWidth
+                                disabled={collecting}
                                 onClick={handleCelebrationCollect}
                                 sx={{
                                     borderRadius: '16px',
@@ -572,12 +567,24 @@ export default function EasterEventMap() {
                                     background: colors.gradient,
                                     fontWeight: 'bold',
                                     fontSize: '1.1rem',
+                                    transition: 'all 0.3s ease-out',
                                     '&:hover': {
                                         opacity: 0.9
+                                    },
+                                    '&.Mui-disabled': {
+                                        background: colors.gradient,
+                                        color: 'white'
                                     }
                                 }}
                             >
-                                {celebrationPopup.isGoldenEgg ? 'Open Golden Egg!' : 'Collect Egg!'}
+                                {collecting ? (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <CircularProgress size={20} sx={{ color: 'white' }} />
+                                        Collecting...
+                                    </Box>
+                                ) : (
+                                    celebrationPopup.isGoldenEgg ? 'Open Golden Egg!' : 'Collect Egg!'
+                                )}
                             </Button>
                         </Box>
                     );
@@ -608,11 +615,11 @@ export default function EasterEventMap() {
 
                     return (
                         <>
-                            <DialogTitle className={styles[colorClass]} sx={{ p: 3, textAlign: 'center' }}>
+                            <DialogTitle component="div" className={styles[colorClass]} sx={{ p: 3, textAlign: 'center' }}>
                                 <Typography variant="body2" className="font-bold uppercase tracking-widest opacity-90">
                                     {questionPopup.subject} Question
                                 </Typography>
-                                <Typography variant="h5" className="font-extrabold mt-1">
+                                <Typography variant="h5" component="p" className="font-extrabold mt-1">
                                     Answer to Collect Egg
                                 </Typography>
                             </DialogTitle>
@@ -637,10 +644,22 @@ export default function EasterEventMap() {
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             borderRadius: '16px',
+                                            '& fieldset': {
+                                                borderColor: borderColor
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: borderColor
+                                            },
                                             '&.Mui-focused fieldset': {
                                                 borderColor: borderColor,
                                                 borderWidth: '2px'
                                             }
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: borderColor
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: borderColor
                                         }
                                     }}
                                 />
@@ -807,8 +826,8 @@ export default function EasterEventMap() {
                     sx: { borderRadius: '24px', p: 2 }
                 }}
             >
-                <DialogTitle>
-                    <Typography variant="h6" className="font-bold text-center">
+                <DialogTitle component="div">
+                    <Typography variant="h6" component="p" className="font-bold text-center">
                         Leave Easter Hunt?
                     </Typography>
                 </DialogTitle>
@@ -833,7 +852,7 @@ export default function EasterEventMap() {
                     <Button
                         variant="contained"
                         fullWidth
-                        onClick={() => router.push('/')}
+                        onClick={() => router.push('/easter-event')}
                         sx={{
                             borderRadius: '12px',
                             background: 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%)'

@@ -661,12 +661,12 @@ export default function EggHuntView() {
 
                     return (
                         <>
-                            <DialogTitle className={styles[colorClass]} sx={{ p: 3, textAlign: 'center', position: 'relative' }}>
+                            <DialogTitle component="div" className={styles[colorClass]} sx={{ p: 3, textAlign: 'center', position: 'relative' }}>
                                 <Box className="flex flex-col items-center">
                                     <Typography variant="body2" className="font-bold uppercase tracking-widest opacity-90">
                                         {questionPopup.subject} Question - Level {session?.currentLevel}
                                     </Typography>
-                                    <Typography variant="h5" className="font-extrabold mt-1">
+                                    <Typography variant="h5" component="p" className="font-extrabold mt-1">
                                         Answer to Unlock Symbol
                                     </Typography>
                                 </Box>
@@ -759,8 +759,8 @@ export default function EggHuntView() {
                     sx: { borderRadius: '24px', p: 2 }
                 }}
             >
-                <DialogTitle>
-                    <Typography variant="h6" className="font-bold text-center">
+                <DialogTitle component="div">
+                    <Typography variant="h6" component="p" className="font-bold text-center">
                         Leave Egg Hunt?
                     </Typography>
                 </DialogTitle>
