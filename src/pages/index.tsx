@@ -110,7 +110,7 @@ export default function Home() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                trail_ref: game.ref,
+                game_ref: game.ref,
                 user_id: userId
             })
         })
