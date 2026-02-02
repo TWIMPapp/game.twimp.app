@@ -122,19 +122,35 @@ function CodexGrid({ codex }: { codex: CodexEntry[] }) {
 
 // Clue Display Component
 function ClueDisplay({ clue }: { clue: EncodedClue }) {
+    // Group characters into words (split by spaces)
+    const words: EncodedCharacter[][] = [];
+    let currentWord: EncodedCharacter[] = [];
+
+    clue.encoded.forEach((char) => {
+        if (char.char === ' ') {
+            if (currentWord.length > 0) {
+                words.push(currentWord);
+                currentWord = [];
+            }
+        } else {
+            currentWord.push(char);
+        }
+    });
+    if (currentWord.length > 0) {
+        words.push(currentWord);
+    }
+
     return (
-        <Box className="flex flex-wrap gap-1 items-center">
-            {clue.encoded.map((char, i) => (
-                <Box key={i} className={`text-center ${char.char === ' ' ? 'w-3' : ''}`}>
-                    {char.char === ' ' ? (
-                        <Typography>&nbsp;</Typography>
-                    ) : (
-                        <Box className={`px-1 py-0.5 rounded ${char.revealed ? 'bg-green-100' : 'bg-purple-100'}`}>
+        <Box className="flex flex-wrap gap-2 items-center">
+            {words.map((word, wordIndex) => (
+                <Box key={wordIndex} className="flex gap-0.5" sx={{ flexShrink: 0 }}>
+                    {word.map((char, charIndex) => (
+                        <Box key={charIndex} className={`px-1 py-0.5 rounded ${char.revealed ? 'bg-green-100' : 'bg-purple-100'}`}>
                             <Typography className={`text-sm font-bold ${char.revealed ? 'text-green-700' : 'text-purple-700'}`}>
                                 {char.revealed ? char.char : char.symbol}
                             </Typography>
                         </Box>
-                    )}
+                    ))}
                 </Box>
             ))}
             {clue.fullyDecoded && (
@@ -510,8 +526,8 @@ export default function EasterEventHub() {
                                                     <Typography variant="caption" className="text-amber-600 font-medium">
                                                         {update.hoursAgo !== undefined && (
                                                             update.hoursAgo === 0 ? 'Just now' :
-                                                            update.hoursAgo < 24 ? `${update.hoursAgo}h ago` :
-                                                            `${Math.floor(update.hoursAgo / 24)}d ago`
+                                                                update.hoursAgo < 24 ? `${update.hoursAgo}h ago` :
+                                                                    `${Math.floor(update.hoursAgo / 24)}d ago`
                                                         )}
                                                     </Typography>
                                                 </Box>
@@ -527,94 +543,134 @@ export default function EasterEventHub() {
                     </CardContent>
                 </Card>
 
-                {/* Daily Puzzle - Question mark pattern background */}
+                {/* Cryptic Puzzle - Mystery Box Design */}
                 <Card
                     className="rounded-2xl shadow-md overflow-hidden"
                     sx={{
-                        background: `
-                            linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(124, 58, 237, 0.15) 100%),
-                            repeating-linear-gradient(
-                                45deg,
-                                transparent,
-                                transparent 20px,
-                                rgba(147, 51, 234, 0.03) 20px,
-                                rgba(147, 51, 234, 0.03) 40px
-                            )
-                        `,
-                        border: '2px solid #c4b5fd',
-                        position: 'relative',
-                        '&::before': {
-                            content: '"? ? ? ? ? ? ? ? ? ?"',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            fontSize: '24px',
-                            color: 'rgba(147, 51, 234, 0.08)',
-                            fontWeight: 'bold',
-                            letterSpacing: '20px',
-                            lineHeight: '40px',
-                            overflow: 'hidden',
-                            pointerEvents: 'none',
-                            zIndex: 0
-                        }
+                        position: 'relative'
                     }}
                 >
-                    <CardContent sx={{ position: 'relative', zIndex: 1 }}>
-                        <Typography variant="h6" className="font-bold mb-3 flex items-center gap-2 text-purple-800">
-                            🧩 Daily Puzzle
-                        </Typography>
-                        {gameData?.puzzleStatus?.active ? (
-                            <Box
-                                onClick={() => !gameData.puzzleStatus.solved && setPuzzleDialogOpen(true)}
-                                className={`p-4 rounded-xl border-2 text-center cursor-pointer transition-all ${gameData.puzzleStatus.solved
-                                    ? 'bg-green-50/90 border-green-300'
-                                    : 'bg-white/80 border-purple-300 hover:bg-white/90'
-                                    }`}
+                    {/* Full-width Puzzle Box with Overlays */}
+                    <Box
+                        onClick={() => gameData?.puzzleStatus?.active && !gameData.puzzleStatus.solved && setPuzzleDialogOpen(true)}
+                        sx={{
+                            position: 'relative',
+                            width: '100%',
+                            aspectRatio: '4/3',
+                            cursor: gameData?.puzzleStatus?.active && !gameData?.puzzleStatus?.solved ? 'pointer' : 'default',
+                            transition: 'transform 0.2s ease',
+                            overflow: 'hidden',
+                            '&:hover': gameData?.puzzleStatus?.active && !gameData?.puzzleStatus?.solved ? {
+                                transform: 'scale(1.01)'
+                            } : {}
+                        }}
+                    >
+                        {/* Puzzle Box Image - Full Width/Height */}
+                        <Box
+                            component="img"
+                            src="/puzzle-box.png"
+                            alt="Mystery Puzzle Box"
+                            sx={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                filter: gameData?.puzzleStatus?.solved
+                                    ? 'brightness(1.1)'
+                                    : !gameData?.puzzleStatus?.active
+                                        ? 'grayscale(0.3) opacity(0.7)'
+                                        : 'none',
+                                transition: 'filter 0.3s ease'
+                            }}
+                        />
+
+                        {/* Centered "Tap to solve" overlay */}
+                        {gameData?.puzzleStatus?.active && !gameData?.puzzleStatus?.solved && (
+                            <Typography
+                                sx={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    color: 'white',
+                                    fontWeight: 700,
+                                    fontSize: '0.875rem',
+                                    textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.6)'
+                                }}
                             >
-                                <Typography className="text-3xl mb-2">
-                                    {gameData.puzzleStatus.solved ? '✅' : '🔮'}
-                                </Typography>
-                                <Typography className="font-bold text-gray-800">
-                                    {gameData.puzzleStatus.puzzle?.title}
-                                </Typography>
-                                {gameData.puzzleStatus.solved ? (
-                                    <Box>
-                                        <Typography variant="caption" className="text-green-600 block">
-                                            Solved!
-                                        </Typography>
-                                        {gameData.puzzleStatus.nextPuzzleAt && (
-                                            <Typography variant="caption" className="text-gray-500">
-                                                Next puzzle: {gameData.puzzleStatus.nextPuzzleTitle || 'Coming'} in {puzzleCountdown}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                ) : (
-                                    <Typography variant="caption" className="text-purple-600">
-                                        ⏰ {puzzleCountdown || formatTimeRemaining(gameData.puzzleStatus.timeRemaining || 0)} remaining
-                                    </Typography>
-                                )}
-                            </Box>
-                        ) : gameData?.puzzleStatus?.nextPuzzleAt ? (
-                            <Box className="p-4 rounded-xl bg-white/80 border-2 border-purple-300 text-center">
-                                <Typography className="text-3xl mb-2">⏳</Typography>
-                                <Typography className="font-bold text-gray-800">
-                                    {gameData.puzzleStatus.nextPuzzleTitle || 'Next Puzzle'}
-                                </Typography>
-                                <Typography variant="caption" className="text-purple-600">
-                                    Starts in {puzzleCountdown}
-                                </Typography>
-                            </Box>
-                        ) : (
-                            <Box className="p-4 rounded-xl bg-white/60 border-2 border-gray-300 text-center">
-                                <Typography className="text-gray-500">
-                                    {gameData?.puzzleStatus?.message || 'No active puzzle'}
-                                </Typography>
+                                Tap to solve
+                            </Typography>
+                        )}
+
+                        {/* Solved checkmark overlay - centered */}
+                        {gameData?.puzzleStatus?.solved && (
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: '50%',
+                                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 4px 20px rgba(34, 197, 94, 0.5)',
+                                    border: '3px solid white'
+                                }}
+                            >
+                                <Typography sx={{ fontSize: 32, color: 'white' }}>✓</Typography>
                             </Box>
                         )}
-                    </CardContent>
+
+                        {/* Timer - Bottom Right */}
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                bottom: 8,
+                                right: 8
+                            }}
+                        >
+                            {gameData?.puzzleStatus?.active ? (
+                                gameData.puzzleStatus.solved ? (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{ fontWeight: 600, color: 'black' }}
+                                    >
+                                        Next in {puzzleCountdown}
+                                    </Typography>
+                                ) : (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{ fontWeight: 600, color: 'black' }}
+                                    >
+                                        ⏳ {puzzleCountdown || formatTimeRemaining(gameData.puzzleStatus.timeRemaining || 0)} left
+                                    </Typography>
+                                )
+                            ) : gameData?.puzzleStatus?.nextPuzzleAt ? (
+                                <Typography
+                                    variant="caption"
+                                    sx={{ fontWeight: 600, color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.7)' }}
+                                >
+                                    🔒 Opens in {puzzleCountdown}
+                                </Typography>
+                            ) : (
+                                <Typography
+                                    variant="caption"
+                                    sx={{ fontWeight: 600, color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.7)' }}
+                                >
+                                    {gameData?.puzzleStatus?.message || 'No puzzle'}
+                                </Typography>
+                            )}
+                        </Box>
+                    </Box>
                 </Card>
+
 
                 {/* Clues */}
                 <Card
@@ -671,11 +727,11 @@ export default function EasterEventHub() {
                         </Typography>
                         <CodexGrid codex={gameData?.codex || []} />
                     </CardContent>
-                </Card>
-            </Box>
+                </Card >
+            </Box >
 
             {/* Fixed CTA Button */}
-            <Box
+            < Box
                 sx={{
                     position: 'fixed',
                     bottom: 0,
@@ -687,36 +743,53 @@ export default function EasterEventHub() {
                     zIndex: 1000
                 }}
             >
-                <Button
-                    variant="contained"
-                    fullWidth
-                    size="large"
-                    onClick={handleStartGame}
-                    sx={{
-                        borderRadius: '16px',
-                        height: '56px',
-                        background: 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%)',
-                        fontWeight: 'bold',
-                        fontSize: '1.1rem',
-                        textTransform: 'none',
-                        boxShadow: '0 4px 14px rgba(34, 197, 94, 0.4)',
-                        '&:hover': {
-                            background: 'linear-gradient(45deg, #16A34A 0%, #15803D 100%)'
-                        }
-                    }}
-                >
+                {(gameData?.dailyProgress?.collected || 0) >= (gameData?.dailyProgress?.max || 5) ? (
                     <Box
-                        component="img"
-                        src="/eggs/egg-gold.svg"
-                        alt=""
-                        sx={{ width: 28, height: 28, mr: 1 }}
-                    />
-                    Find The Eggs ({gameData?.dailyProgress?.collected || 0}/{gameData?.dailyProgress?.max || 5})
-                </Button>
-            </Box>
+                        sx={{
+                            borderRadius: '16px',
+                            height: '56px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            fontSize: '1.1rem',
+                            color: '#EC4899'
+                        }}
+                    >
+                        🎉 Come Back Tomorrow!
+                    </Box>
+                ) : (
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        onClick={handleStartGame}
+                        sx={{
+                            borderRadius: '16px',
+                            height: '56px',
+                            background: 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%)',
+                            fontWeight: 'bold',
+                            fontSize: '1.1rem',
+                            textTransform: 'none',
+                            boxShadow: '0 4px 14px rgba(34, 197, 94, 0.4)',
+                            '&:hover': {
+                                background: 'linear-gradient(45deg, #16A34A 0%, #15803D 100%)'
+                            }
+                        }}
+                    >
+                        <Box
+                            component="img"
+                            src="/eggs/egg-gold.svg"
+                            alt=""
+                            sx={{ width: 28, height: 28, mr: 1 }}
+                        />
+                        Find The Eggs ({gameData?.dailyProgress?.collected || 0}/{gameData?.dailyProgress?.max || 5})
+                    </Button>
+                )}
+            </Box >
 
             {/* Puzzle Dialog */}
-            <Dialog
+            < Dialog
                 open={puzzleDialogOpen}
                 onClose={() => !puzzleSubmitting && setPuzzleDialogOpen(false)}
                 maxWidth="sm"
@@ -725,7 +798,7 @@ export default function EasterEventHub() {
             >
                 <DialogTitle className="text-center bg-purple-500 text-white">
                     <Typography variant="h6" component="p" className="font-bold">
-                        🧩 {gameData?.puzzleStatus?.puzzle?.title}
+                        🔮 Cryptic Puzzle
                     </Typography>
                 </DialogTitle>
                 <DialogContent sx={{ pt: 3 }}>
@@ -781,10 +854,10 @@ export default function EasterEventHub() {
                         {puzzleSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Submit'}
                     </Button>
                 </DialogActions>
-            </Dialog>
+            </Dialog >
 
             {/* Chapter Dialog */}
-            <Dialog
+            < Dialog
                 open={chapterDialogOpen}
                 onClose={() => setChapterDialogOpen(false)}
                 maxWidth="sm"
@@ -827,7 +900,7 @@ export default function EasterEventHub() {
                         </DialogActions>
                     </>
                 )}
-            </Dialog>
-        </Box>
+            </Dialog >
+        </Box >
     );
 }

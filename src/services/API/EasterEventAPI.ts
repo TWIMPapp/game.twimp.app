@@ -54,4 +54,12 @@ export class EasterEventAPI {
     static async resetSpawnLocation(userId: string, lat: number, lng: number) {
         return this.nextAPI.post({ game_ref: 'easter-event', user_id: userId, action: 'reset-spawn', lat, lng }, {});
     }
+
+    static async setCustomTrail(userId: string, locations: Array<{ lat: number; lng: number }>) {
+        return this.action('set-custom-trail').post({ user_id: userId, locations }, {});
+    }
+
+    static async clearCustomTrail(userId: string) {
+        return this.action('clear-custom-trail').post({ user_id: userId }, {});
+    }
 }

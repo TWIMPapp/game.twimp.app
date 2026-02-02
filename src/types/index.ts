@@ -12,6 +12,7 @@ export interface Game {
     type?: 'WALK' | 'EVENT';
     gradient?: string;
     content_pack?: boolean;
+    status?: 'active' | 'featured' | 'pending' | 'inactive';
 }
 
 export interface User {

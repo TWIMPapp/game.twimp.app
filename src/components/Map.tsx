@@ -93,6 +93,11 @@ export interface SpawnRadius {
   radiusMeters: number;
 }
 
+export interface ExclusionZone {
+  center: { lat: number; lng: number };
+  radiusMeters: number;
+}
+
 const MapComponent = forwardRef<MapRef, {
   taskMarkers: Marker[];
   userLocation: { lat: number, lng: number } | null;
@@ -100,13 +105,20 @@ const MapComponent = forwardRef<MapRef, {
   onPlayerMove: (lat: number, lng: number) => void;
   zoom?: number;
   spawnRadius?: SpawnRadius;
+  // Trail designer props
+  onLongPress?: (lat: number, lng: number) => void;
+  exclusionZones?: ExclusionZone[];
+  designerMode?: boolean;
 }>(function MapComponent({
   taskMarkers,
   userLocation,
   testMode = false,
   onPlayerMove,
   zoom = 20,
-  spawnRadius
+  spawnRadius,
+  onLongPress,
+  exclusionZones = [],
+  designerMode = false
 }, ref) {
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
@@ -114,6 +126,12 @@ const MapComponent = forwardRef<MapRef, {
   const [heading, setHeading] = useState<number>(0);
   const [viewportBounds, setViewportBounds] = useState<google.maps.LatLngBounds | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+
+  // Long-press detection for trail designer
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+  const LONG_PRESS_MS = 500;
+  const MOVE_THRESHOLD = 10; // pixels
 
   // Expose map control methods via ref for tutorial
   useImperativeHandle(ref, () => ({
@@ -177,6 +195,66 @@ const MapComponent = forwardRef<MapRef, {
     }
   };
 
+  // Long-press handlers for trail designer
+  const handleMapTouchStart = useCallback((e: React.TouchEvent) => {
+    if (!designerMode || !onLongPress) return;
+
+    touchStartPos.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+
+    longPressTimer.current = setTimeout(() => {
+      if (mapRef.current && touchStartPos.current) {
+        // Get lat/lng from the center of the map (where finger is)
+        const mapCenter = mapRef.current.getCenter();
+        if (mapCenter) {
+          // Calculate offset from center based on touch position
+          const mapDiv = mapRef.current.getDiv();
+          const rect = mapDiv.getBoundingClientRect();
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          const touchX = touchStartPos.current.x - rect.left;
+          const touchY = touchStartPos.current.y - rect.top;
+
+          // Get current zoom and calculate meters per pixel
+          const zoom = mapRef.current.getZoom() || 18;
+          const metersPerPixel = 156543.03392 * Math.cos(mapCenter.lat() * Math.PI / 180) / Math.pow(2, zoom);
+
+          // Calculate lat/lng offset
+          const latOffset = -(touchY - centerY) * metersPerPixel / 111320;
+          const lngOffset = (touchX - centerX) * metersPerPixel / (111320 * Math.cos(mapCenter.lat() * Math.PI / 180));
+
+          const lat = mapCenter.lat() + latOffset;
+          const lng = mapCenter.lng() + lngOffset;
+
+          onLongPress(lat, lng);
+        }
+      }
+    }, LONG_PRESS_MS);
+  }, [designerMode, onLongPress]);
+
+  const handleMapTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartPos.current || !longPressTimer.current) return;
+
+    const dx = e.touches[0].clientX - touchStartPos.current.x;
+    const dy = e.touches[0].clientY - touchStartPos.current.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > MOVE_THRESHOLD) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleMapTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    touchStartPos.current = null;
+  }, []);
+
   const displayMarkers =
     taskMarkers?.map((marker) => ({
       ...marker,
@@ -200,7 +278,12 @@ const MapComponent = forwardRef<MapRef, {
   return (
     <>
       {isGoogleMapsAPILoaded || center?.lat !== 0 ? (
-        <Box sx={containerStyle}>
+        <Box
+          sx={containerStyle}
+          onTouchStart={handleMapTouchStart}
+          onTouchMove={handleMapTouchMove}
+          onTouchEnd={handleMapTouchEnd}
+        >
           <LoadScript
             googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
             onLoad={() => setIsGoogleMapsAPILoaded(true)}
@@ -236,14 +319,14 @@ const MapComponent = forwardRef<MapRef, {
 
                   return (
                     <MarkerF
-                      key={`marker-${index}`}
+                      key={`marker-${index}-${marker.lat.toFixed(6)}-${marker.lng.toFixed(6)}-${marker.colour || 'default'}`}
                       position={{ lat: marker.lat, lng: marker.lng }}
                       icon={{
                         url: marker.image_url as string,
                         scaledSize: new google.maps.Size(iconSize, iconSize),
                       }}
                       zIndex={1}
-                      onClick={() => setMarkerInfoBox(marker)}
+                      onClick={designerMode ? undefined : () => setMarkerInfoBox(marker)}
                     />
                   );
                 })}
@@ -262,7 +345,7 @@ const MapComponent = forwardRef<MapRef, {
                       onPlayerMove(e.latLng.lat(), e.latLng.lng());
                     }
                   }}
-                  onClick={() => setMarkerInfoBox(playerMarker)}
+                  onClick={designerMode ? undefined : () => setMarkerInfoBox(playerMarker)}
                 />
               )}
 
@@ -292,6 +375,24 @@ const MapComponent = forwardRef<MapRef, {
                 />
               )}
 
+              {/* Exclusion Zones for Trail Designer */}
+              {isGoogleMapsAPILoaded && exclusionZones.map((zone, idx) => (
+                <CircleF
+                  key={`exclusion-${idx}`}
+                  center={zone.center}
+                  radius={zone.radiusMeters}
+                  options={{
+                    fillColor: '#ef4444',
+                    fillOpacity: 0.25,
+                    strokeColor: '#ef4444',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 3,
+                    clickable: false,
+                    zIndex: 1
+                  }}
+                />
+              ))}
+
               {markerInfoBox && (
                 <InfoWindowF
                   position={{ lat: markerInfoBox.lat, lng: markerInfoBox.lng }}
@@ -307,8 +408,8 @@ const MapComponent = forwardRef<MapRef, {
             </GoogleMap>
           </LoadScript>
 
-          {/* Off-screen Indicators */}
-          {viewportBounds && userLocation && taskMarkers.map((marker, idx) => {
+          {/* Off-screen Indicators - hidden in designer mode */}
+          {!designerMode && viewportBounds && userLocation && taskMarkers.map((marker, idx) => {
             const pos = new google.maps.LatLng(marker.lat, marker.lng);
             if (viewportBounds.contains(pos)) return null;
 
@@ -321,7 +422,7 @@ const MapComponent = forwardRef<MapRef, {
 
             return (
               <Box
-                key={`ind-${idx}`}
+                key={`ind-${idx}-${marker.lat.toFixed(6)}-${marker.lng.toFixed(6)}-${marker.colour || 'default'}`}
                 sx={{
                   position: 'absolute',
                   top: '50%',

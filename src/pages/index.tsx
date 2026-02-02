@@ -12,22 +12,14 @@ import BottomNav from '@/components/BottomNav';
 import FeaturedCard from '@/components/FeaturedCard';
 
 interface CategorizedGames {
+    featured: Game[];
     playAgain: Game[];
     nearYou: Game[];
     all: Game[];
 }
 
-type GameStatus = 'active' | 'featured' | 'pending' | 'inactive';
-
-interface GameConfig {
-    ref: string;
-    gameType: 'trail' | 'universal';
-    status: GameStatus;
-}
-
 export default function Home() {
-    const [data, setData] = useState<CategorizedGames>({ playAgain: [], nearYou: [], all: [] });
-    const [featuredConfig, setFeaturedConfig] = useState<GameConfig[]>([]);
+    const [data, setData] = useState<CategorizedGames>({ featured: [], playAgain: [], nearYou: [], all: [] });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [view, setView] = useState<'list' | 'map'>('list');
@@ -49,17 +41,13 @@ export default function Home() {
             if (lng) params.append('lng', lng.toString());
             if (userId) params.append('user_id', userId);
 
-            fetch(`${BASE_URL}/trails/list?${params.toString()}`)
+            fetch(`${BASE_URL}/list?${params.toString()}`)
                 .then(res => {
                     if (!res.ok) throw new Error('API unavailable');
                     return res.json();
                 })
                 .then(resData => {
                     setData(resData);
-                    // Featured config is now included in trails response
-                    if (resData.featured) {
-                        setFeaturedConfig(resData.featured);
-                    }
                     setError(null);
                 })
                 .catch(() => {
@@ -80,17 +68,17 @@ export default function Home() {
 
     }, [router]);
 
-    // Featured games (top section only, sorted by distance)
-    const featuredRefs = new Set(featuredConfig.filter(c => c.status === 'featured').map(c => c.ref));
-    const featuredGames = data.all
-        .filter(g => featuredRefs.has(g.ref))
-        .sort((a, b) => (a.distanceInMiles ?? 999) - (b.distanceInMiles ?? 999));
+    // Featured games come directly from backend
+    const featuredGames = data.featured;
+    const featuredRefs = new Set(featuredGames.map(g => g.ref));
 
-    // Pending games (shown but not clickable, "COMING SOON")
-    const pendingRefs = new Set(featuredConfig.filter(c => c.status === 'pending').map(c => c.ref));
-    const isPending = (ref: string) => pendingRefs.has(ref);
+    // Pending = status 'pending' in any list
+    const isPending = (ref: string) => {
+        const game = [...data.all, ...data.playAgain].find(g => g.ref === ref);
+        return game?.status === 'pending';
+    };
 
-    // Non-featured active games for regular display
+    // Non-featured games for regular display
     const nonFeaturedGames = data.all.filter(g => !featuredRefs.has(g.ref));
     const nonFeaturedNearYou = data.nearYou.filter(g => !featuredRefs.has(g.ref));
     const nonFeaturedPlayAgain = data.playAgain.filter(g => !featuredRefs.has(g.ref));
@@ -239,18 +227,18 @@ export default function Home() {
                             </Box>
                         ) : (
                             <>
-                                <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">
-                                    {nonFeaturedNearYou.length > 0 ? 'NATIONAL SPECIAL' : 'Exploration'}
-                                </Typography>
-
-                                {/* Featured Games - controlled by database */}
-                                {featuredGames.map(game => (
-                                    <FeaturedCard
-                                        key={game.ref}
-                                        game={game}
-                                        onClick={() => handlePlay(game)}
-                                    />
-                                ))}
+                                {featuredGames.length > 0 && (
+                                    <>
+                                        <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">Featured</Typography>
+                                        {featuredGames.map(game => (
+                                            <FeaturedCard
+                                                key={game.ref}
+                                                game={game}
+                                                onClick={() => handlePlay(game)}
+                                            />
+                                        ))}
+                                    </>
+                                )}
 
                                 {nonFeaturedPlayAgain.length > 0 && (
                                     <>
@@ -265,16 +253,20 @@ export default function Home() {
                                     </>
                                 )}
 
-                                <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">
-                                    {nonFeaturedNearYou.length > 0 ? 'Not far from you' : 'Exploration'}
-                                </Typography>
-                                <Grid container spacing={3}>
-                                    {(nonFeaturedNearYou.length > 0 ? nonFeaturedNearYou : nonFeaturedGames).map((game) => (
-                                        <Grid item key={game.ref} xs={12} sm={6}>
-                                            <TrailCard game={game} onPlay={handlePlay} fullWidth isPending={isPending(game.ref)} />
+                                {(nonFeaturedNearYou.length > 0 || nonFeaturedGames.length > 0) && (
+                                    <>
+                                        <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">
+                                            {nonFeaturedNearYou.length > 0 ? 'Not far from you' : 'Exploration'}
+                                        </Typography>
+                                        <Grid container spacing={3}>
+                                            {(nonFeaturedNearYou.length > 0 ? nonFeaturedNearYou : nonFeaturedGames).map((game) => (
+                                                <Grid item key={game.ref} xs={12} sm={6}>
+                                                    <TrailCard game={game} onPlay={handlePlay} fullWidth isPending={isPending(game.ref)} />
+                                                </Grid>
+                                            ))}
                                         </Grid>
-                                    ))}
-                                </Grid>
+                                    </>
+                                )}
                             </>
                         )}
                     </Box>
