@@ -308,7 +308,7 @@ export default function CreateCustomTrail() {
                                 Random Locations
                             </Typography>
                             <Typography sx={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                                We'll scatter pins around the starting point
+                                Pins are scattered around the starting point
                             </Typography>
                         </Button>
 
@@ -372,7 +372,7 @@ export default function CreateCustomTrail() {
                                 <Box>
                                     <Typography sx={{ fontWeight: 600 }}>Competitive mode</Typography>
                                     <Typography variant="caption" sx={{ color: '#6b7280' }}>
-                                        All pins visible to everyone. When someone collects a pin, it disappears from everyone else's map.
+                                        All pins visible to everyone. When someone collects a pin, it disappears from everyone else&apos;s map.
                                     </Typography>
                                 </Box>
                             }
