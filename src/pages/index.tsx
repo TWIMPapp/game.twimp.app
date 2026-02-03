@@ -203,8 +203,14 @@ export default function Home() {
                                 style={{ boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}
                             />
                             <Button
-                                className="absolute right-1.5 top-1.5 w-11 h-11 min-w-0 rounded-xl bg-[#FF2E5B] text-white shadow-md p-0"
-                                sx={{ backgroundColor: '#FF2E5B !important', minWidth: '44px !important' }}
+                                className="w-11 h-11 min-w-0 rounded-xl bg-[#FF2E5B] text-white shadow-md p-0"
+                                sx={{
+                                    position: 'absolute',
+                                    right: '6px',
+                                    top: '6px',
+                                    backgroundColor: '#FF2E5B !important',
+                                    minWidth: '44px !important'
+                                }}
                             >
                                 <SearchIcon />
                             </Button>
