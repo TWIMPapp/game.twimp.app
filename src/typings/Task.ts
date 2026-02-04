@@ -3,6 +3,8 @@ import { Sentiment } from './Sentiment.enum';
 import { Status } from './Status.enum';
 import { TaskType } from './TaskType.enum';
 import { ThemeStyle } from './ThemeStyle.enum';
+
+export { Colour, Status };
 import { InventoryItem } from './inventoryItem';
 import { Position } from '@/hooks/useGeolocation';
 
