@@ -8,7 +8,8 @@ import Map from '@/components/Map';
 import { MapRef } from '@/components/Map';
 import { CustomTrailAPI } from '@/services/API/CustomTrailAPI';
 import { Marker } from '@/typings/Task';
-import { Colour, Status } from '@/typings/Task';
+import { Colour } from '@/typings/Colour.enum';
+import { Status } from '@/typings/Status.enum';
 
 interface Player {
     userId: string;
@@ -124,7 +125,7 @@ export default function CreatorStatus() {
         title: `Pin ${idx + 1}`,
         subtitle: pin.globallyCollected ? `Found by ${pin.collectedBy?.slice(0, 8) || 'someone'}` : 'Uncollected',
         colour: pin.globallyCollected ? Colour.Green : Colour.Red,
-        status: pin.globallyCollected ? Status.Completed : Status.Active
+        status: pin.globallyCollected ? Status.Visited : Status.Active
     }));
 
     // Player markers (blue dots)
