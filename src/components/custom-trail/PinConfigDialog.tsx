@@ -30,42 +30,21 @@ interface PinConfigDialogProps {
     onCancel: () => void;
 }
 
-// Display-friendly icon labels
-const ICON_LABELS: Record<string, string> = {
-    egg_red: 'Red Egg',
-    egg_blue: 'Blue Egg',
-    egg_green: 'Green Egg',
-    egg_gold: 'Gold Egg',
-    egg_orange: 'Orange Egg',
-    basket: 'Basket',
-    treasure_chest: 'Treasure',
-    question_mark: 'Mystery',
-    heart_red: 'Red Heart',
-    heart_pink: 'Pink Heart',
-    rose: 'Rose',
-    love_letter: 'Love Letter',
-    pin: 'Pin',
-    star: 'Star',
-    flag: 'Flag'
-};
-
-// Emoji representations for icons
-const ICON_EMOJI: Record<string, string> = {
-    egg_red: '🥚',
-    egg_blue: '🥚',
-    egg_green: '🥚',
-    egg_gold: '🥇',
-    egg_orange: '🥚',
-    basket: '🧺',
-    treasure_chest: '📦',
-    question_mark: '❓',
-    heart_red: '❤️',
-    heart_pink: '💗',
-    rose: '🌹',
-    love_letter: '💌',
-    pin: '📍',
-    star: '⭐',
-    flag: '🏁'
+// Icon definitions - emoji and label for each icon type
+const ICONS: Record<string, { emoji: string; label: string }> = {
+    egg: { emoji: '🥚', label: 'Egg' },
+    medal: { emoji: '🥇', label: 'Medal' },
+    basket: { emoji: '🧺', label: 'Basket' },
+    treasure_chest: { emoji: '📦', label: 'Treasure' },
+    question_mark: { emoji: '❓', label: 'Mystery' },
+    heart_red: { emoji: '❤️', label: 'Red Heart' },
+    heart_pink: { emoji: '💗', label: 'Pink Heart' },
+    rose: { emoji: '🌹', label: 'Rose' },
+    love_letter: { emoji: '💌', label: 'Love Letter' },
+    pin: { emoji: '📍', label: 'Pin' },
+    star: { emoji: '⭐', label: 'Star' },
+    flag: { emoji: '🏁', label: 'Flag' },
+    gift: { emoji: '🎁', label: 'Gift' }
 };
 
 export default function PinConfigDialog({
@@ -126,9 +105,9 @@ export default function PinConfigDialog({
                                 }}
                             >
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
-                                    <span>{ICON_EMOJI[icon] || '📍'}</span>
+                                    <span>{ICONS[icon]?.emoji || '📍'}</span>
                                     <Typography sx={{ fontSize: '0.6rem', color: selectedIcon === icon ? 'white' : '#6b7280' }}>
-                                        {ICON_LABELS[icon] || icon}
+                                        {ICONS[icon]?.label || icon}
                                     </Typography>
                                 </Box>
                             </Button>

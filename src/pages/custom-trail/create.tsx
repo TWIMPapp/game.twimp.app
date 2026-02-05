@@ -25,22 +25,22 @@ type Step = 'theme' | 'name' | 'start_location' | 'mode' | 'random_config' | 'de
 // Theme icon sets (mirrors backend themes.ts)
 const THEME_ICONS: Record<string, { icons: string[]; defaultIcon: string }> = {
     easter: {
-        icons: ['egg_red', 'egg_blue', 'egg_green', 'egg_gold', 'egg_orange', 'basket', 'treasure_chest', 'question_mark'],
-        defaultIcon: 'egg_red'
+        icons: ['egg', 'medal', 'basket', 'treasure_chest', 'question_mark'],
+        defaultIcon: 'egg'
     },
     valentine: {
         icons: ['heart_red', 'heart_pink', 'rose', 'love_letter', 'treasure_chest', 'question_mark'],
         defaultIcon: 'heart_red'
     },
     general: {
-        icons: ['pin', 'treasure_chest', 'star', 'question_mark', 'flag'],
+        icons: ['pin', 'treasure_chest', 'star', 'question_mark', 'flag', 'gift'],
         defaultIcon: 'pin'
     }
 };
 
 export default function CreateCustomTrail() {
     const router = useRouter();
-    const { user_id } = router.query;
+    const { user_id, theme: themeParam } = router.query;
 
     const [step, setStep] = useState<Step>('theme');
     const [theme, setTheme] = useState<CustomTrailTheme>('general');
@@ -53,6 +53,14 @@ export default function CreateCustomTrail() {
     const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
 
     const creatorId = (user_id as string) || `anon_${Date.now()}`;
+
+    // Handle theme query param - skip theme selection if provided
+    useEffect(() => {
+        if (themeParam && ['easter', 'valentine', 'general'].includes(themeParam as string)) {
+            setTheme(themeParam as CustomTrailTheme);
+            setStep('name');
+        }
+    }, [themeParam]);
 
     // Request geolocation on mount so the map is ready by the time the user reaches that step
     useEffect(() => {
