@@ -109,6 +109,9 @@ const MapComponent = forwardRef<MapRef, {
   onLongPress?: (lat: number, lng: number) => void;
   exclusionZones?: ExclusionZone[];
   designerMode?: boolean;
+  // For sequential trails: only show distance indicator for this marker index
+  // If undefined, shows indicators for all markers (backwards compatible)
+  targetMarkerIndex?: number;
 }>(function MapComponent({
   taskMarkers,
   userLocation,
@@ -118,7 +121,8 @@ const MapComponent = forwardRef<MapRef, {
   spawnRadius,
   onLongPress,
   exclusionZones = [],
-  designerMode = false
+  designerMode = false,
+  targetMarkerIndex
 }, ref) {
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
@@ -410,6 +414,9 @@ const MapComponent = forwardRef<MapRef, {
 
           {/* Off-screen Indicators - hidden in designer mode */}
           {!designerMode && viewportBounds && userLocation && taskMarkers.map((marker, idx) => {
+            // If targetMarkerIndex is specified, only show indicator for that marker
+            if (targetMarkerIndex !== undefined && idx !== targetMarkerIndex) return null;
+
             const pos = new google.maps.LatLng(marker.lat, marker.lng);
             if (viewportBounds.contains(pos)) return null;
 

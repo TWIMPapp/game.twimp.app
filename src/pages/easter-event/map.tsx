@@ -66,7 +66,7 @@ export default function EasterEventMap() {
     const [loading, setLoading] = useState(true);
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
-    const [testMode, setTestMode] = useState(true);
+    const [testMode, setTestMode] = useState(process.env.NODE_ENV !== 'production');
     const [celebrationPopup, setCelebrationPopup] = useState<{ subject: string; isGoldenEgg: boolean; isBonusEgg?: boolean; task?: any } | null>(null);
     const [collecting, setCollecting] = useState(false);
     const [questionPopup, setQuestionPopup] = useState<any>(null);

@@ -66,7 +66,7 @@ export default function PlayCustomTrail() {
     const [answerError, setAnswerError] = useState<string | null>(null);
     const [activePinIndex, setActivePinIndex] = useState<number | undefined>(undefined);
     const [isCompetitive, setIsCompetitive] = useState(false);
-    const [testMode, setTestMode] = useState(true);
+    const [testMode, setTestMode] = useState(process.env.NODE_ENV !== 'production');
 
     const awtyRef = useRef<NodeJS.Timeout | null>(null);
     const mapRef = useRef<MapRef>(null);
@@ -227,6 +227,12 @@ export default function PlayCustomTrail() {
             colour: pin.collected ? Colour.Green : Colour.Red
         }));
 
+    // Find the marker index for current target pin (order may differ from array index)
+    // Returns undefined if pin is hidden (not in markers array) - no indicator shown for hidden pins
+    const currentPin = session ? trailPins.find(p => p.order === session.currentPinIndex) : null;
+    const foundIndex = currentPin ? markers.findIndex(m => m.lat === currentPin.lat && m.lng === currentPin.lng) : -1;
+    const currentTargetMarkerIndex = foundIndex >= 0 ? foundIndex : undefined;
+
     const themeLabel = trailInfo?.theme === 'easter' ? 'Easter Egg Hunt'
         : trailInfo?.theme === 'valentine' ? "Valentine's Trail"
         : 'Treasure Hunt';
@@ -347,6 +353,8 @@ export default function PlayCustomTrail() {
                             onPlayerMove={(lat, lng) => {
                                 if (testMode) setUserLocation({ lat, lng });
                             }}
+                            // Custom trails are always sequential - only show indicator for current target pin
+                            targetMarkerIndex={currentTargetMarkerIndex}
                         />
                     </Box>
                 </Box>

@@ -53,7 +53,7 @@ export default function EggHuntView() {
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [lastSentLocation, setLastSentLocation] = useState<{ lat: number, lng: number } | null>(null);
-    const [testMode, setTestMode] = useState(true); // Test mode enabled by default
+    const [testMode, setTestMode] = useState(process.env.NODE_ENV !== 'production');
     const [questionPopup, setQuestionPopup] = useState<any>(null); // Store question data for popup
     const [answer, setAnswer] = useState('');
     const [submitting, setSubmitting] = useState(false);
