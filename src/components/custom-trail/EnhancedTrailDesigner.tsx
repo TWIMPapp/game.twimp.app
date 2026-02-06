@@ -37,7 +37,7 @@ function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: numbe
     return R * c;
 }
 
-const MIN_SPACING_METERS = 200;
+const MIN_SPACING_METERS = 50;
 
 export default function EnhancedTrailDesigner({
     startLocation,
