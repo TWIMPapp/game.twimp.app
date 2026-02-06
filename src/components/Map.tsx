@@ -112,6 +112,7 @@ const MapComponent = forwardRef<MapRef, {
   // For sequential trails: only show distance indicator for this marker index
   // If undefined, shows indicators for all markers (backwards compatible)
   targetMarkerIndex?: number;
+  spawnRadiusColor?: string;
 }>(function MapComponent({
   taskMarkers,
   userLocation,
@@ -122,7 +123,8 @@ const MapComponent = forwardRef<MapRef, {
   onLongPress,
   exclusionZones = [],
   designerMode = false,
-  targetMarkerIndex
+  targetMarkerIndex,
+  spawnRadiusColor = '#ffffff'
 }, ref) {
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
@@ -309,6 +311,12 @@ const MapComponent = forwardRef<MapRef, {
               }}
               onLoad={onLoad}
               onUnmount={onUnmount}
+              onRightClick={(e) => {
+                if (designerMode && onLongPress && e.latLng) {
+                  e.domEvent.preventDefault();
+                  onLongPress(e.latLng.lat(), e.latLng.lng());
+                }
+              }}
               onBoundsChanged={() => {
                 if (mapRef.current) {
                   setViewportBounds(mapRef.current.getBounds() || null);
@@ -368,9 +376,9 @@ const MapComponent = forwardRef<MapRef, {
                   center={spawnRadius.center}
                   radius={spawnRadius.radiusMeters}
                   options={{
-                    fillColor: '#ffffff',
+                    fillColor: spawnRadiusColor,
                     fillOpacity: 0.1,
-                    strokeColor: '#ffffff',
+                    strokeColor: spawnRadiusColor,
                     strokeOpacity: 0.8,
                     strokeWeight: 2,
                     clickable: false,

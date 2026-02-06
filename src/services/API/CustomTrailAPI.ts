@@ -25,6 +25,7 @@ export class CustomTrailAPI {
         competitive?: boolean;
         count?: number;
         has_questions?: boolean;
+        spawn_radius?: number;
     }) {
         return this.createAPI.post(params, {});
     }

@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
-import MapIcon from '@mui/icons-material/Map';
 import { BASE_URL } from '@/constants';
 
 export default function ValentineLanding() {
@@ -60,13 +59,12 @@ export default function ValentineLanding() {
     };
 
     const handleCreateTrail = () => {
-        // Get or create user ID
         let userId = localStorage.getItem('twimp_user_id');
         if (!userId) {
             userId = crypto.randomUUID();
             localStorage.setItem('twimp_user_id', userId);
         }
-        router.push(`/custom-trail/create?user_id=${userId}&theme=valentine`);
+        router.push(`/custom-trail/create?user_id=${userId}&theme=valentine&mode=custom`);
     };
 
     return (
