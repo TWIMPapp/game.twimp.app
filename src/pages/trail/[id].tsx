@@ -51,7 +51,7 @@ export default function PlayCustomTrail() {
     const router = useRouter();
     const { id, user_id } = router.query;
     const trailId = id as string;
-    const userId = (user_id as string) || `player_${Date.now()}`;
+    const [userId] = useState(() => (user_id as string) || `player_${Date.now()}`);
 
     const [gameState, setGameState] = useState<GameState>('loading');
     const [trailInfo, setTrailInfo] = useState<TrailInfo | null>(null);
