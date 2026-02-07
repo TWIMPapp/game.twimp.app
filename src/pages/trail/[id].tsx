@@ -67,7 +67,6 @@ export default function PlayCustomTrail() {
     const [activePinIndex, setActivePinIndex] = useState<number | undefined>(undefined);
     const [isCompetitive, setIsCompetitive] = useState(false);
     const [testMode, setTestMode] = useState(process.env.NODE_ENV !== 'production');
-    const [debugInfo, setDebugInfo] = useState<string>('Waiting...');
 
     const awtyRef = useRef<NodeJS.Timeout | null>(null);
     const mapRef = useRef<MapRef>(null);
@@ -114,9 +113,6 @@ export default function PlayCustomTrail() {
 
         try {
             const result: any = await CustomTrailAPI.awty(userId, trailId, userLocation.lat, userLocation.lng);
-            
-            // DEBUG: Show response on screen
-            setDebugInfo(`ok:${result.ok} arrived:${result.arrived} collected:${result.collected} dist:${result.nearestDistance || '-'}`);
 
             if (!result.ok) return;
 
@@ -360,25 +356,6 @@ export default function PlayCustomTrail() {
                             // Custom trails are always sequential - only show indicator for current target pin
                             targetMarkerIndex={currentTargetMarkerIndex}
                         />
-                    </Box>
-
-                    {/* DEBUG PANEL */}
-                    <Box sx={{
-                        position: 'absolute',
-                        bottom: 20,
-                        left: 10,
-                        right: 10,
-                        backgroundColor: 'rgba(0,0,0,0.85)',
-                        color: '#0f0',
-                        p: 1,
-                        borderRadius: '8px',
-                        fontFamily: 'monospace',
-                        fontSize: '11px',
-                        zIndex: 100
-                    }}>
-                        <div>DEBUG: {debugInfo}</div>
-                        <div>Loc: {userLocation ? `${userLocation.lat.toFixed(5)}, ${userLocation.lng.toFixed(5)}` : 'none'}</div>
-                        <div>State: {gameState} | Pins: {trailPins.length}</div>
                     </Box>
                 </Box>
             )}
