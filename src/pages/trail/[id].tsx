@@ -266,11 +266,13 @@ export default function PlayCustomTrail() {
                     <Typography variant="h5" sx={{ fontWeight: 700, textAlign: 'center' }}>
                         {trailInfo.name || themeLabel}
                     </Typography>
-                    <Typography sx={{ color: '#6b7280', textAlign: 'center' }}>
-                        {themeLabel} &middot; {trailInfo.pinCount} location{trailInfo.pinCount !== 1 ? 's' : ''} to find
-                        {trailInfo.competitive && ' (Competitive)'}
-                    </Typography>
-                    {trailInfo.playCount > 0 && (
+                    {trailInfo.theme !== 'valentine' && (
+                        <Typography sx={{ color: '#6b7280', textAlign: 'center' }}>
+                            {themeLabel} &middot; {trailInfo.pinCount} location{trailInfo.pinCount !== 1 ? 's' : ''} to find
+                            {trailInfo.competitive && ' (Competitive)'}
+                        </Typography>
+                    )}
+                    {trailInfo.theme !== 'valentine' && trailInfo.playCount > 0 && (
                         <Typography sx={{ color: '#9ca3af', fontSize: '0.85rem' }}>
                             Played {trailInfo.playCount} time{trailInfo.playCount !== 1 ? 's' : ''}
                         </Typography>
