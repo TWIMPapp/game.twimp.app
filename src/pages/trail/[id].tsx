@@ -224,7 +224,8 @@ export default function PlayCustomTrail() {
             subtitle: pin.collected
                 ? (pin.collectedByYou ? 'You found this!' : 'Taken')
                 : 'Find me!',
-            colour: pin.collected ? Colour.Green : Colour.Red
+            colour: pin.collected ? Colour.Green : Colour.Red,
+            ...(trailInfo?.theme === 'valentine' && !pin.collected ? { emoji: '\u{1F48C}' } : {})
         }));
 
     // Find the marker index for current target pin (order may differ from array index)
