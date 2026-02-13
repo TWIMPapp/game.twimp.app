@@ -15,6 +15,7 @@ import Map, { MapRef } from '@/components/Map';
 import { CustomTrailAPI } from '@/services/API';
 import { Colour } from '@/typings/Colour.enum';
 import { Marker } from '@/typings/Task';
+import { getPinMarkerProps } from '@/config/pinIcons';
 
 const AWTY_INTERVAL = 5000;
 
@@ -225,7 +226,7 @@ export default function PlayCustomTrail() {
                 ? (pin.collectedByYou ? 'You found this!' : 'Taken')
                 : 'Find me!',
             colour: pin.collected ? Colour.Green : Colour.Red,
-            ...(trailInfo?.theme === 'valentine' && !pin.collected ? { emoji: '\u{1F48C}' } : {})
+            ...(!pin.collected && pin.icon ? getPinMarkerProps(pin.icon) : {})
         }));
 
     // Find the marker index for current target pin (order may differ from array index)

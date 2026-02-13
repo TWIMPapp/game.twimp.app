@@ -20,6 +20,7 @@ import Map, { MapRef } from '@/components/Map';
 import { CustomTrailAPI } from '@/services/API';
 import { Colour } from '@/typings/Colour.enum';
 import { Marker } from '@/typings/Task';
+import PIN_ICONS, { getPinIcon, getPinMarkerProps, PinIcon } from '@/config/pinIcons';
 
 type CustomTrailTheme = 'easter' | 'valentine' | 'general';
 type Step = 'theme' | 'mode' | 'random_map' | 'designer' | 'name_create' | 'creating' | 'done';
@@ -27,44 +28,21 @@ type MapPhase = 'set_start' | 'radius' | 'pins';
 
 const MIN_SPACING_METERS = 50;
 
-// Theme icon sets (mirrors backend themes.ts)
-// emoji: frontend-only — if present, rendered as emoji marker on map;
-//        if absent, Map tries /icons/{name}.svg, then falls back to coloured dot
-interface ThemeIcon { name: string; colour: string; emoji?: string; }
-const THEME_ICONS: Record<string, { icons: ThemeIcon[]; defaultIcon: string }> = {
+// Theme icon sets — references shared PIN_ICONS config
+const THEME_ICONS: Record<string, { icons: PinIcon[]; defaultIcon: string }> = {
     easter: {
-        icons: [
-            { name: 'egg_red', colour: 'red' },
-            { name: 'egg_blue', colour: 'blue' },
-            { name: 'egg_green', colour: 'green' },
-            { name: 'egg_gold', colour: 'gold' },
-            { name: 'egg_orange', colour: 'orange' },
-            { name: 'basket', colour: 'green', emoji: '🧺' },
-            { name: 'treasure_chest', colour: 'gold', emoji: '💰' },
-            { name: 'question_mark', colour: 'purple', emoji: '❓' },
-        ],
+        icons: ['egg_red', 'egg_blue', 'egg_green', 'egg_gold', 'egg_orange', 'basket', 'treasure_chest', 'question_mark']
+            .map(n => getPinIcon(n)!),
         defaultIcon: 'egg_red'
     },
     valentine: {
-        icons: [
-            { name: 'heart_red', colour: 'red', emoji: '❤️' },
-            { name: 'heart_pink', colour: 'pink', emoji: '💗' },
-            { name: 'rose', colour: 'red', emoji: '🌹' },
-            { name: 'love_letter', colour: 'pink', emoji: '💌' },
-            { name: 'treasure_chest', colour: 'gold', emoji: '💰' },
-            { name: 'question_mark', colour: 'purple', emoji: '❓' },
-        ],
+        icons: ['heart_red', 'heart_pink', 'rose', 'love_letter', 'treasure_chest', 'question_mark']
+            .map(n => getPinIcon(n)!),
         defaultIcon: 'heart_red'
     },
     general: {
-        icons: [
-            { name: 'pin', colour: 'red', emoji: '📍' },
-            { name: 'treasure_chest', colour: 'gold', emoji: '💰' },
-            { name: 'star', colour: 'gold', emoji: '⭐' },
-            { name: 'question_mark', colour: 'purple', emoji: '❓' },
-            { name: 'flag', colour: 'green', emoji: '🚩' },
-            { name: 'gift', colour: 'blue', emoji: '🎁' },
-        ],
+        icons: ['pin', 'treasure_chest', 'star', 'question_mark', 'flag', 'gift']
+            .map(n => getPinIcon(n)!),
         defaultIcon: 'pin'
     }
 };
@@ -120,7 +98,13 @@ export default function CreateCustomTrail() {
     const [error, setError] = useState<string | null>(null);
     const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
-    const [activeTrail, setActiveTrail] = useState<{ id: string; name?: string } | null>(null);
+    const [activeTrail, setActiveTrail] = useState<{ id: string; name?: string } | null>(() => {
+        if (typeof window === 'undefined') return null;
+        try {
+            const cached = localStorage.getItem('twimp_active_trail');
+            return cached ? JSON.parse(cached) : null;
+        } catch { return null; }
+    });
 
     const mapRef = useRef<MapRef>(null);
 
@@ -199,7 +183,14 @@ export default function CreateCustomTrail() {
             const trails = res?.trails || res;
             if (Array.isArray(trails)) {
                 const active = trails.find((t: any) => t.isActive);
-                if (active) setActiveTrail({ id: active.id, name: active.name });
+                if (active) {
+                    const data = { id: active.id, name: active.name };
+                    setActiveTrail(data);
+                    localStorage.setItem('twimp_active_trail', JSON.stringify(data));
+                } else {
+                    setActiveTrail(null);
+                    localStorage.removeItem('twimp_active_trail');
+                }
             }
         }).catch(() => {});
     }, [creatorId]);
@@ -287,6 +278,7 @@ export default function CreateCustomTrail() {
 
             if (result.ok && result.trail) {
                 setCreatedTrailId(result.trail.id);
+                localStorage.setItem('twimp_active_trail', JSON.stringify({ id: result.trail.id, name: name.trim() || undefined }));
                 setStep('done');
             } else {
                 setError(result.message || 'Failed to create trail');
@@ -298,7 +290,8 @@ export default function CreateCustomTrail() {
         }
     };
 
-    const handleDesignerComplete = (pins: any[]) => {
+    const handleDesignerComplete = (designerStart: { lat: number; lng: number }, pins: any[]) => {
+        setStartLocation(designerStart);
         setCustomPins(pins);
         setStep('name_create');
     };
@@ -343,7 +336,7 @@ export default function CreateCustomTrail() {
                 title: `${label} ${i + 1}`,
                 subtitle: 'Preview',
                 colour: icon.colour as Colour,
-                ...(icon.emoji ? { emoji: icon.emoji } : { image_url: `/icons/${icon.name.replace(/_/g, '-')}.svg` }),
+                ...getPinMarkerProps(icon.name),
             });
         });
         return markers;
@@ -353,7 +346,7 @@ export default function CreateCustomTrail() {
         <Box sx={{ minHeight: '100vh', backgroundColor: '#F8F5F2' }}>
 
             {/* Active trail — blocks creation until stopped */}
-            {activeTrail && (step === 'mode' || step === 'theme') && (
+            {activeTrail && step !== 'creating' && step !== 'done' && (
                 <>
                     <PageHeader compact />
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', px: 3, pt: 6 }}>
@@ -466,7 +459,7 @@ export default function CreateCustomTrail() {
             )}
 
             {/* Step: Random Map (set_start → radius → pins) */}
-            {step === 'random_map' && (
+            {step === 'random_map' && !activeTrail && (
                 <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
                     {/* Map */}
                     <Box sx={{ flex: 1, minHeight: 0 }}>
@@ -595,11 +588,16 @@ export default function CreateCustomTrail() {
             )}
 
             {/* Step: Designer */}
-            {step === 'designer' && (
+            {step === 'designer' && !activeTrail && !mapCenter && (
+                <Box sx={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography sx={{ color: '#6b7280' }}>Getting your location...</Typography>
+                </Box>
+            )}
+            {step === 'designer' && !activeTrail && mapCenter && (
                 <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
                     <Box sx={{ flex: 1 }}>
                         <EnhancedTrailDesigner
-                            startLocation={startLocation || mapCenter || { lat: 51.5074, lng: -0.1278 }}
+                            userLocation={mapCenter}
                             icons={THEME_ICONS[theme]?.icons || THEME_ICONS.general.icons}
                             defaultIcon={THEME_ICONS[theme]?.defaultIcon || 'pin'}
                             onComplete={handleDesignerComplete}
@@ -624,7 +622,7 @@ export default function CreateCustomTrail() {
             )}
 
             {/* Step: Name & Create */}
-            {step === 'name_create' && (
+            {step === 'name_create' && !activeTrail && (
                 <Box sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
                         Name your game

@@ -3,6 +3,7 @@ import { Box, Typography, Button, Snackbar, Alert } from '@mui/material';
 import Map, { MapRef, ExclusionZone } from '../Map';
 import { Marker } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
+import { PinIcon, getPinMarkerProps } from '@/config/pinIcons';
 import PinConfigDialog from './PinConfigDialog';
 
 interface PinData {
@@ -17,13 +18,11 @@ interface PinData {
     order: number;
 }
 
-export interface ThemeIcon { name: string; colour: string; }
-
 interface EnhancedTrailDesignerProps {
-    startLocation: { lat: number; lng: number };
-    icons: ThemeIcon[];
+    userLocation: { lat: number; lng: number };
+    icons: PinIcon[];
     defaultIcon: string;
-    onComplete: (pins: PinData[]) => void;
+    onComplete: (startLocation: { lat: number; lng: number }, pins: PinData[]) => void;
     onCancel: () => void;
     mapRef?: React.RefObject<MapRef>;
 }
@@ -42,14 +41,18 @@ function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 const MIN_SPACING_METERS = 50;
 
+type Phase = 'set_start' | 'place_pins';
+
 export default function EnhancedTrailDesigner({
-    startLocation,
+    userLocation,
     icons,
     defaultIcon,
     onComplete,
     onCancel,
     mapRef
 }: EnhancedTrailDesignerProps) {
+    const [phase, setPhase] = useState<Phase>('set_start');
+    const [startLocation, setStartLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [pins, setPins] = useState<PinData[]>([]);
     const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [showConfigDialog, setShowConfigDialog] = useState(false);
@@ -59,38 +62,41 @@ export default function EnhancedTrailDesigner({
 
     // Build exclusion zones from placed pins + start location
     const exclusionZones: ExclusionZone[] = [
-        { center: startLocation, radiusMeters: MIN_SPACING_METERS },
+        ...(startLocation ? [{ center: startLocation, radiusMeters: MIN_SPACING_METERS }] : []),
         ...pins.map(pin => ({
             center: { lat: pin.lat, lng: pin.lng },
             radiusMeters: MIN_SPACING_METERS
         }))
     ];
 
-    // Convert placed pins to map markers
-    const markers: Marker[] = [
-        // Start location marker (red)
-        {
-            lat: startLocation.lat,
-            lng: startLocation.lng,
-            title: 'Start',
-            subtitle: 'Starting point',
-            colour: Colour.Red
-        },
-        // Placed pins
-        ...pins.map((pin, idx) => ({
-            lat: pin.lat,
-            lng: pin.lng,
-            title: `Pin ${idx + 1}`,
-            subtitle: pin.visible ? 'Visible' : 'Hidden',
-            colour: pin.visible ? Colour.Green : Colour.Purple
-        }))
-    ];
+    // Convert placed pins to map markers (start point rendered via startingPointLocation prop)
+    const markers: Marker[] = pins.map((pin, idx) => ({
+        lat: pin.lat,
+        lng: pin.lng,
+        title: `Pin ${idx + 1}`,
+        subtitle: pin.visible ? 'Visible' : 'Hidden',
+        colour: pin.visible ? Colour.Green : Colour.Purple,
+        ...getPinMarkerProps(pin.icon)
+    }));
 
     const handleLongPress = useCallback((lat: number, lng: number) => {
+        // Phase: set start location
+        if (phase === 'set_start') {
+            setStartLocation({ lat, lng });
+            setToastMessage('Starting point set!');
+            setToastSeverity('success');
+            setShowDroppedToast(true);
+            setTimeout(() => setPhase('place_pins'), 600);
+            return;
+        }
+
+        // Phase: place pins
+        if (!startLocation) return;
+
         // Check distance from start location
         const distFromStart = getDistanceMeters(lat, lng, startLocation.lat, startLocation.lng);
         if (distFromStart < MIN_SPACING_METERS) {
-            setToastMessage('Too close to the start point! Must be at least 200m away.');
+            setToastMessage(`Too close to the start point! Must be at least ${MIN_SPACING_METERS}m away.`);
             setToastSeverity('error');
             setShowDroppedToast(true);
             return;
@@ -100,7 +106,7 @@ export default function EnhancedTrailDesigner({
         for (let i = 0; i < pins.length; i++) {
             const dist = getDistanceMeters(lat, lng, pins[i].lat, pins[i].lng);
             if (dist < MIN_SPACING_METERS) {
-                setToastMessage(`Too close to Pin ${i + 1}! Must be at least 200m apart.`);
+                setToastMessage(`Too close to Pin ${i + 1}! Must be at least ${MIN_SPACING_METERS}m apart.`);
                 setToastSeverity('error');
                 setShowDroppedToast(true);
                 return;
@@ -110,7 +116,7 @@ export default function EnhancedTrailDesigner({
         // Valid location - open config dialog
         setPendingLocation({ lat, lng });
         setShowConfigDialog(true);
-    }, [pins, startLocation]);
+    }, [phase, pins, startLocation]);
 
     const handlePinConfigSave = useCallback((config: {
         icon: string;
@@ -151,12 +157,16 @@ export default function EnhancedTrailDesigner({
     const handleUndo = () => {
         if (pins.length > 0) {
             setPins(pins.slice(0, -1));
+        } else if (startLocation) {
+            // Undo start location — go back to set_start phase
+            setStartLocation(null);
+            setPhase('set_start');
         }
     };
 
     const handleSubmit = () => {
-        if (pins.length > 0) {
-            onComplete(pins);
+        if (startLocation && pins.length > 0) {
+            onComplete(startLocation, pins);
         }
     };
 
@@ -180,44 +190,49 @@ export default function EnhancedTrailDesigner({
                 }}
             >
                 <Typography sx={{ fontWeight: 700, fontSize: '1rem' }}>
-                    {pins.length === 0
-                        ? 'Long press to place Pin 1'
-                        : `Long press to place Pin ${pins.length + 1}`}
+                    {phase === 'set_start'
+                        ? 'Long press to set the starting point'
+                        : pins.length === 0
+                            ? 'Long press to place Pin 1'
+                            : `Long press to place Pin ${pins.length + 1}`}
                 </Typography>
             </Box>
 
-            {/* Pin Counter */}
-            <Box
-                sx={{
-                    position: 'fixed',
-                    bottom: 90,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    zIndex: 999,
-                    backgroundColor: 'rgba(255,255,255,0.95)',
-                    px: 2,
-                    py: 0.5,
-                    borderRadius: '12px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-                }}
-            >
-                <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#FF2E5B' }}>
-                    {pins.length} pin{pins.length !== 1 ? 's' : ''} placed
-                </Typography>
-            </Box>
+            {/* Pin Counter (only in place_pins phase) */}
+            {phase === 'place_pins' && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        bottom: 90,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 999,
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                    }}
+                >
+                    <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#FF2E5B' }}>
+                        {pins.length} pin{pins.length !== 1 ? 's' : ''} placed
+                    </Typography>
+                </Box>
+            )}
 
             {/* Map */}
             <Box sx={{ flex: 1, pb: '80px' }}>
                 <Map
                     ref={mapRef}
                     taskMarkers={markers}
-                    userLocation={startLocation}
+                    userLocation={userLocation}
                     testMode={false}
                     zoom={16}
                     onPlayerMove={() => { }}
                     designerMode={true}
                     onLongPress={handleLongPress}
                     exclusionZones={exclusionZones}
+                    startingPointLocation={startLocation}
                 />
             </Box>
 
@@ -240,7 +255,7 @@ export default function EnhancedTrailDesigner({
             >
                 <Button
                     variant="outlined"
-                    onClick={pins.length > 0 ? handleUndo : onCancel}
+                    onClick={pins.length > 0 || startLocation ? handleUndo : onCancel}
                     sx={{
                         py: 1.5,
                         px: 3,
@@ -251,7 +266,7 @@ export default function EnhancedTrailDesigner({
                         textTransform: 'none'
                     }}
                 >
-                    {pins.length > 0 ? 'Undo' : 'Back'}
+                    {pins.length > 0 ? 'Undo' : startLocation ? 'Undo Start' : 'Back'}
                 </Button>
 
                 {pins.length > 0 && (

@@ -69,18 +69,6 @@ const colorToHex: Record<string, string> = {
   'pink': '#EC4899'
 };
 
-// Returns the correct SVG egg icon from public folder
-const getColoredEggIcon = (color: string): string => {
-  const c = color.toLowerCase();
-  if (c === 'blue') return '/icons/egg-blue.svg';
-  if (c === 'orange') return '/icons/egg-orange.svg';
-  if (c === 'green') return '/icons/egg-green.svg';
-  if (c === 'red') return '/icons/egg-red.svg';
-  if (c === 'gold' || c === 'yellow') return '/icons/egg-gold.svg';
-  if (c === 'pink') return '/icons/egg-red.svg'; // fallback to red for pink
-  return '/icons/egg-blue.svg'; // default
-};
-
 // Convert an emoji character to a data-URL SVG for use as a map marker icon
 const emojiToIconUrl = (emoji: string, size = 48): string => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="${Math.round(size * 0.75)}">${emoji}</text></svg>`;
@@ -182,8 +170,14 @@ const MapComponent = forwardRef<MapRef, {
     // Initial center
     if (userLocation && center.lat === 0) {
       setCenter(userLocation);
+      if (mapRef.current) {
+        mapRef.current.panTo(userLocation);
+      }
     } else if (taskMarkers && taskMarkers.length > 0 && center.lat === 0) {
       setCenter({ lat: taskMarkers[0].lat, lng: taskMarkers[0].lng });
+      if (mapRef.current) {
+        mapRef.current.panTo({ lat: taskMarkers[0].lat, lng: taskMarkers[0].lng });
+      }
     }
   }, [taskMarkers, userLocation]);
 
@@ -263,11 +257,9 @@ const MapComponent = forwardRef<MapRef, {
         ? emojiToIconUrl(marker.emoji)
         : marker?.image_url
           ? marker.image_url
-          : marker.title?.toLowerCase().includes('egg')
-            ? getColoredEggIcon(marker.colour || 'blue')
-            : marker?.colour
-              ? MarkerColourMap[marker.colour as Colour]
-              : MarkerColourMap[Colour.Red]
+          : marker?.colour
+            ? MarkerColourMap[marker.colour as Colour]
+            : MarkerColourMap[Colour.Red]
     })) ?? [];
 
   const playerMarker: Marker | null = userLocation ? {

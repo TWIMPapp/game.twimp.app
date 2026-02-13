@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -12,7 +12,7 @@ import {
     FormControlLabel,
     Grid
 } from '@mui/material';
-import { ThemeIcon } from './EnhancedTrailDesigner';
+import { PinIcon, getDisplayEmoji } from '@/config/pinIcons';
 
 interface PinConfig {
     icon: string;
@@ -26,31 +26,11 @@ interface PinConfig {
 interface PinConfigDialogProps {
     open: boolean;
     pinNumber: number;
-    icons: ThemeIcon[];
+    icons: PinIcon[];
     defaultIcon: string;
     onSave: (config: PinConfig) => void;
     onCancel: () => void;
 }
-
-// Icon definitions - emoji and label for each icon type
-const ICON_DISPLAY: Record<string, { emoji: string; label: string }> = {
-    egg_red: { emoji: '🔴', label: 'Red Egg' },
-    egg_blue: { emoji: '🔵', label: 'Blue Egg' },
-    egg_green: { emoji: '🟢', label: 'Green Egg' },
-    egg_gold: { emoji: '🟡', label: 'Gold Egg' },
-    egg_orange: { emoji: '🟠', label: 'Orange Egg' },
-    basket: { emoji: '🧺', label: 'Basket' },
-    treasure_chest: { emoji: '📦', label: 'Treasure' },
-    question_mark: { emoji: '❓', label: 'Mystery' },
-    heart_red: { emoji: '❤️', label: 'Red Heart' },
-    heart_pink: { emoji: '💗', label: 'Pink Heart' },
-    rose: { emoji: '🌹', label: 'Rose' },
-    love_letter: { emoji: '💌', label: 'Love Letter' },
-    pin: { emoji: '📍', label: 'Pin' },
-    star: { emoji: '⭐', label: 'Star' },
-    flag: { emoji: '🏁', label: 'Flag' },
-    gift: { emoji: '🎁', label: 'Gift' }
-};
 
 export default function PinConfigDialog({
     open,
@@ -66,6 +46,18 @@ export default function PinConfigDialog({
     const [question, setQuestion] = useState('');
     const [answer, setAnswer] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+
+    // Reset all fields when dialog opens for a new pin
+    useEffect(() => {
+        if (open) {
+            setSelectedIcon(defaultIcon);
+            setVisible(true);
+            setHasQuestion(false);
+            setQuestion('');
+            setAnswer('');
+            setSuccessMessage('');
+        }
+    }, [open, defaultIcon]);
 
     const handleSave = () => {
         const iconObj = icons.find(i => i.name === selectedIcon);
@@ -112,9 +104,9 @@ export default function PinConfigDialog({
                                 }}
                             >
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
-                                    <span>{ICON_DISPLAY[icon.name]?.emoji || '📍'}</span>
+                                    <span>{getDisplayEmoji(icon.name)}</span>
                                     <Typography sx={{ fontSize: '0.6rem', color: selectedIcon === icon.name ? 'white' : '#6b7280' }}>
-                                        {ICON_DISPLAY[icon.name]?.label || icon.name}
+                                        {icon.label || icon.name}
                                     </Typography>
                                 </Box>
                             </Button>

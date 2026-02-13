@@ -1,7 +1,8 @@
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, Avatar } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import logoImg from '@/assets/images/logo.png';
 import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
 
 const FONT = "'Poppins', sans-serif";
 
@@ -18,6 +19,7 @@ interface PageHeaderProps {
 
 export default function PageHeader({ compact = false, showCreate = false, onCreateClick }: PageHeaderProps) {
     const router = useRouter();
+    const { isAuthenticated, user } = useAuth();
 
     const handleLogoClick = () => {
         if (router.pathname !== '/') {
@@ -70,6 +72,22 @@ export default function PageHeader({ compact = false, showCreate = false, onCrea
                     >
                         Create
                     </Button>
+                )}
+                {isAuthenticated && user?.image && (
+                    <Avatar
+                        src={user.image}
+                        alt={user.name || 'Account'}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            router.push('/user/who');
+                        }}
+                        sx={{
+                            width: compact ? 28 : 34,
+                            height: compact ? 28 : 34,
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        }}
+                    />
                 )}
             </Box>
         </Box>

@@ -140,6 +140,7 @@ const Account = () => {
     setStopConfirmId(null);
     try {
       await CustomTrailAPI.stopTrail(trailId, creatorId);
+      localStorage.removeItem('twimp_active_trail');
       await loadGames();
     } catch (err) {
       console.error('Failed to stop trail:', err);
