@@ -10,7 +10,7 @@ const nextConfig = {
     return [
       {
         source: '/v/:id',
-        destination: '/custom-trail/:id',
+        destination: '/trail/:id',
       },
     ];
   },
