@@ -10,8 +10,14 @@ module.exports = {
     extend: {
       colors: {
         'twimp-pink': '#FF2E5B',
-        'twimp-teal': '#A9D1C1',
         'twimp-pink-light': '#FF6C88',
+        'twimp-pink-soft': '#FFF0F3',
+        'twimp-green': '#2DB87A',
+        'twimp-green-light': '#A9D1C1',
+        'twimp-teal': '#A9D1C1',
+        'twimp-turquoise': '#3BBFA0',
+        'twimp-yellow': '#FFD166',
+        'twimp-bg': '#F8F5F2',
       },
       borderRadius: {
         'twimp': '20px',

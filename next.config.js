@@ -6,6 +6,14 @@ const nextConfig = {
   sassOptions: {
     includePaths: [path.join(__dirname, 'styles')],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/v/:id',
+        destination: '/custom-trail/:id',
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Don't include backend code in client bundle

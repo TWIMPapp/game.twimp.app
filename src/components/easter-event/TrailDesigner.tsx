@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Box, Typography, Button, Snackbar, Alert } from '@mui/material';
-import Map, { MapRef, ExclusionZone } from './Map';
+import Map, { MapRef, ExclusionZone } from '../Map';
 import { Marker } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 
@@ -25,7 +25,7 @@ function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: numbe
     return R * c;
 }
 
-const MIN_SPACING_METERS = 50;
+const MIN_SPACING_METERS = 200;
 
 export default function TrailDesigner({
     userLocation,

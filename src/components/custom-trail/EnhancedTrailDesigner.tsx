@@ -9,6 +9,7 @@ interface PinData {
     lat: number;
     lng: number;
     icon: string;
+    colour: string;
     visible: boolean;
     question?: string;
     answer?: string;
@@ -16,9 +17,11 @@ interface PinData {
     order: number;
 }
 
+export interface ThemeIcon { name: string; colour: string; }
+
 interface EnhancedTrailDesignerProps {
     startLocation: { lat: number; lng: number };
-    icons: string[];
+    icons: ThemeIcon[];
     defaultIcon: string;
     onComplete: (pins: PinData[]) => void;
     onCancel: () => void;
@@ -111,6 +114,7 @@ export default function EnhancedTrailDesigner({
 
     const handlePinConfigSave = useCallback((config: {
         icon: string;
+        colour: string;
         visible: boolean;
         question?: string;
         answer?: string;
@@ -122,6 +126,7 @@ export default function EnhancedTrailDesigner({
             lat: pendingLocation.lat,
             lng: pendingLocation.lng,
             icon: config.icon,
+            colour: config.colour,
             visible: config.visible,
             question: config.question,
             answer: config.answer,
@@ -196,7 +201,7 @@ export default function EnhancedTrailDesigner({
                     boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                 }}
             >
-                <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#3b82f6' }}>
+                <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#FF2E5B' }}>
                     {pins.length} pin{pins.length !== 1 ? 's' : ''} placed
                 </Typography>
             </Box>
@@ -257,13 +262,10 @@ export default function EnhancedTrailDesigner({
                             flex: 1,
                             py: 1.5,
                             borderRadius: '16px',
-                            backgroundColor: '#3b82f6',
                             fontWeight: 700,
                             fontSize: '1.1rem',
                             textTransform: 'none',
-                            '&:hover': {
-                                backgroundColor: '#2563eb'
-                            }
+                            backgroundColor: '#FF2E5B !important',
                         }}
                     >
                         Done ({pins.length} pin{pins.length !== 1 ? 's' : ''})

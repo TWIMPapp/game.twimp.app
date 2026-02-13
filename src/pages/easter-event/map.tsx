@@ -18,7 +18,7 @@ import { EasterEventAPI } from '@/services/API';
 import Map, { SpawnRadius, MapRef } from '@/components/Map';
 import SafetyDialog from '@/components/SafetyDialog';
 import TrailModeSelector from '@/components/TrailModeSelector';
-import TrailDesigner from '@/components/TrailDesigner';
+import TrailDesigner from '@/components/easter-event/TrailDesigner';
 import styles from '@/styles/egg-hunt.module.css';
 import { Colour } from '@/typings/Colour.enum';
 import { Marker } from '@/typings/Task';
@@ -53,7 +53,7 @@ const getThemeForSubject = (subject: string, isGoldenEgg: boolean): string => {
 // Get the SVG path for an egg (pink uses red since no pink SVG exists)
 const getEggSvgPath = (theme: string): string => {
     const svgColor = theme === 'pink' ? 'red' : theme;
-    return `/eggs/egg-${svgColor}.svg`;
+    return `/icons/egg-${svgColor}.svg`;
 };
 
 // Get the Colour enum for Map markers
@@ -516,7 +516,7 @@ export default function EasterEventMap() {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <Box
                             component="img"
-                            src={isBonusMode ? "/eggs/egg-orange.svg" : "/eggs/egg-green.svg"}
+                            src={isBonusMode ? "/icons/egg-orange.svg" : "/icons/egg-green.svg"}
                             alt="Eggs"
                             sx={{ width: 24, height: 24 }}
                         />

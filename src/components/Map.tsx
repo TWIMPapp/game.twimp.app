@@ -14,40 +14,39 @@ export interface MapRef {
   panAndZoom: (location: { lat: number; lng: number }, zoom: number) => void;
 }
 
-// --- Heading Indicator Component ---
-const HeadingIndicator = ({ heading }: { heading: number }) => {
-  const circleSize = 64; // Diameter of the circle (match marker size)
-  const pointerSize = 8; // Size of the pointer triangle base/height
+export interface MapProps {
+  taskMarkers?: Marker[];
+  userLocation?: { lat: number; lng: number } | null;
+  testMode?: boolean;
+  zoom?: number;
+  onPlayerMove?: (lat: number, lng: number) => void;
+  designerMode?: boolean;
+  onLongPress?: (lat: number, lng: number) => void;
+  spawnRadius?: { center: { lat: number; lng: number }; radiusMeters: number };
+  startingPointLocation?: { lat: number; lng: number } | null;
+}
 
+// --- User Location Blue Dot Component (Google Maps style) ---
+const UserLocationDot = () => {
   return (
     <div
       style={{
         position: 'absolute',
-        width: `${circleSize}px`,
-        height: `${circleSize}px`,
-        marginLeft: `-${circleSize / 2}px`,
-        marginTop: `-${circleSize}px`,
+        width: '14px',
+        height: '14px',
+        marginLeft: '-7px',
+        marginTop: '-7px',
+        borderRadius: '50%',
+        backgroundColor: '#4285F4',
+        border: '2px solid white',
+        boxShadow: '0 0 0 1px rgba(66, 133, 244, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2)',
+        pointerEvents: 'none',
       }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          top: `-${pointerSize / 2}px`,
-          left: '50%',
-          width: '0',
-          height: '0',
-          borderLeft: `${pointerSize / 2}px solid transparent`,
-          borderRight: `${pointerSize / 2}px solid transparent`,
-          borderBottom: `${pointerSize}px solid #ff2e5b`,
-          transformOrigin: `50% ${circleSize / 2 + pointerSize / 2}px`,
-          transform: `translateX(-50%) rotate(${heading}deg)`,
-          transition: 'transform 0.1s linear',
-          pointerEvents: 'none',
-        }}
-      />
-    </div>
+    />
   );
 };
+
+
 
 const MarkerColourMap: Record<Colour, string> = {
   [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
@@ -73,13 +72,19 @@ const colorToHex: Record<string, string> = {
 // Returns the correct SVG egg icon from public folder
 const getColoredEggIcon = (color: string): string => {
   const c = color.toLowerCase();
-  if (c === 'blue') return '/eggs/egg-blue.svg';
-  if (c === 'orange') return '/eggs/egg-orange.svg';
-  if (c === 'green') return '/eggs/egg-green.svg';
-  if (c === 'red') return '/eggs/egg-red.svg';
-  if (c === 'gold' || c === 'yellow') return '/eggs/egg-gold.svg';
-  if (c === 'pink') return '/eggs/egg-red.svg'; // fallback to red for pink
-  return '/eggs/egg-blue.svg'; // default
+  if (c === 'blue') return '/icons/egg-blue.svg';
+  if (c === 'orange') return '/icons/egg-orange.svg';
+  if (c === 'green') return '/icons/egg-green.svg';
+  if (c === 'red') return '/icons/egg-red.svg';
+  if (c === 'gold' || c === 'yellow') return '/icons/egg-gold.svg';
+  if (c === 'pink') return '/icons/egg-red.svg'; // fallback to red for pink
+  return '/icons/egg-blue.svg'; // default
+};
+
+// Convert an emoji character to a data-URL SVG for use as a map marker icon
+const emojiToIconUrl = (emoji: string, size = 48): string => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="${Math.round(size * 0.75)}">${emoji}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 };
 
 const containerStyle = {
@@ -113,6 +118,7 @@ const MapComponent = forwardRef<MapRef, {
   // If undefined, shows indicators for all markers (backwards compatible)
   targetMarkerIndex?: number;
   spawnRadiusColor?: string;
+  startingPointLocation?: { lat: number; lng: number } | null;
 }>(function MapComponent({
   taskMarkers,
   userLocation,
@@ -124,12 +130,12 @@ const MapComponent = forwardRef<MapRef, {
   exclusionZones = [],
   designerMode = false,
   targetMarkerIndex,
-  spawnRadiusColor = '#ffffff'
+  spawnRadiusColor = '#ffffff',
+  startingPointLocation = null
 }, ref) {
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
   const [markerInfoBox, setMarkerInfoBox] = useState<Marker>();
-  const [heading, setHeading] = useState<number>(0);
   const [viewportBounds, setViewportBounds] = useState<google.maps.LatLngBounds | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -182,17 +188,7 @@ const MapComponent = forwardRef<MapRef, {
     }
   }, [taskMarkers, userLocation]);
 
-  useEffect(() => {
-    const handleOrientation = (event: Event) => {
-      const orientationEvent = event as DeviceOrientationEvent;
-      if (orientationEvent.absolute && orientationEvent.alpha !== null) {
-        setHeading(orientationEvent.alpha);
-      }
-    };
 
-    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-    return () => window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
-  }, []);
 
   const handleMyLocationClick = () => {
     if (mapRef.current && userLocation) {
@@ -264,13 +260,15 @@ const MapComponent = forwardRef<MapRef, {
   const displayMarkers =
     taskMarkers?.map((marker) => ({
       ...marker,
-      image_url: marker?.image_url
-        ? marker.image_url
-        : marker.title?.toLowerCase().includes('egg')
-          ? getColoredEggIcon(marker.colour || 'blue')
-          : marker?.colour
-            ? MarkerColourMap[marker.colour as Colour]
-            : MarkerColourMap[Colour.Red]
+      image_url: marker?.emoji
+        ? emojiToIconUrl(marker.emoji)
+        : marker?.image_url
+          ? marker.image_url
+          : marker.title?.toLowerCase().includes('egg')
+            ? getColoredEggIcon(marker.colour || 'blue')
+            : marker?.colour
+              ? MarkerColourMap[marker.colour as Colour]
+              : MarkerColourMap[Colour.Red]
     })) ?? [];
 
   const playerMarker: Marker | null = userLocation ? {
@@ -343,31 +341,29 @@ const MapComponent = forwardRef<MapRef, {
                   );
                 })}
 
-              {isGoogleMapsAPILoaded && playerMarker && (
-                <MarkerF
-                  position={{ lat: playerMarker.lat, lng: playerMarker.lng }}
-                  icon={{
-                    url: playerMarker.image_url as string,
-                    scaledSize: new google.maps.Size(64, 64),
-                  }}
-                  zIndex={10}
-                  draggable={testMode}
-                  onDragEnd={(e) => {
-                    if (e.latLng) {
-                      onPlayerMove(e.latLng.lat(), e.latLng.lng());
-                    }
-                  }}
-                  onClick={designerMode ? undefined : () => setMarkerInfoBox(playerMarker)}
-                />
-              )}
-
+              {/* Always show blue dot for user location */}
               {isGoogleMapsAPILoaded && userLocation && (
                 <OverlayViewF
                   position={{ lat: userLocation.lat, lng: userLocation.lng }}
                   mapPaneName="overlayMouseTarget"
                 >
-                  <HeadingIndicator heading={heading} />
+                  <UserLocationDot />
                 </OverlayViewF>
+              )}
+
+
+
+              {/* Show starting point as Twimp marker when set */}
+              {isGoogleMapsAPILoaded && startingPointLocation && (
+                <MarkerF
+                  position={{ lat: startingPointLocation.lat, lng: startingPointLocation.lng }}
+                  icon={{
+                    url: MarkerIcon.src,
+                    scaledSize: new google.maps.Size(64, 64),
+                  }}
+                  zIndex={5}
+                  title="Starting Point"
+                />
               )}
 
               {/* Spawn Radius Circle */}

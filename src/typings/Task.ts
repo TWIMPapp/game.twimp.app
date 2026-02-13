@@ -42,6 +42,7 @@ export interface Marker {
   title: string;
   subtitle: string;
   image_url?: string;
+  emoji?: string;
   colour?: Colour;
   status?: Status;
 }

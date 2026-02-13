@@ -238,12 +238,12 @@ export default function PlayCustomTrail() {
         : 'Treasure Hunt';
 
     return (
-        <Box sx={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+        <Box sx={{ minHeight: '100vh', backgroundColor: '#F8F5F2' }}>
 
             {/* Loading */}
             {gameState === 'loading' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: 2 }}>
-                    <CircularProgress size={48} sx={{ color: '#3b82f6' }} />
+                    <CircularProgress size={48} sx={{ color: '#FF2E5B' }} />
                     <Typography sx={{ color: '#6b7280' }}>Loading...</Typography>
                 </Box>
             )}
@@ -286,10 +286,8 @@ export default function PlayCustomTrail() {
                             textTransform: 'none',
                             fontWeight: 700,
                             fontSize: '1.2rem',
-                            background: '#3b82f6 !important',
-                            color: 'white !important',
-                            boxShadow: '0 4px 14px rgba(59,130,246,0.3)',
-                            '&:hover': { background: '#2563eb !important' }
+                            boxShadow: '0 4px 14px rgba(255,46,91,0.3)',
+                            backgroundColor: '#FF2E5B !important',
                         }}
                     >
                         Start!
@@ -313,7 +311,7 @@ export default function PlayCustomTrail() {
                         <Typography sx={{ fontWeight: 700 }}>
                             {trailInfo?.name || themeLabel}
                         </Typography>
-                        <Typography sx={{ fontWeight: 600, color: '#3b82f6' }}>
+                        <Typography sx={{ fontWeight: 600, color: '#FF2E5B' }}>
                             {session
                                 ? isCompetitive
                                     ? `You: ${session.collectedPins.length} | ${(session as any).remainingPins ?? '?'} left`
@@ -393,10 +391,8 @@ export default function PlayCustomTrail() {
                             borderRadius: '12px',
                             textTransform: 'none',
                             fontWeight: 700,
-                            background: '#3b82f6 !important',
-                            color: 'white !important',
-                            '&:hover': { background: '#2563eb !important' },
-                            px: 4
+                            px: 4,
+                            backgroundColor: '#FF2E5B !important',
                         }}
                     >
                         Submit
@@ -430,16 +426,15 @@ export default function PlayCustomTrail() {
                 <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
                     <Button
                         variant="contained"
+                        color="secondary"
                         onClick={handleSuccessDismiss}
                         sx={{
                             borderRadius: '16px',
                             textTransform: 'none',
                             fontWeight: 700,
-                            background: '#22c55e !important',
-                            color: 'white !important',
-                            '&:hover': { background: '#16a34a !important' },
                             px: 6,
-                            py: 1.5
+                            py: 1.5,
+                            backgroundColor: '#2DB87A !important',
                         }}
                     >
                         Next!

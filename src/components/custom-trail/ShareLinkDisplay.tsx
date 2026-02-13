@@ -90,8 +90,8 @@ export default function ShareLinkDisplay({ trailId, trailName }: ShareLinkDispla
                         borderRadius: '16px',
                         textTransform: 'none',
                         fontWeight: 600,
-                        borderColor: copied ? '#22c55e' : '#3b82f6',
-                        color: copied ? '#22c55e' : '#3b82f6'
+                        borderColor: copied ? '#22c55e' : '#FF2E5B',
+                        color: copied ? '#22c55e' : '#FF2E5B'
                     }}
                 >
                     {copied ? 'Copied!' : 'Copy Link'}
@@ -107,7 +107,7 @@ export default function ShareLinkDisplay({ trailId, trailName }: ShareLinkDispla
                         borderRadius: '16px',
                         textTransform: 'none',
                         fontWeight: 700,
-                        backgroundColor: '#3b82f6'
+                        backgroundColor: '#FF2E5B !important',
                     }}
                 >
                     Share

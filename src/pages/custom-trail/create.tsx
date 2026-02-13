@@ -12,12 +12,14 @@ import {
 } from '@mui/material';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
 import EditLocationAltIcon from '@mui/icons-material/EditLocationAlt';
+import PageHeader from '@/components/PageHeader';
 import ThemeSelector from '@/components/custom-trail/ThemeSelector';
 import EnhancedTrailDesigner from '@/components/custom-trail/EnhancedTrailDesigner';
 import ShareLinkDisplay from '@/components/custom-trail/ShareLinkDisplay';
 import Map, { MapRef } from '@/components/Map';
 import { CustomTrailAPI } from '@/services/API';
 import { Colour } from '@/typings/Colour.enum';
+import { Marker } from '@/typings/Task';
 
 type CustomTrailTheme = 'easter' | 'valentine' | 'general';
 type Step = 'theme' | 'mode' | 'random_map' | 'designer' | 'name_create' | 'creating' | 'done';
@@ -26,23 +28,46 @@ type MapPhase = 'set_start' | 'radius' | 'pins';
 const MIN_SPACING_METERS = 50;
 
 // Theme icon sets (mirrors backend themes.ts)
-const THEME_ICONS: Record<string, { icons: string[]; defaultIcon: string }> = {
+// emoji: frontend-only — if present, rendered as emoji marker on map;
+//        if absent, Map tries /icons/{name}.svg, then falls back to coloured dot
+interface ThemeIcon { name: string; colour: string; emoji?: string; }
+const THEME_ICONS: Record<string, { icons: ThemeIcon[]; defaultIcon: string }> = {
     easter: {
-        icons: ['egg', 'medal', 'basket', 'treasure_chest', 'question_mark'],
-        defaultIcon: 'egg'
+        icons: [
+            { name: 'egg_red', colour: 'red' },
+            { name: 'egg_blue', colour: 'blue' },
+            { name: 'egg_green', colour: 'green' },
+            { name: 'egg_gold', colour: 'gold' },
+            { name: 'egg_orange', colour: 'orange' },
+            { name: 'basket', colour: 'green', emoji: '🧺' },
+            { name: 'treasure_chest', colour: 'gold', emoji: '💰' },
+            { name: 'question_mark', colour: 'purple', emoji: '❓' },
+        ],
+        defaultIcon: 'egg_red'
     },
     valentine: {
-        icons: ['heart_red', 'heart_pink', 'rose', 'love_letter', 'treasure_chest', 'question_mark'],
+        icons: [
+            { name: 'heart_red', colour: 'red', emoji: '❤️' },
+            { name: 'heart_pink', colour: 'pink', emoji: '💗' },
+            { name: 'rose', colour: 'red', emoji: '🌹' },
+            { name: 'love_letter', colour: 'pink', emoji: '💌' },
+            { name: 'treasure_chest', colour: 'gold', emoji: '💰' },
+            { name: 'question_mark', colour: 'purple', emoji: '❓' },
+        ],
         defaultIcon: 'heart_red'
     },
     general: {
-        icons: ['pin', 'treasure_chest', 'star', 'question_mark', 'flag', 'gift'],
+        icons: [
+            { name: 'pin', colour: 'red', emoji: '📍' },
+            { name: 'treasure_chest', colour: 'gold', emoji: '💰' },
+            { name: 'star', colour: 'gold', emoji: '⭐' },
+            { name: 'question_mark', colour: 'purple', emoji: '❓' },
+            { name: 'flag', colour: 'green', emoji: '🚩' },
+            { name: 'gift', colour: 'blue', emoji: '🎁' },
+        ],
         defaultIcon: 'pin'
     }
 };
-
-// Egg color cycle for preview markers
-const EGG_COLOURS = [Colour.Blue, Colour.Orange, Colour.Green, Colour.Red, Colour.Yellow];
 
 // Theme-based gradients for mode cards
 const THEME_MODE_GRADIENTS: Record<CustomTrailTheme, { random: string; custom: string }> = {
@@ -66,9 +91,7 @@ const primaryButton = {
     borderRadius: '16px',
     textTransform: 'none',
     fontWeight: 700,
-    background: '#3b82f6 !important',
-    color: 'white !important',
-    '&:hover': { background: '#2563eb !important' }
+    backgroundColor: '#FF2E5B !important',
 };
 
 const secondaryButton = {
@@ -96,6 +119,8 @@ export default function CreateCustomTrail() {
     const [createdTrailId, setCreatedTrailId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    const [activeTrail, setActiveTrail] = useState<{ id: string; name?: string } | null>(null);
 
     const mapRef = useRef<MapRef>(null);
 
@@ -167,6 +192,18 @@ export default function CreateCustomTrail() {
         }
     }, [themeParam, modeParam, countParam, radiusParam]);
 
+    // Check if creator already has an active trail
+    useEffect(() => {
+        if (!creatorId) return;
+        CustomTrailAPI.getTrailsByCreator(creatorId).then((res: any) => {
+            const trails = res?.trails || res;
+            if (Array.isArray(trails)) {
+                const active = trails.find((t: any) => t.isActive);
+                if (active) setActiveTrail({ id: active.id, name: active.name });
+            }
+        }).catch(() => {});
+    }, [creatorId]);
+
     // Request geolocation on mount
     useEffect(() => {
         navigator.geolocation.getCurrentPosition(
@@ -209,12 +246,18 @@ export default function CreateCustomTrail() {
 
     const handleStartLocationSet = (lat: number, lng: number) => {
         setStartLocation({ lat, lng });
-        if (isFullyPreset) {
-            // All config pre-determined, skip straight to name/create
-            setStep('name_create');
-        } else {
-            setMapPhase('radius');
-        }
+        setIsTransitioning(true);
+        
+        // Delay transition to let user see the marker appear
+        setTimeout(() => {
+            if (isFullyPreset) {
+                // All config pre-determined, skip straight to name/create
+                setStep('name_create');
+            } else {
+                setMapPhase('radius');
+            }
+            setIsTransitioning(false);
+        }, 800); // 800ms delay to show marker and let user absorb the action
     };
 
     const handleCreate = async () => {
@@ -280,42 +323,83 @@ export default function CreateCustomTrail() {
         }
     };
 
-    // Build map markers for random_map step (start + preview pins in pins phase)
+    // Build map markers for random_map step (preview pins in pins phase only, no start marker)
     const randomMapMarkers = useMemo(() => {
-        if (!startLocation) return [];
-        const markers = [{
-            lat: startLocation.lat,
-            lng: startLocation.lng,
-            title: 'Start',
-            subtitle: 'Starting point',
-            colour: Colour.Red
-        }];
-        if (mapPhase === 'pins') {
-            previewPins.slice(0, randomCount).forEach((pos, i) => {
-                markers.push({
-                    lat: pos.lat,
-                    lng: pos.lng,
-                    title: theme === 'easter' ? `Egg ${i + 1}` : `Pin ${i + 1}`,
-                    subtitle: 'Preview',
-                    colour: theme === 'easter' ? EGG_COLOURS[i % EGG_COLOURS.length] : Colour.Blue
-                });
+        if (mapPhase !== 'pins') return [];
+        const markers: Marker[] = [];
+        const themeLabels: Record<CustomTrailTheme, string> = {
+            easter: 'Egg',
+            valentine: 'Heart',
+            general: 'Pin',
+        };
+        const icons = THEME_ICONS[theme]?.icons || THEME_ICONS.general.icons;
+        const label = themeLabels[theme] || 'Pin';
+
+        previewPins.slice(0, randomCount).forEach((pos, i) => {
+            const icon = icons[i % icons.length];
+            markers.push({
+                lat: pos.lat,
+                lng: pos.lng,
+                title: `${label} ${i + 1}`,
+                subtitle: 'Preview',
+                colour: icon.colour as Colour,
+                ...(icon.emoji ? { emoji: icon.emoji } : { image_url: `/icons/${icon.name.replace(/_/g, '-')}.svg` }),
             });
-        }
+        });
         return markers;
-    }, [startLocation, mapPhase, previewPins, randomCount, theme]);
+    }, [mapPhase, previewPins, randomCount, theme]);
 
     return (
-        <Box sx={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+        <Box sx={{ minHeight: '100vh', backgroundColor: '#F8F5F2' }}>
+
+            {/* Active trail — blocks creation until stopped */}
+            {activeTrail && (step === 'mode' || step === 'theme') && (
+                <>
+                    <PageHeader compact />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', px: 3, pt: 6 }}>
+                        <Typography sx={{ fontSize: '3rem', mb: 2 }}>🕹️💥</Typography>
+                        <Typography variant="h5" sx={{ fontWeight: 800, mb: 1, textAlign: 'center', color: '#FF2E5B' }}>
+                            Uhoh! Game Overload!
+                        </Typography>
+                        <Typography sx={{ color: '#6b7280', textAlign: 'center', mb: 3, fontSize: '0.9rem' }}>
+                            You&apos;ve already got a game out in the wild!{'\n'}Stop it first before starting a new one.
+                        </Typography>
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            onClick={() => router.push(`/custom-trail/status?id=${activeTrail.id}`)}
+                            sx={{
+                                ...primaryButton,
+                                mb: 1.5,
+                            }}
+                        >
+                            Go to {activeTrail.name || `Trail ${activeTrail.id}`}
+                        </Button>
+                        <Button
+                            fullWidth
+                            onClick={() => router.push('/')}
+                            sx={secondaryButton}
+                        >
+                            Back to Home
+                        </Button>
+                    </Box>
+                </>
+            )}
 
             {/* Step: Theme */}
-            {step === 'theme' && (
-                <ThemeSelector onSelect={handleThemeSelect} />
+            {step === 'theme' && !activeTrail && (
+                <>
+                    <PageHeader compact />
+                    <ThemeSelector onSelect={handleThemeSelect} />
+                </>
             )}
 
             {/* Step: Mode */}
-            {step === 'mode' && (
+            {step === 'mode' && !activeTrail && (
+                <>
+                <PageHeader compact />
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 800, textAlign: 'center', color: '#ec4899' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 800, textAlign: 'center', color: '#FF2E5B' }}>
                         Let&apos;s make a new game!
                     </Typography>
                     <Typography sx={{ textAlign: 'center', color: '#6b7280', mb: 1 }}>
@@ -378,6 +462,7 @@ export default function CreateCustomTrail() {
                         </Typography>
                     </Box>
                 </Box>
+                </>
             )}
 
             {/* Step: Random Map (set_start → radius → pins) */}
@@ -388,7 +473,7 @@ export default function CreateCustomTrail() {
                         <Map
                             ref={mapRef}
                             taskMarkers={randomMapMarkers}
-                            userLocation={startLocation || mapCenter}
+                            userLocation={mapCenter}
                             testMode={false}
                             zoom={mapPhase === 'set_start' ? 15 : spawnRadius <= 200 ? 17 : spawnRadius <= 350 ? 16 : 15}
                             onPlayerMove={() => {}}
@@ -398,6 +483,7 @@ export default function CreateCustomTrail() {
                                 center: startLocation,
                                 radiusMeters: spawnRadius
                             } : undefined}
+                            startingPointLocation={mapPhase === 'set_start' ? null : startLocation}
                         />
                     </Box>
 
@@ -416,15 +502,31 @@ export default function CreateCustomTrail() {
                         {/* Phase: Set Start */}
                         {mapPhase === 'set_start' && (
                             <>
-                                <Typography sx={{ fontWeight: 700, textAlign: 'center', mb: 0.5 }}>
-                                    Set the starting point
-                                </Typography>
-                                <Typography sx={{ color: '#6b7280', textAlign: 'center', fontSize: '0.85rem', mb: 1.5 }}>
-                                    Long press on the map to set where players will begin
-                                </Typography>
-                                <Button onClick={handleBack} sx={secondaryButton}>
-                                    &lt; Previous
-                                </Button>
+                                {isTransitioning ? (
+                                    <>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, py: 1 }}>
+                                            <CircularProgress size={20} sx={{ color: '#FF2E5B' }} />
+                                            <Typography sx={{ fontWeight: 700, color: '#FF2E5B' }}>
+                                                Starting point set!
+                                            </Typography>
+                                        </Box>
+                                        <Typography sx={{ color: '#6b7280', textAlign: 'center', fontSize: '0.85rem' }}>
+                                            Loading next step...
+                                        </Typography>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Typography sx={{ fontWeight: 700, textAlign: 'center', mb: 0.5 }}>
+                                            Set the starting point
+                                        </Typography>
+                                        <Typography sx={{ color: '#6b7280', textAlign: 'center', fontSize: '0.85rem', mb: 1.5 }}>
+                                            Long press on the map to set where players will begin
+                                        </Typography>
+                                        <Button onClick={handleBack} sx={secondaryButton}>
+                                            &lt; Previous
+                                        </Button>
+                                    </>
+                                )}
                             </>
                         )}
 
@@ -446,14 +548,14 @@ export default function CreateCustomTrail() {
                                         min={100}
                                         max={500}
                                         step={50}
-                                        sx={{ color: '#3b82f6' }}
+                                        sx={{ color: '#FF2E5B' }}
                                     />
                                 </Box>
                                 <Box sx={{ mt: '5px', display: 'flex', gap: 2 }}>
                                     <Button fullWidth onClick={handleBack} sx={secondaryButton}>
                                         &lt; Previous
                                     </Button>
-                                    <Button fullWidth onClick={() => setMapPhase('pins')} sx={primaryButton}>
+                                    <Button fullWidth variant="contained" onClick={() => setMapPhase('pins')} sx={primaryButton}>
                                         Next &gt;
                                     </Button>
                                 </Box>
@@ -472,7 +574,7 @@ export default function CreateCustomTrail() {
                                         onChange={(_, val) => setRandomCount(val as number)}
                                         min={3}
                                         max={maxPinsForRadius}
-                                        sx={{ color: '#3b82f6' }}
+                                        sx={{ color: '#FF2E5B' }}
                                     />
                                 </Box>
                                 <Typography sx={{ color: '#9ca3af', fontSize: '0.75rem', textAlign: 'center' }}>
@@ -482,7 +584,7 @@ export default function CreateCustomTrail() {
                                     <Button fullWidth onClick={handleBack} sx={secondaryButton}>
                                         &lt; Previous
                                     </Button>
-                                    <Button fullWidth onClick={() => setStep('name_create')} sx={primaryButton}>
+                                    <Button fullWidth variant="contained" onClick={() => setStep('name_create')} sx={primaryButton}>
                                         Next &gt;
                                     </Button>
                                 </Box>
@@ -525,7 +627,7 @@ export default function CreateCustomTrail() {
             {step === 'name_create' && (
                 <Box sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-                        Name your trail
+                        Name your game
                     </Typography>
                     <Typography sx={{ color: '#6b7280', mb: 3 }}>
                         Give it a name so people know what they are joining (optional).
@@ -570,10 +672,9 @@ export default function CreateCustomTrail() {
                         <Button fullWidth onClick={handleBack} sx={secondaryButton}>
                             &lt; Previous
                         </Button>
-                        <Button fullWidth onClick={handleCreate} sx={{
+                        <Button fullWidth variant="contained" onClick={handleCreate} sx={{
                             ...primaryButton,
-                            background: '#22c55e !important',
-                            '&:hover': { background: '#16a34a !important' }
+                            backgroundColor: '#2DB87A !important',
                         }}>
                             {name.trim() ? 'Create Trail' : 'Create'}
                         </Button>
@@ -584,7 +685,7 @@ export default function CreateCustomTrail() {
             {/* Step: Creating */}
             {step === 'creating' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: 2 }}>
-                    <CircularProgress size={48} sx={{ color: '#3b82f6' }} />
+                    <CircularProgress size={48} sx={{ color: '#FF2E5B' }} />
                     <Typography sx={{ fontWeight: 600, color: '#6b7280' }}>
                         Creating your trail...
                     </Typography>

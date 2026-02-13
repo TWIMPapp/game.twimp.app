@@ -1,45 +1,66 @@
-import React from 'react';
-import { Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
-import ExploreIcon from '@mui/icons-material/Explore';
-import BackpackIcon from '@mui/icons-material/Backpack';
-import PeopleIcon from '@mui/icons-material/People';
+import { useRouter } from 'next/router';
+import { Box, Paper, IconButton } from '@mui/material';
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 
-export default function BottomNav() {
-    const [value, setValue] = React.useState(1); // Default to Explore (Pink)
+interface BottomNavProps {
+    onCreateClick?: () => void;
+}
+
+export default function BottomNav({ onCreateClick }: BottomNavProps) {
+    const router = useRouter();
+    const isHome = router.pathname === '/';
+    const isAccount = router.pathname === '/user/who';
 
     return (
-        <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
-            <BottomNavigation
-                showLabels={false}
-                value={value}
-                onChange={(event, newValue) => {
-                    setValue(newValue);
-                }}
-                sx={{
-                    height: 70,
-                    '& .Mui-selected': {
-                        '& .MuiBottomNavigationAction-icon': {
-                            backgroundColor: '#FF2E5B',
-                            color: 'white',
-                            borderRadius: '50%',
-                            padding: '8px',
-                            fontSize: '2rem',
-                            transform: 'translateY(-10px)',
-                            boxShadow: '0 4px 12px rgba(255, 46, 91, 0.4)',
-                        },
-                    },
-                    '& .MuiBottomNavigationAction-icon': {
-                        transition: 'all 0.2s ease-in-out',
-                        color: '#757575',
-                    }
-                }}
-            >
-                <BottomNavigationAction icon={<HomeIcon />} />
-                <BottomNavigationAction icon={<ExploreIcon />} />
-                <BottomNavigationAction icon={<BackpackIcon />} />
-                <BottomNavigationAction icon={<PeopleIcon />} />
-            </BottomNavigation>
-        </Paper>
+        <Box sx={{
+            position: 'fixed', bottom: 16, left: 16, right: 16,
+            zIndex: 1000,
+        }}>
+            <Paper sx={{
+                borderRadius: '28px', overflow: 'visible',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
+                p: 1,
+            }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', py: 0.5 }}>
+                    <IconButton
+                        onClick={() => router.push('/')}
+                        sx={{
+                            color: isHome ? '#FF2E5B' : '#9CA3AF',
+                            '&:hover': { bgcolor: isHome ? '#FFF0F3' : '#F3F4F6' },
+                        }}
+                    >
+                        <HomeRoundedIcon sx={{ fontSize: 28 }} />
+                    </IconButton>
+
+                    <Box
+                        onClick={onCreateClick}
+                        sx={{
+                            width: 56, height: 56, borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #FF2E5B 0%, #FF6C88 100%)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 6px 20px rgba(255, 46, 91, 0.4)',
+                            transform: 'translateY(-12px)',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s',
+                            '&:hover': { transform: 'translateY(-14px)' },
+                        }}
+                    >
+                        <AddCircleIcon sx={{ color: 'white', fontSize: 30 }} />
+                    </Box>
+
+                    <IconButton
+                        onClick={() => router.push('/user/who')}
+                        sx={{
+                            color: isAccount ? '#FF2E5B' : '#9CA3AF',
+                            '&:hover': { bgcolor: isAccount ? '#FFF0F3' : '#F3F4F6' },
+                        }}
+                    >
+                        <PersonRoundedIcon sx={{ fontSize: 28 }} />
+                    </IconButton>
+                </Box>
+            </Paper>
+        </Box>
     );
 }

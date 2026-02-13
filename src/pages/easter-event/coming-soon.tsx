@@ -16,14 +16,14 @@ export default function EasterEventComingSoon() {
                 variant="contained"
                 onClick={() => router.push('/')}
                 sx={{
-                    backgroundColor: 'white',
-                    color: '#22c55e',
+                    backgroundColor: 'white !important',
+                    color: '#2DB87A',
                     fontWeight: 'bold',
                     borderRadius: '16px',
                     px: 4,
                     py: 1.5,
                     '&:hover': {
-                        backgroundColor: '#f0fdf4'
+                        backgroundColor: '#f0fdf4 !important'
                     }
                 }}
             >

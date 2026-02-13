@@ -127,14 +127,11 @@ export default function TrailsMapView({ games, onPlayGame }: TrailsMapViewProps)
                                         fullWidth
                                         onClick={() => onPlayGame(selectedGame)}
                                         sx={{
-                                            backgroundColor: '#FF2E5B !important',
                                             borderRadius: '16px',
                                             fontWeight: 'bold',
                                             py: 1.5,
                                             textTransform: 'none',
-                                            '&:hover': {
-                                                backgroundColor: '#E0264D !important'
-                                            }
+                                            backgroundColor: '#FF2E5B !important',
                                         }}
                                     >
                                         Play Now

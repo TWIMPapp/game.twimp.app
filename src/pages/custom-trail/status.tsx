@@ -6,10 +6,40 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import Map from '@/components/Map';
 import { MapRef } from '@/components/Map';
+import PageHeader from '@/components/PageHeader';
 import { CustomTrailAPI } from '@/services/API/CustomTrailAPI';
 import { Marker } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import { Status } from '@/typings/Status.enum';
+
+// Map icon names (from backend) to image URLs or emoji
+const ICON_TO_URL: Record<string, string> = {
+    egg_red: '/icons/egg-red.svg',
+    egg_blue: '/icons/egg-blue.svg',
+    egg_green: '/icons/egg-green.svg',
+    egg_gold: '/icons/egg-gold.svg',
+    egg_orange: '/icons/egg-orange.svg',
+};
+
+const ICON_TO_EMOJI: Record<string, string> = {
+    heart_red: '❤️',
+    heart_pink: '💗',
+    rose: '🌹',
+    love_letter: '💌',
+    basket: '🧺',
+    treasure_chest: '💰',
+    question_mark: '❓',
+    pin: '📍',
+    star: '⭐',
+    flag: '🚩',
+    gift: '🎁',
+};
+
+const resolveIcon = (icon: string): { image_url?: string; emoji?: string } => {
+    if (ICON_TO_URL[icon]) return { image_url: ICON_TO_URL[icon] };
+    if (ICON_TO_EMOJI[icon]) return { emoji: ICON_TO_EMOJI[icon] };
+    return {};
+};
 
 interface Player {
     userId: string;
@@ -24,6 +54,7 @@ interface TrailPin {
     lat: number;
     lng: number;
     icon: string;
+    colour: string;
     order: number;
     visible: boolean;
     globallyCollected: boolean;
@@ -96,7 +127,7 @@ export default function CreatorStatus() {
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', bgcolor: '#f9fafb' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', bgcolor: '#F8F5F2' }}>
                 <CircularProgress sx={{ color: '#FF2E5B' }} />
                 <Typography sx={{ mt: 2, color: '#6b7280' }}>Loading trail status...</Typography>
             </Box>
@@ -105,7 +136,7 @@ export default function CreatorStatus() {
 
     if (error || !data) {
         return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', bgcolor: '#f9fafb', px: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', bgcolor: '#F8F5F2', px: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, color: '#ef4444', mb: 2 }}>
                     {error || 'Trail not found'}
                 </Typography>
@@ -118,13 +149,14 @@ export default function CreatorStatus() {
 
     const { trail, players, summary } = data;
 
-    // Pin markers
+    // Pin markers - resolve icon names to image URLs, pass colour for indicators
     const pinMarkers: Marker[] = trail.pins.map((pin, idx) => ({
         lat: pin.lat,
         lng: pin.lng,
-        title: `Pin ${idx + 1}`,
+        title: trail.theme === 'easter' ? `Egg ${idx + 1}` : `Pin ${idx + 1}`,
         subtitle: pin.globallyCollected ? `Found by ${pin.collectedBy?.slice(0, 8) || 'someone'}` : 'Uncollected',
-        colour: pin.globallyCollected ? Colour.Green : Colour.Red,
+        ...resolveIcon(pin.icon),
+        colour: (pin.colour || 'red') as Colour,
         status: pin.globallyCollected ? Status.Visited : Status.Active
     }));
 
@@ -136,20 +168,18 @@ export default function CreatorStatus() {
             lng: p.position.lng,
             title: `Player ${idx + 1}`,
             subtitle: `${p.collectedPins.length}/${trail.pins.length} found`,
-            colour: Colour.Blue,
+            image_url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
             status: Status.Active
         }));
 
     const allMarkers = [...pinMarkers, ...playerMarkers];
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#f9fafb' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#F8F5F2' }}>
             {/* Header */}
-            <Box sx={{ p: 2, bgcolor: 'white', borderBottom: '1px solid #e5e7eb' }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1f2937' }}>
-                    {trail.name || 'Custom Trail'}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+            <Box>
+                <PageHeader compact />
+                <Box sx={{ display: 'flex', gap: 1, px: 3, pt: 1, pb: 2, flexWrap: 'wrap' }}>
                     <Chip
                         icon={<PeopleIcon />}
                         label={`${summary.totalPlayers} player${summary.totalPlayers !== 1 ? 's' : ''}`}

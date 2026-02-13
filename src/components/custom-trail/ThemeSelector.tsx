@@ -18,7 +18,7 @@ const themes = [
     {
         id: 'valentine' as const,
         label: "Valentine's Trail",
-        description: 'Create a romantic treasure hunt for your loved one',
+        description: 'Create a romantic treasure hunt\nfor your loved one',
         icon: <FavoriteIcon sx={{ fontSize: 40 }} />,
         gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
     },
@@ -34,7 +34,7 @@ const themes = [
 export default function ThemeSelector({ onSelect }: ThemeSelectorProps) {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, textAlign: 'center', mb: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
                 Choose a Theme
             </Typography>
 
@@ -68,7 +68,7 @@ export default function ThemeSelector({ onSelect }: ThemeSelectorProps) {
                     <Typography sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
                         {theme.label}
                     </Typography>
-                    <Typography sx={{ fontSize: '0.85rem', opacity: 0.9 }}>
+                    <Typography sx={{ fontSize: '0.85rem', opacity: 0.9, textAlign: 'center', whiteSpace: 'pre-line' }}>
                         {theme.description}
                     </Typography>
                 </Box>

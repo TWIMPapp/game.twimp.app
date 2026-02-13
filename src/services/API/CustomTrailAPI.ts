@@ -1,5 +1,7 @@
+import axios from 'axios';
 import { APIService } from './API';
 import { Endpoint } from '@/typings/Endpoint.enum';
+import { BASE_URL } from '@/constants';
 
 export class CustomTrailAPI {
     // Unified game endpoints
@@ -60,5 +62,26 @@ export class CustomTrailAPI {
 
     static async restart(userId: string, trailId: string) {
         return this.nextAPI.post({ game_ref: `custom-trail-${trailId}`, user_id: userId, action: 'restart' }, {});
+    }
+
+    // ===== Creator Management =====
+
+    static async getTrailsByCreator(creatorId: string) {
+        const res = await axios.get(`${BASE_URL}/custom-trail/by-creator?creator_id=${encodeURIComponent(creatorId)}`);
+        return res.data?.body || res.data;
+    }
+
+    static async stopTrail(id: string, creatorId: string) {
+        const res = await axios.delete(`${BASE_URL}/custom-trail/${id}`, {
+            data: { creator_id: creatorId }
+        });
+        return res.data?.body || res.data;
+    }
+
+    static async startTrail(id: string, creatorId: string) {
+        const res = await axios.patch(`${BASE_URL}/custom-trail/${id}`, {
+            creator_id: creatorId
+        });
+        return res.data?.body || res.data;
     }
 }

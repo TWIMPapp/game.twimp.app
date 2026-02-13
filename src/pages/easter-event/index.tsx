@@ -23,6 +23,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { EasterEventAPI } from '@/services/API';
 import easterBunnyImg from '@/assets/images/easterbunny.png';
+import PageHeader from '@/components/PageHeader';
 
 interface EncodedCharacter {
     char: string;
@@ -347,13 +348,16 @@ export default function EasterEventHub() {
     if (loading) {
         return (
             <Box className="h-screen flex items-center justify-center bg-green-50">
-                <CircularProgress sx={{ color: '#22C55E' }} />
+                <CircularProgress sx={{ color: '#FF2E5B' }} />
             </Box>
         );
     }
 
     return (
         <Box className="min-h-screen bg-gradient-to-b from-green-50 to-yellow-50 pb-24">
+            {/* Logo */}
+            <PageHeader compact />
+
             {/* Header with Easter Bunny */}
             <Box
                 sx={{
@@ -767,19 +771,20 @@ export default function EasterEventHub() {
                         sx={{
                             borderRadius: '16px',
                             height: '56px',
-                            background: 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%)',
+                            background: 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%) !important',
+                            backgroundColor: 'transparent !important',
                             fontWeight: 'bold',
                             fontSize: '1.1rem',
                             textTransform: 'none',
                             boxShadow: '0 4px 14px rgba(34, 197, 94, 0.4)',
                             '&:hover': {
-                                background: 'linear-gradient(45deg, #16A34A 0%, #15803D 100%)'
+                                background: 'linear-gradient(45deg, #16A34A 0%, #15803D 100%) !important'
                             }
                         }}
                     >
                         <Box
                             component="img"
-                            src="/eggs/egg-gold.svg"
+                            src="/icons/egg-gold.svg"
                             alt=""
                             sx={{ width: 28, height: 28, mr: 1 }}
                         />
@@ -848,7 +853,8 @@ export default function EasterEventHub() {
                         disabled={puzzleSubmitting || !puzzleAnswer.trim()}
                         sx={{
                             borderRadius: '12px',
-                            background: 'linear-gradient(45deg, #9333EA 0%, #7C3AED 100%)'
+                            background: 'linear-gradient(45deg, #9333EA 0%, #7C3AED 100%) !important',
+                            backgroundColor: 'transparent !important'
                         }}
                     >
                         {puzzleSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Submit'}
@@ -892,7 +898,8 @@ export default function EasterEventHub() {
                                 onClick={handleNextScene}
                                 sx={{
                                     borderRadius: '12px',
-                                    background: 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%)'
+                                    background: 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%) !important',
+                                    backgroundColor: 'transparent !important'
                                 }}
                             >
                                 {currentScene < selectedChapter.scenes.length - 1 ? 'Next' : 'Close'}

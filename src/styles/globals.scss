@@ -4,9 +4,14 @@
 @import 'github-markdown-css/github-markdown-light.css';
 
 $twimp-pink: #FF2E5B;
-$twimp-light-pink: #FF6C88;
+$twimp-pink-light: #FF6C88;
+$twimp-pink-soft: #FFF0F3;
+$twimp-green: #2DB87A;
+$twimp-green-light: #A9D1C1;
 $twimp-teal: #A9D1C1;
-$twimp-background: radial-gradient(circle at top right, #c7e8da, #A9D1C1);
+$twimp-turquoise: #3BBFA0;
+$twimp-yellow: #FFD166;
+$twimp-bg: #F8F5F2;
 $twimp-card-radius: 20px;
 
 .leaflet-container {
@@ -36,7 +41,7 @@ $twimp-card-radius: 20px;
 }
 
 .MuiSpeedDialAction-fab {
-  background-color: $twimp-light-pink;
+  background-color: $twimp-pink-light;
   color: white;
 }
 
@@ -59,8 +64,7 @@ html {
   width: 100%;
   height: 100%;
   font-family: 'Noto Sans', 'Inter', sans-serif;
-  background: $twimp-background;
-  background-attachment: fixed;
+  background: $twimp-bg;
   color: #333;
 }
 

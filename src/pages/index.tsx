@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { BASE_URL } from '@/constants';
 import { Game } from '@/types';
-import { Box, Card, CardContent, CardMedia, Typography, Container, Grid, Button, ToggleButton, ToggleButtonGroup, CircularProgress } from '@mui/material';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import MapIcon from '@mui/icons-material/Map';
-import SearchIcon from '@mui/icons-material/Search';
-import TrailsMapView from '@/components/TrailsMapView';
+import { Box, Card, CardContent, CardMedia, Typography, Container, Grid, Button, CircularProgress } from '@mui/material';
+import { useAuth } from '@/contexts/AuthContext';
 import BottomNav from '@/components/BottomNav';
+import PageHeader from '@/components/PageHeader';
 import FeaturedCard from '@/components/FeaturedCard';
+import LoginRequiredModal from '@/components/LoginRequiredModal';
+import WelcomeModal from '@/components/WelcomeModal';
 
 interface CategorizedGames {
     featured: Game[];
@@ -22,9 +23,14 @@ export default function Home() {
     const [data, setData] = useState<CategorizedGames>({ featured: [], playAgain: [], nearYou: [], all: [] });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [view, setView] = useState<'list' | 'map'>('list');
-    const [searchQuery, setSearchQuery] = useState('');
     const router = useRouter();
+    const { isAuthenticated } = useAuth();
+    const { data: session, status } = useSession();
+
+    // Welcome modal state
+    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+    const [hasSeenWelcome, setHasSeenWelcome] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
 
     useEffect(() => {
         let userId = localStorage.getItem('twimp_user_id');
@@ -67,6 +73,20 @@ export default function Home() {
         }
 
     }, [router]);
+
+    // Show welcome modal for new users
+    useEffect(() => {
+        if (status === 'authenticated' && session?.user && !hasSeenWelcome) {
+            const welcomeShown = localStorage.getItem(`welcomed_${session.user.email}`);
+            if (!welcomeShown) {
+                setShowWelcomeModal(true);
+                localStorage.setItem(`welcomed_${session.user.email}`, 'true');
+                setHasSeenWelcome(true);
+            } else {
+                setHasSeenWelcome(true);
+            }
+        }
+    }, [status, session, hasSeenWelcome]);
 
     // Featured games come directly from backend
     const featuredGames = data.featured;
@@ -116,13 +136,28 @@ export default function Home() {
             .catch(() => setLoading(false));
     };
 
-    const filteredGames = searchQuery.length > 0
-        ? nonFeaturedGames.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()))
-        : nonFeaturedGames;
+    const handleCreateClick = () => {
+        if (!isAuthenticated) {
+            setShowLoginModal(true);
+            return;
+        }
+        // Go directly to custom trail creation
+        router.push('/custom-trail/create');
+    };
+
+    const handleWelcomeCreateNow = () => {
+        setShowWelcomeModal(false);
+        // Go directly to custom trail creation
+        router.push('/custom-trail/create');
+    };
+
+    const handleWelcomeBackHome = () => {
+        setShowWelcomeModal(false);
+    };
 
     if (loading && data.all.length === 0) {
         return (
-            <Box className="h-screen flex flex-col items-center justify-center bg-gray-50">
+            <Box className="h-screen flex flex-col items-center justify-center bg-twimp-bg">
                 <CircularProgress sx={{ color: '#FF2E5B' }} />
                 <Typography className="mt-4 font-medium text-gray-500">Loading Twimp Library...</Typography>
             </Box>
@@ -131,7 +166,7 @@ export default function Home() {
 
     if (error && data.all.length === 0) {
         return (
-            <Box className="h-screen flex flex-col items-center justify-center bg-gray-50 px-6">
+            <Box className="h-screen flex flex-col items-center justify-center bg-twimp-bg px-6">
                 <Typography variant="h5" className="font-extrabold text-[#FF2E5B] mb-4">twimp</Typography>
                 <Typography variant="h6" className="font-bold text-gray-700 mb-2 text-center">
                     We&apos;re setting things up!
@@ -143,12 +178,11 @@ export default function Home() {
                     variant="contained"
                     onClick={() => window.location.reload()}
                     sx={{
-                        backgroundColor: '#FF2E5B',
                         borderRadius: '16px',
                         px: 4,
                         py: 1.5,
                         fontWeight: 'bold',
-                        '&:hover': { backgroundColor: '#e6284f' }
+                        backgroundColor: '#FF2E5B !important',
                     }}
                 >
                     Try Again
@@ -158,129 +192,74 @@ export default function Home() {
     }
 
     return (
-        <div className="min-h-screen pb-8 bg-gray-50">
+        <div className="min-h-screen pb-8 bg-twimp-bg">
             <Head>
                 <title>Twimp - The World is my Playground</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
             </Head>
 
-            {/* Consistent Container for both views */}
-            <Container maxWidth="lg" className="pt-6 px-4 pb-24">
-                {/* Header & Search */}
-                <Box className="flex flex-col gap-4 mb-8">
-                    <Box className="flex justify-between items-center">
-                        <Typography variant="h5" className="font-extrabold text-[#FF2E5B] tracking-tight" sx={{ fontFamily: "'Noto Sans', sans-serif" }}>
-                            twimp
-                        </Typography>
-                        <ToggleButtonGroup
-                            value={view}
-                            exclusive
-                            onChange={(_, newView) => newView && setView(newView)}
-                            size="small"
-                            sx={{
-                                backgroundColor: 'white',
-                                borderRadius: '12px',
-                                '& .MuiToggleButton-root': { border: 'none', px: 2 }
-                            }}
-                        >
-                            <ToggleButton value="list">
-                                <ViewListIcon fontSize="small" />
-                            </ToggleButton>
-                            <ToggleButton value="map">
-                                <MapIcon fontSize="small" />
-                            </ToggleButton>
-                        </ToggleButtonGroup>
-                    </Box>
+            <PageHeader showCreate onCreateClick={handleCreateClick} />
 
-                    {view === 'list' && (
-                        <Box className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search trails..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full h-14 pl-5 pr-14 rounded-2xl bg-white shadow-sm border-none focus:ring-2 focus:ring-pink-500 text-lg transition-all"
-                                style={{ boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}
-                            />
-                            <Button
-                                className="w-11 h-11 min-w-0 rounded-xl bg-[#FF2E5B] text-white shadow-md p-0"
-                                sx={{
-                                    position: 'absolute',
-                                    right: '6px',
-                                    top: '6px',
-                                    backgroundColor: '#FF2E5B !important',
-                                    minWidth: '44px !important'
-                                }}
-                            >
-                                <SearchIcon />
-                            </Button>
-                        </Box>
+            <Container maxWidth="lg" className="px-4 pb-24 pt-4">
+
+                <Box>
+                    {featuredGames.length > 0 && (
+                        <>
+                            <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">Featured</Typography>
+                            {featuredGames.map(game => (
+                                <FeaturedCard
+                                    key={game.ref}
+                                    game={game}
+                                    onClick={() => handlePlay(game)}
+                                />
+                            ))}
+                        </>
+                    )}
+
+                    {nonFeaturedPlayAgain.length > 0 && (
+                        <>
+                            <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">Play again</Typography>
+                            <Grid container spacing={2} className="mb-8">
+                                {nonFeaturedPlayAgain.map((game) => (
+                                    <Grid item key={game.ref} xs={6}>
+                                        <TrailCard game={game} onPlay={handlePlay} isPending={isPending(game.ref)} />
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </>
+                    )}
+
+                    {(nonFeaturedNearYou.length > 0 || nonFeaturedGames.length > 0) && (
+                        <>
+                            <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">
+                                {nonFeaturedNearYou.length > 0 ? 'Not far from you' : 'Exploration'}
+                            </Typography>
+                            <Grid container spacing={3}>
+                                {(nonFeaturedNearYou.length > 0 ? nonFeaturedNearYou : nonFeaturedGames).map((game) => (
+                                    <Grid item key={game.ref} xs={12} sm={6}>
+                                        <TrailCard game={game} onPlay={handlePlay} fullWidth isPending={isPending(game.ref)} />
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </>
                     )}
                 </Box>
-
-                {view === 'list' ? (
-                    <Box>
-                        {searchQuery.length > 0 ? (
-                            <Box>
-                                <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">Results</Typography>
-                                <Grid container spacing={2}>
-                                    {filteredGames.map(game => (
-                                        <Grid item key={game.ref} xs={12} sm={6}>
-                                            <TrailCard game={game} onPlay={handlePlay} fullWidth isPending={isPending(game.ref)} />
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Box>
-                        ) : (
-                            <>
-                                {featuredGames.length > 0 && (
-                                    <>
-                                        <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">Featured</Typography>
-                                        {featuredGames.map(game => (
-                                            <FeaturedCard
-                                                key={game.ref}
-                                                game={game}
-                                                onClick={() => handlePlay(game)}
-                                            />
-                                        ))}
-                                    </>
-                                )}
-
-                                {nonFeaturedPlayAgain.length > 0 && (
-                                    <>
-                                        <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">Play again</Typography>
-                                        <Grid container spacing={2} className="mb-8">
-                                            {nonFeaturedPlayAgain.map((game) => (
-                                                <Grid item key={game.ref} xs={6}>
-                                                    <TrailCard game={game} onPlay={handlePlay} isPending={isPending(game.ref)} />
-                                                </Grid>
-                                            ))}
-                                        </Grid>
-                                    </>
-                                )}
-
-                                {(nonFeaturedNearYou.length > 0 || nonFeaturedGames.length > 0) && (
-                                    <>
-                                        <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">
-                                            {nonFeaturedNearYou.length > 0 ? 'Not far from you' : 'Exploration'}
-                                        </Typography>
-                                        <Grid container spacing={3}>
-                                            {(nonFeaturedNearYou.length > 0 ? nonFeaturedNearYou : nonFeaturedGames).map((game) => (
-                                                <Grid item key={game.ref} xs={12} sm={6}>
-                                                    <TrailCard game={game} onPlay={handlePlay} fullWidth isPending={isPending(game.ref)} />
-                                                </Grid>
-                                            ))}
-                                        </Grid>
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </Box>
-                ) : (
-                    <TrailsMapView games={nonFeaturedGames} onPlayGame={handlePlay} />
-                )}
             </Container>
-            <BottomNav />
+            <BottomNav onCreateClick={handleCreateClick} />
+
+            {/* Login Required Modal */}
+            <LoginRequiredModal
+                open={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
+                action="create"
+            />
+
+            {/* Welcome Modal for New Users */}
+            <WelcomeModal
+                open={showWelcomeModal}
+                onCreateNow={handleWelcomeCreateNow}
+                onBackHome={handleWelcomeBackHome}
+            />
         </div>
     );
 }
