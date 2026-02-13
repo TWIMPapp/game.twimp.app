@@ -65,8 +65,8 @@ export default function WelcomeModal({
             mb: 4,
           }}
         >
-          Now that you're signed up, you can create games that you can share with your friends.
-          Whether it's a Treasure Hunt for the kids party, an Easter Egg hunt for the family or a
+          Now that you&apos;re signed up, you can create games that you can share with your friends.
+          Whether it&apos;s a Treasure Hunt for the kids party, an Easter Egg hunt for the family or a
           romantic walk for a loved one, get creating!
         </Typography>
 
