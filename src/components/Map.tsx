@@ -1,4 +1,4 @@
-import { GoogleMap, LoadScript, MarkerF, InfoWindowF, OverlayViewF, CircleF } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, MarkerF, OverlayViewF, CircleF } from '@react-google-maps/api';
 import { useEffect, useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import MarkerIcon from '@/assets/icons/marker-icon.png';
 import { Marker } from '@/typings/Task';
@@ -135,7 +135,6 @@ const MapComponent = forwardRef<MapRef, {
 }, ref) {
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
-  const [markerInfoBox, setMarkerInfoBox] = useState<Marker>();
   const [viewportBounds, setViewportBounds] = useState<google.maps.LatLngBounds | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -336,7 +335,6 @@ const MapComponent = forwardRef<MapRef, {
                         scaledSize: new google.maps.Size(iconSize, iconSize),
                       }}
                       zIndex={1}
-                      onClick={designerMode ? undefined : () => setMarkerInfoBox(marker)}
                     />
                   );
                 })}
@@ -401,18 +399,6 @@ const MapComponent = forwardRef<MapRef, {
                 />
               ))}
 
-              {markerInfoBox && (
-                <InfoWindowF
-                  position={{ lat: markerInfoBox.lat, lng: markerInfoBox.lng }}
-                  options={{ pixelOffset: new google.maps.Size(0, -48) }}
-                  onCloseClick={() => setMarkerInfoBox(undefined)}
-                >
-                  <div style={{ color: 'black' }}>
-                    <h3 className="text-xl font-bold">{markerInfoBox.title}</h3>
-                    <p className="text-gray-500 pt-2 block">{markerInfoBox.subtitle}</p>
-                  </div>
-                </InfoWindowF>
-              )}
             </GoogleMap>
           </LoadScript>
 
