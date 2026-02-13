@@ -191,7 +191,7 @@ export default function CreateGameDialog({
             💡 Next Step
           </Typography>
           <Typography variant="caption" className="text-blue-700 block mt-1">
-            After creating your game, you'll design the walking trail and set collection points.
+            After creating your game, you&apos;ll design the walking trail and set collection points.
           </Typography>
         </Box>
       </DialogContent>
