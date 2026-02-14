@@ -16,6 +16,8 @@ import { CustomTrailAPI } from '@/services/API';
 import { Colour } from '@/typings/Colour.enum';
 import { Marker } from '@/typings/Task';
 import { getPinMarkerProps } from '@/config/pinIcons';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
+import { IconButton } from '@mui/material';
 
 const AWTY_INTERVAL = 5000;
 
@@ -68,6 +70,8 @@ export default function PlayCustomTrail() {
     const [activePinIndex, setActivePinIndex] = useState<number | undefined>(undefined);
     const [isCompetitive, setIsCompetitive] = useState(false);
     const [testMode, setTestMode] = useState(process.env.NODE_ENV !== 'production');
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [resetting, setResetting] = useState(false);
 
     const awtyRef = useRef<NodeJS.Timeout | null>(null);
     const awtyInFlight = useRef(false);
@@ -234,6 +238,22 @@ export default function PlayCustomTrail() {
         setGameState('playing');
     };
 
+    const handleResetLocation = async () => {
+        setResetting(true);
+        try {
+            await CustomTrailAPI.restart(userId, trailId);
+            setShowResetConfirm(false);
+            setSession(null);
+            setTrailPins([]);
+            setHint(null);
+            // Re-start from current location
+            handleStart();
+        } catch {
+            setShowResetConfirm(false);
+        }
+        setResetting(false);
+    };
+
     // Build map markers from trail pins
     const markers: Marker[] = trailPins
         .filter((pin) => !pin.collected || pin.collectedByYou) // In competitive, hide pins others collected
@@ -334,13 +354,23 @@ export default function PlayCustomTrail() {
                         <Typography sx={{ fontWeight: 700 }}>
                             {trailInfo?.name || themeLabel}
                         </Typography>
-                        <Typography sx={{ fontWeight: 600, color: '#FF2E5B' }}>
-                            {session
-                                ? isCompetitive
-                                    ? `You: ${session.collectedPins.length} | ${(session as any).remainingPins ?? '?'} left`
-                                    : `${session.collectedPins.length}/${session.totalPins}`
-                                : ''}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography sx={{ fontWeight: 600, color: '#FF2E5B' }}>
+                                {session
+                                    ? isCompetitive
+                                        ? `You: ${session.collectedPins.length} | ${(session as any).remainingPins ?? '?'} left`
+                                        : `${session.collectedPins.length}/${session.totalPins}`
+                                    : ''}
+                            </Typography>
+                            <IconButton
+                                size="small"
+                                onClick={() => setShowResetConfirm(true)}
+                                title="Reset to current location"
+                                sx={{ color: '#9ca3af' }}
+                            >
+                                <MyLocationIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
                     </Box>
 
                     {/* Hint */}
@@ -461,6 +491,44 @@ export default function PlayCustomTrail() {
                         }}
                     >
                         Next!
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Reset Location Confirmation */}
+            <Dialog
+                open={showResetConfirm}
+                onClose={() => setShowResetConfirm(false)}
+                PaperProps={{ sx: { borderRadius: '24px', p: 1 } }}
+            >
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Reset Location?
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        This will restart the trail and place your pins around your current location. Any progress will be lost.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button
+                        onClick={() => setShowResetConfirm(false)}
+                        sx={{ textTransform: 'none', color: '#6b7280' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleResetLocation}
+                        disabled={resetting}
+                        sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            px: 3,
+                            backgroundColor: '#FF2E5B !important',
+                        }}
+                    >
+                        {resetting ? <CircularProgress size={20} sx={{ color: 'white' }} /> : 'Reset'}
                     </Button>
                 </DialogActions>
             </Dialog>

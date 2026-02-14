@@ -5,6 +5,7 @@ import {
     DialogActions, TextField, CircularProgress, Chip, IconButton
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { DinoHuntAPI } from '@/services/API/DinoHuntAPI';
 import Map, { MapRef } from '@/components/Map';
 import DinoStatsChart from '@/components/dino-hunt/DinoStatsChart';
@@ -45,6 +46,7 @@ export default function DinoHuntMap() {
     const mapRef = useRef<MapRef>(null);
     const userLocationRef = useRef<{ lat: number; lng: number } | null>(null);
 
+    const [testMode] = useState(process.env.NODE_ENV !== 'production');
     const [loading, setLoading] = useState(true);
     const [session, setSession] = useState<any>(null);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -52,12 +54,15 @@ export default function DinoHuntMap() {
     // Dialog states
     const [arrivedPopup, setArrivedPopup] = useState<any>(null);     // egg arrival data
     const [questionPopup, setQuestionPopup] = useState<any>(null);   // question + options
+    const [answerFeedback, setAnswerFeedback] = useState<any>(null); // correct/close/wrong + pending dino
     const [revealPopup, setRevealPopup] = useState<any>(null);       // dinosaur reveal
     const [namingPopup, setNamingPopup] = useState(false);           // nickname input
     const [nickname, setNickname] = useState('');
     const [goldenEggArrived, setGoldenEggArrived] = useState(false); // golden egg arrival
     const [storyLoading, setStoryLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [resetting, setResetting] = useState(false);
 
     // Current dino data (from answer, before naming)
     const [pendingDino, setPendingDino] = useState<any>(null);
@@ -128,7 +133,7 @@ export default function DinoHuntMap() {
         if (!userId || !session) return;
 
         // Don't poll during dialogs
-        const isInDialog = arrivedPopup || questionPopup || revealPopup || namingPopup || goldenEggArrived || storyLoading;
+        const isInDialog = arrivedPopup || questionPopup || answerFeedback || revealPopup || namingPopup || goldenEggArrived || storyLoading;
 
         const checkAWTY = async () => {
             if (isInDialog) return;
@@ -152,7 +157,7 @@ export default function DinoHuntMap() {
         const interval = setInterval(checkAWTY, 5000);
         checkAWTY();
         return () => clearInterval(interval);
-    }, [session, arrivedPopup, questionPopup, revealPopup, namingPopup, goldenEggArrived, storyLoading]);
+    }, [session, arrivedPopup, questionPopup, answerFeedback, revealPopup, namingPopup, goldenEggArrived, storyLoading]);
 
     // Build map markers from eggs
     const getMarkers = useCallback((): Marker[] => {
@@ -160,13 +165,14 @@ export default function DinoHuntMap() {
         const markers: Marker[] = [];
 
         for (const egg of session.eggs) {
+            if (egg.collected) continue; // Hide collected eggs
             const catInfo = CATEGORY_INFO[egg.categoryId] || { name: '?', emoji: '🥚', eggColor: '#888' };
             markers.push({
                 lat: egg.lat,
                 lng: egg.lng,
-                title: egg.collected ? '✓' : catInfo.emoji,
-                subtitle: egg.collected ? 'Collected' : catInfo.name,
-                colour: egg.collected ? Colour.Green : (EGG_COLOR_MAP[catInfo.eggColor] || Colour.Orange),
+                title: catInfo.emoji,
+                subtitle: catInfo.name,
+                colour: EGG_COLOR_MAP[catInfo.eggColor] || Colour.Orange,
             });
         }
 
@@ -192,7 +198,7 @@ export default function DinoHuntMap() {
         setArrivedPopup(null);
     };
 
-    // Handle answer selection
+    // Handle answer selection — show feedback first, then unlock reveal
     const handleAnswer = async (answerIndex: number) => {
         if (submitting) return;
         setSubmitting(true);
@@ -205,7 +211,19 @@ export default function DinoHuntMap() {
 
             if (result.ok) {
                 setPendingDino(result.dinosaur);
-                setRevealPopup({
+
+                const rarity = result.dinosaur?.rarity;
+                const feedbackText = rarity === 'epic'
+                    ? 'You were right!'
+                    : rarity === 'rare'
+                        ? 'You were close!'
+                        : 'Uhhh.... no! :)';
+                const feedbackEmoji = rarity === 'epic' ? '🎯' : rarity === 'rare' ? '🤏' : '😅';
+
+                setAnswerFeedback({
+                    text: feedbackText,
+                    emoji: feedbackEmoji,
+                    rarity,
                     dinosaur: result.dinosaur,
                     revealMessage: result.revealMessage,
                 });
@@ -215,6 +233,16 @@ export default function DinoHuntMap() {
             console.error('Answer failed:', err);
         }
         setSubmitting(false);
+    };
+
+    // Handle "Unlock Your Dinosaur" from feedback dialog
+    const handleUnlockDino = () => {
+        if (!answerFeedback) return;
+        setRevealPopup({
+            dinosaur: answerFeedback.dinosaur,
+            revealMessage: answerFeedback.revealMessage,
+        });
+        setAnswerFeedback(null);
     };
 
     // Handle opening naming dialog from reveal
@@ -268,6 +296,22 @@ export default function DinoHuntMap() {
         setStoryLoading(false);
     };
 
+    // Handle reset location — restart game from current position
+    const handleResetLocation = async () => {
+        setResetting(true);
+        try {
+            const userId = localStorage.getItem('twimp_user_id')!;
+            await DinoHuntAPI.restart(userId);
+            setShowResetConfirm(false);
+            // Redirect to index — setup will re-start from current location
+            router.replace('/dino-hunt');
+        } catch (err) {
+            console.error('Reset failed:', err);
+            setShowResetConfirm(false);
+        }
+        setResetting(false);
+    };
+
     if (loading) {
         return (
             <Box className={`${styles.page} ${styles.loadingContainer}`}>
@@ -314,9 +358,18 @@ export default function DinoHuntMap() {
                         }}
                     />
                 )}
-                <IconButton onClick={() => router.push('/dino-hunt')} sx={{ color: 'white' }}>
-                    <CloseIcon />
-                </IconButton>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <IconButton
+                        onClick={() => setShowResetConfirm(true)}
+                        title="Reset to current location"
+                        sx={{ color: 'rgba(255,255,255,0.7)' }}
+                    >
+                        <MyLocationIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton onClick={() => router.push('/dino-hunt')} sx={{ color: 'white' }}>
+                        <CloseIcon />
+                    </IconButton>
+                </Box>
             </Box>
 
             {/* Map */}
@@ -324,8 +377,14 @@ export default function DinoHuntMap() {
                 ref={mapRef}
                 taskMarkers={markers}
                 userLocation={userLocation}
+                testMode={testMode}
                 zoom={17}
-                onPlayerMove={() => {}}
+                onPlayerMove={(lat, lng) => {
+                    if (testMode) {
+                        setUserLocation({ lat, lng });
+                        userLocationRef.current = { lat, lng };
+                    }
+                }}
             />
 
             {/* ===== ARRIVAL POPUP ===== */}
@@ -385,6 +444,40 @@ export default function DinoHuntMap() {
                             </Button>
                         ))}
                     </Box>
+                </DialogContent>
+            </Dialog>
+
+            {/* ===== ANSWER FEEDBACK POPUP ===== */}
+            <Dialog
+                open={!!answerFeedback}
+                onClose={() => {}}
+                PaperProps={{ sx: { borderRadius: '24px', p: 1, maxWidth: 360 } }}
+            >
+                <DialogContent sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography sx={{ fontSize: '4rem', mb: 2 }}>
+                        {answerFeedback?.emoji}
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
+                        {answerFeedback?.text}
+                    </Typography>
+                    <Button
+                        variant="contained"
+                        onClick={handleUnlockDino}
+                        sx={{
+                            backgroundColor: answerFeedback?.rarity === 'epic'
+                                ? '#9333EA !important'
+                                : answerFeedback?.rarity === 'rare'
+                                    ? '#3B82F6 !important'
+                                    : '#22C55E !important',
+                            borderRadius: '16px',
+                            px: 4, py: 1.5,
+                            fontWeight: 'bold',
+                            fontSize: '1rem',
+                            color: 'white',
+                        }}
+                    >
+                        Unlock Your Dinosaur!
+                    </Button>
                 </DialogContent>
             </Dialog>
 
@@ -508,6 +601,44 @@ export default function DinoHuntMap() {
                         }}
                     >
                         Begin Final Battle!
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* ===== RESET LOCATION CONFIRMATION ===== */}
+            <Dialog
+                open={showResetConfirm}
+                onClose={() => setShowResetConfirm(false)}
+                PaperProps={{ sx: { borderRadius: '24px', p: 1 } }}
+            >
+                <DialogTitle sx={{ fontWeight: 'bold' }}>
+                    Reset Location?
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        This will restart the game and spawn new eggs around your current location. All progress will be lost.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button
+                        onClick={() => setShowResetConfirm(false)}
+                        sx={{ textTransform: 'none', color: '#6b7280' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleResetLocation}
+                        disabled={resetting}
+                        sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            px: 3,
+                            backgroundColor: '#047857 !important',
+                        }}
+                    >
+                        {resetting ? <CircularProgress size={20} sx={{ color: 'white' }} /> : 'Reset'}
                     </Button>
                 </DialogActions>
             </Dialog>
