@@ -1,0 +1,197 @@
+/* Dino Egg Hunt — Prehistoric Theme */
+
+.page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%);
+    color: white;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+}
+
+.headerTitle {
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progressChip {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+
+/* Setup page */
+.setupContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    min-height: 100vh;
+}
+
+.dinoPickerGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-width: 360px;
+    width: 100%;
+    margin: 16px 0;
+}
+
+.dinoPickerCard {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dinoPickerCard:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.03);
+}
+
+.dinoPickerCardSelected {
+    border-color: #fbbf24;
+    background: rgba(251, 191, 36, 0.2);
+}
+
+.dinoPickerEmoji {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.dinoPickerName {
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+/* Story intro */
+.storyBox {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 480px;
+    width: 100%;
+    margin: 16px 0;
+    white-space: pre-line;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Victory */
+.victoryContainer {
+    padding: 24px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.victoryTitle {
+    font-size: 2rem;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.battleStoryBox {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
+    margin: 16px 0;
+    white-space: pre-line;
+    line-height: 1.6;
+    font-size: 0.9rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Map overlay elements */
+.mapProgressBar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: linear-gradient(180deg, rgba(6, 78, 59, 0.95) 0%, rgba(6, 78, 59, 0) 100%);
+}
+
+.eggCounter {
+    font-weight: bold;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Egg marker colors */
+.eggMarkerCollected {
+    opacity: 0.4;
+    filter: grayscale(0.8);
+}
+
+/* Dialog overrides */
+.dinoDialog {
+    border-radius: 24px !important;
+}
+
+/* Question buttons */
+.answerButton {
+    text-align: left;
+    padding: 12px 16px !important;
+    border-radius: 12px !important;
+    margin-bottom: 8px !important;
+    border: 2px solid #e5e7eb !important;
+    text-transform: none !important;
+    font-size: 0.95rem !important;
+}
+
+.answerButton:hover {
+    border-color: #047857 !important;
+    background: #f0fdf4 !important;
+}
+
+/* Golden egg pulse */
+@keyframes goldenPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+.goldenEggPulse {
+    animation: goldenPulse 1.5s ease-in-out infinite;
+}
+
+/* Loading state */
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 16px;
+}
