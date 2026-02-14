@@ -61,6 +61,8 @@ const getColourEnum = (theme: string): Colour => {
     return THEME_TO_COLOUR[theme] || Colour.Pink;
 };
 
+const EASTER_EVENT_LIVE = false; // Set to true when ready to launch
+
 export default function EasterEventMap() {
     const [session, setSession] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -171,6 +173,11 @@ export default function EasterEventMap() {
 
     // Initial load
     useEffect(() => {
+        if (!EASTER_EVENT_LIVE) {
+            router.replace('/easter-event/coming-soon');
+            return;
+        }
+
         let visitorId = localStorage.getItem('twimp_user_id');
         if (!visitorId) {
             visitorId = crypto.randomUUID();

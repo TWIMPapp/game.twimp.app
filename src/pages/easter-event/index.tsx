@@ -161,6 +161,8 @@ function ClueDisplay({ clue }: { clue: EncodedClue }) {
     );
 }
 
+const EASTER_EVENT_LIVE = false; // Set to true when ready to launch
+
 export default function EasterEventHub() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
@@ -223,6 +225,11 @@ export default function EasterEventHub() {
     }, [gameData?.puzzleStatus, dataFetchedAt]);
 
     useEffect(() => {
+        if (!EASTER_EVENT_LIVE) {
+            router.replace('/easter-event/coming-soon');
+            return;
+        }
+
         let userId = localStorage.getItem('twimp_user_id');
         if (!userId) {
             userId = crypto.randomUUID();
