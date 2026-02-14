@@ -262,14 +262,6 @@ const MapComponent = forwardRef<MapRef, {
             : MarkerColourMap[Colour.Red]
     })) ?? [];
 
-  const playerMarker: Marker | null = userLocation ? {
-    lat: userLocation.lat,
-    lng: userLocation.lng,
-    title: 'You are here',
-    subtitle: testMode ? 'Drag me to test!' : 'Run about and it will update',
-    image_url: MarkerIcon.src
-  } : null;
-
   return (
     <>
       {isGoogleMapsAPILoaded || center?.lat !== 0 ? (
@@ -331,14 +323,30 @@ const MapComponent = forwardRef<MapRef, {
                   );
                 })}
 
-              {/* Always show blue dot for user location */}
+              {/* User location: draggable marker in test mode, blue dot otherwise */}
               {isGoogleMapsAPILoaded && userLocation && (
-                <OverlayViewF
-                  position={{ lat: userLocation.lat, lng: userLocation.lng }}
-                  mapPaneName="overlayMouseTarget"
-                >
-                  <UserLocationDot />
-                </OverlayViewF>
+                testMode ? (
+                  <MarkerF
+                    position={{ lat: userLocation.lat, lng: userLocation.lng }}
+                    draggable={true}
+                    onDragEnd={(e) => {
+                      if (e.latLng) onPlayerMove(e.latLng.lat(), e.latLng.lng());
+                    }}
+                    icon={{
+                      url: MarkerIcon.src,
+                      scaledSize: new google.maps.Size(48, 48),
+                    }}
+                    zIndex={10}
+                    title="Drag me to test!"
+                  />
+                ) : (
+                  <OverlayViewF
+                    position={{ lat: userLocation.lat, lng: userLocation.lng }}
+                    mapPaneName="overlayMouseTarget"
+                  >
+                    <UserLocationDot />
+                  </OverlayViewF>
+                )
               )}
 
 

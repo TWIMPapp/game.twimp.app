@@ -173,7 +173,7 @@ export default function ValentineLanding() {
                     label="Their name"
                     value={recipientName}
                     onChange={(e) => setRecipientName(e.target.value)}
-                    placeholder="e.g. Sarah"
+                    placeholder="e.g. Melissa"
                     size="small"
                     sx={{
                         '& .MuiOutlinedInput-root': {

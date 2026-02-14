@@ -70,6 +70,7 @@ export default function PlayCustomTrail() {
     const [testMode, setTestMode] = useState(process.env.NODE_ENV !== 'production');
 
     const awtyRef = useRef<NodeJS.Timeout | null>(null);
+    const awtyInFlight = useRef(false);
     const mapRef = useRef<MapRef>(null);
 
     // Fetch trail info on mount
@@ -108,16 +109,26 @@ export default function PlayCustomTrail() {
         return () => navigator.geolocation.clearWatch(watchId);
     }, [gameState, testMode]);
 
-    // AWTY polling
+    // AWTY polling — uses a lock to prevent overlapping calls from racing
+    const gameStateRef = useRef(gameState);
+    gameStateRef.current = gameState;
+
     const pollAWTY = useCallback(async () => {
-        if (!userLocation || !trailId || gameState !== 'playing') return;
+        if (!userLocation || !trailId || gameStateRef.current !== 'playing') return;
+        if (awtyInFlight.current) return; // prevent overlapping calls
+        awtyInFlight.current = true;
 
         try {
             const result: any = await CustomTrailAPI.awty(userId, trailId, userLocation.lat, userLocation.lng);
 
+            // After the await, check current state — not the stale closure value
+            if (gameStateRef.current !== 'playing') return;
             if (!result.ok) return;
 
             if (result.completed) {
+                if (result.successMessage) setSuccessMessage(result.successMessage);
+                if (result.session) setSession(result.session);
+                if (result.trail?.pins) setTrailPins(result.trail.pins);
                 setGameState('completed');
                 return;
             }
@@ -143,18 +154,26 @@ export default function PlayCustomTrail() {
             } else {
                 setHint(result.hint || null);
             }
-        } catch { /* ignore polling errors */ }
-    }, [userLocation, trailId, userId, gameState]);
+        } catch { /* ignore polling errors */ } finally {
+            awtyInFlight.current = false;
+        }
+    }, [userLocation, trailId, userId]);
+
+    // Store pollAWTY in a ref so the interval always calls the latest version
+    const pollAWTYRef = useRef(pollAWTY);
+    pollAWTYRef.current = pollAWTY;
 
     useEffect(() => {
         if (gameState !== 'playing') {
             if (awtyRef.current) clearInterval(awtyRef.current);
             return;
         }
-        awtyRef.current = setInterval(pollAWTY, AWTY_INTERVAL);
-        pollAWTY(); // immediate first poll
+        // Use ref-based callback so the interval doesn't need to be recreated on every GPS update
+        const poll = () => pollAWTYRef.current();
+        awtyRef.current = setInterval(poll, AWTY_INTERVAL);
+        poll(); // immediate first poll
         return () => { if (awtyRef.current) clearInterval(awtyRef.current); };
-    }, [gameState, pollAWTY]);
+    }, [gameState]);
 
     const handleStart = async () => {
         if (!trailId) return;
