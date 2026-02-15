@@ -10,6 +10,7 @@ import { DinoHuntAPI } from '@/services/API/DinoHuntAPI';
 import Map, { MapRef } from '@/components/Map';
 import DinoStatsChart from '@/components/dino-hunt/DinoStatsChart';
 import RarityBadge from '@/components/dino-hunt/RarityBadge';
+import ReportHazardDialog from '@/components/ReportHazardDialog';
 import { Colour } from '@/typings/Colour.enum';
 import { Marker } from '@/typings/Task';
 import styles from '@/styles/dino-hunt.module.css';
@@ -63,6 +64,7 @@ export default function DinoHuntMap() {
     const [submitting, setSubmitting] = useState(false);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [resetting, setResetting] = useState(false);
+    const [hazardEggIndex, setHazardEggIndex] = useState<number | null>(null);
 
     // Current dino data (from answer, before naming)
     const [pendingDino, setPendingDino] = useState<any>(null);
@@ -164,7 +166,8 @@ export default function DinoHuntMap() {
         if (!session?.eggs) return [];
         const markers: Marker[] = [];
 
-        for (const egg of session.eggs) {
+        for (let i = 0; i < session.eggs.length; i++) {
+            const egg = session.eggs[i];
             if (egg.collected) continue; // Hide collected eggs
             const catInfo = CATEGORY_INFO[egg.categoryId] || { name: '?', emoji: '🥚', eggColor: '#888' };
             markers.push({
@@ -173,6 +176,7 @@ export default function DinoHuntMap() {
                 title: catInfo.emoji,
                 subtitle: catInfo.name,
                 colour: EGG_COLOR_MAP[catInfo.eggColor] || Colour.Orange,
+                pinIndex: i,
             });
         }
 
@@ -312,6 +316,27 @@ export default function DinoHuntMap() {
         setResetting(false);
     };
 
+    // Handle marker click — open hazard report dialog for uncollected eggs
+    const handleMarkerClick = (index: number, marker: Marker) => {
+        if (session?.phase !== 'hunting') return;
+        if (marker.pinIndex === undefined) return;
+        setHazardEggIndex(marker.pinIndex);
+    };
+
+    // Handle hazard report submission
+    const handleReportHazard = async (category: string) => {
+        if (hazardEggIndex === null) return;
+        const userId = localStorage.getItem('twimp_user_id');
+        const loc = userLocationRef.current;
+        if (!userId || !loc) return;
+
+        const result: any = await DinoHuntAPI.reportHazard(userId, hazardEggIndex, category, loc.lat, loc.lng);
+        if (result.ok !== false && result.session) {
+            setSession(result.session);
+        }
+        setHazardEggIndex(null);
+    };
+
     if (loading) {
         return (
             <Box className={`${styles.page} ${styles.loadingContainer}`}>
@@ -385,6 +410,7 @@ export default function DinoHuntMap() {
                         userLocationRef.current = { lat, lng };
                     }
                 }}
+                onMarkerClick={handleMarkerClick}
             />
 
             {/* ===== ARRIVAL POPUP ===== */}
@@ -642,6 +668,13 @@ export default function DinoHuntMap() {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* ===== REPORT HAZARD ===== */}
+            <ReportHazardDialog
+                open={hazardEggIndex !== null}
+                onClose={() => setHazardEggIndex(null)}
+                onReport={handleReportHazard}
+            />
         </Box>
     );
 }

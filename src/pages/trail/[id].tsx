@@ -16,6 +16,7 @@ import { CustomTrailAPI } from '@/services/API';
 import { Colour } from '@/typings/Colour.enum';
 import { Marker } from '@/typings/Task';
 import { getPinMarkerProps } from '@/config/pinIcons';
+import ReportHazardDialog from '@/components/ReportHazardDialog';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { IconButton } from '@mui/material';
 
@@ -73,6 +74,7 @@ export default function PlayCustomTrail() {
     const [testMode, setTestMode] = useState(process.env.NODE_ENV !== 'production');
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [resetting, setResetting] = useState(false);
+    const [hazardPinIndex, setHazardPinIndex] = useState<number | null>(null);
 
     const awtyRef = useRef<NodeJS.Timeout | null>(null);
     const awtyInFlight = useRef(false);
@@ -255,6 +257,29 @@ export default function PlayCustomTrail() {
         setResetting(false);
     };
 
+    // Handle marker click — open hazard report for uncollected pins in random mode only
+    const handleMarkerClick = (_index: number, marker: Marker) => {
+        if (trailInfo?.mode !== 'random') return;
+        if (marker.pinIndex === undefined) return;
+        const pin = trailPins.find(p => p.order === marker.pinIndex);
+        if (!pin || pin.collected) return;
+        setHazardPinIndex(marker.pinIndex);
+    };
+
+    // Handle hazard report submission
+    const handleReportHazard = async (category: string) => {
+        if (hazardPinIndex === null || !userLocation) return;
+
+        const result: any = await CustomTrailAPI.reportHazard(
+            userId, trailId, hazardPinIndex, category, userLocation.lat, userLocation.lng
+        );
+        if (result.ok !== false) {
+            if (result.session) setSession(result.session);
+            if (result.trail?.pins) setTrailPins(result.trail.pins);
+        }
+        setHazardPinIndex(null);
+    };
+
     // Build map markers from trail pins
     const markers: Marker[] = trailPins
         .filter((pin) => !pin.collected || pin.collectedByYou) // In competitive, hide pins others collected
@@ -266,6 +291,7 @@ export default function PlayCustomTrail() {
                 ? (pin.collectedByYou ? 'You found this!' : 'Taken')
                 : 'Find me!',
             colour: pin.collected ? Colour.Green : Colour.Red,
+            pinIndex: pin.order,
             ...(!pin.collected && pin.icon ? getPinMarkerProps(pin.icon) : {})
         }));
 
@@ -409,6 +435,7 @@ export default function PlayCustomTrail() {
                             }}
                             // Custom trails are always sequential - only show indicator for current target pin
                             targetMarkerIndex={currentTargetMarkerIndex}
+                            onMarkerClick={handleMarkerClick}
                         />
                     </Box>
                 </Box>
@@ -535,6 +562,13 @@ export default function PlayCustomTrail() {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Report Hazard */}
+            <ReportHazardDialog
+                open={hazardPinIndex !== null}
+                onClose={() => setHazardPinIndex(null)}
+                onReport={handleReportHazard}
+            />
 
             {/* Completed */}
             {gameState === 'completed' && (

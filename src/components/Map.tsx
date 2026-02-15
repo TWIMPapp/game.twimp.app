@@ -107,6 +107,7 @@ const MapComponent = forwardRef<MapRef, {
   targetMarkerIndex?: number;
   spawnRadiusColor?: string;
   startingPointLocation?: { lat: number; lng: number } | null;
+  onMarkerClick?: (index: number, marker: Marker) => void;
 }>(function MapComponent({
   taskMarkers,
   userLocation,
@@ -119,7 +120,8 @@ const MapComponent = forwardRef<MapRef, {
   designerMode = false,
   targetMarkerIndex,
   spawnRadiusColor = '#ffffff',
-  startingPointLocation = null
+  startingPointLocation = null,
+  onMarkerClick
 }, ref) {
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
@@ -327,6 +329,7 @@ const MapComponent = forwardRef<MapRef, {
                         scaledSize: new google.maps.Size(iconSize, iconSize),
                       }}
                       zIndex={1}
+                      onClick={() => onMarkerClick?.(index, marker)}
                     />
                   );
                 })}

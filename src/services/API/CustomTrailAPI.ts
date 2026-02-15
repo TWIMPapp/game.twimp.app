@@ -60,6 +60,13 @@ export class CustomTrailAPI {
         }, {});
     }
 
+    static async reportHazard(userId: string, trailId: string, pinIndex: number, category: string, lat: number, lng: number) {
+        return this.nextAPI.post({
+            game_ref: `custom-trail-${trailId}`, user_id: userId,
+            action: 'report-hazard', pin_index: pinIndex, hazard_category: category, lat, lng
+        }, {});
+    }
+
     static async restart(userId: string, trailId: string) {
         return this.nextAPI.post({ game_ref: `custom-trail-${trailId}`, user_id: userId, action: 'restart' }, {});
     }

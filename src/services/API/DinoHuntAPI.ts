@@ -42,6 +42,13 @@ export class DinoHuntAPI {
         }, {});
     }
 
+    static async reportHazard(userId: string, eggIndex: number, category: string, lat: number, lng: number) {
+        return this.nextAPI.post({
+            game_ref: 'dino-hunt', user_id: userId,
+            action: 'report-hazard', egg_index: eggIndex, hazard_category: category, lat, lng
+        }, {});
+    }
+
     static async restart(userId: string) {
         return this.nextAPI.post({
             game_ref: 'dino-hunt', user_id: userId,

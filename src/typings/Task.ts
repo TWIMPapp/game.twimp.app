@@ -45,6 +45,7 @@ export interface Marker {
   emoji?: string;
   colour?: Colour;
   status?: Status;
+  pinIndex?: number;
 }
 
 export interface Character {
