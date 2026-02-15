@@ -31,6 +31,7 @@ interface TrailInfo {
     pinCount: number;
     competitive: boolean;
     playCount: number;
+    mode?: 'random' | 'custom';
 }
 
 interface PlaySession {
@@ -362,14 +363,16 @@ export default function PlayCustomTrail() {
                                         : `${session.collectedPins.length}/${session.totalPins}`
                                     : ''}
                             </Typography>
-                            <IconButton
-                                size="small"
-                                onClick={() => setShowResetConfirm(true)}
-                                title="Reset to current location"
-                                sx={{ color: '#9ca3af' }}
-                            >
-                                <MyLocationIcon fontSize="small" />
-                            </IconButton>
+                            {trailInfo?.mode === 'random' && (
+                                <IconButton
+                                    size="small"
+                                    onClick={() => setShowResetConfirm(true)}
+                                    title="Reset to current location"
+                                    sx={{ color: '#9ca3af' }}
+                                >
+                                    <MyLocationIcon fontSize="small" />
+                                </IconButton>
+                            )}
                         </Box>
                     </Box>
 
