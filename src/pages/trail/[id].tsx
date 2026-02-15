@@ -366,7 +366,7 @@ export default function PlayCustomTrail() {
                             {trailInfo?.mode === 'random' && (
                                 <IconButton
                                     size="small"
-                                    onClick={() => session?.collectedPins?.length > 0 ? setShowResetConfirm(true) : handleResetLocation()}
+                                    onClick={() => (session?.collectedPins?.length ?? 0) > 0 ? setShowResetConfirm(true) : handleResetLocation()}
                                     title="Reset to current location"
                                     sx={{ color: '#9ca3af' }}
                                 >

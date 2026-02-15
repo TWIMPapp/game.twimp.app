@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next lint && next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
     "lint": "next lint",
     "deploy": "next build && next export && aws s3 sync out/ s3://game.twimp.app --delete",
     "storybook": "storybook dev -p 6006",
