@@ -129,8 +129,8 @@ const MapComponent = forwardRef<MapRef, {
   // Long-press detection for trail designer
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
-  const LONG_PRESS_MS = 500;
-  const MOVE_THRESHOLD = 10; // pixels
+  const LONG_PRESS_MS = 700;
+  const MOVE_THRESHOLD = 20; // pixels
 
   // Expose map control methods via ref for tutorial
   useImperativeHandle(ref, () => ({
@@ -193,6 +193,7 @@ const MapComponent = forwardRef<MapRef, {
   // Long-press handlers for trail designer
   const handleMapTouchStart = useCallback((e: React.TouchEvent) => {
     if (!designerMode || !onLongPress) return;
+    if (e.touches.length > 1) return; // Ignore multi-touch (pinch/zoom)
 
     touchStartPos.current = {
       x: e.touches[0].clientX,
@@ -231,6 +232,13 @@ const MapComponent = forwardRef<MapRef, {
 
   const handleMapTouchMove = useCallback((e: React.TouchEvent) => {
     if (!touchStartPos.current || !longPressTimer.current) return;
+
+    // Cancel if second finger added (pinch/zoom gesture)
+    if (e.touches.length > 1) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+      return;
+    }
 
     const dx = e.touches[0].clientX - touchStartPos.current.x;
     const dy = e.touches[0].clientY - touchStartPos.current.y;
