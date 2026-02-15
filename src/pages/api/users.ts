@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { email, name, image, provider, proverId } = req.body;
+    const { email, name, image, provider, proverId, twimp_user_id } = req.body;
 
     if (!email || !provider) {
       return res.status(400).json({ error: 'Email and provider are required' });
@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         avatar_url: image,
         provider,
         provider_id: proverId,
+        ...(twimp_user_id && { twimp_user_id }),
       }),
     });
 
