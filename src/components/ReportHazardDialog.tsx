@@ -46,11 +46,11 @@ export default function ReportHazardDialog({ open, onClose, onReport }: ReportHa
             {step === 'confirm' && (
                 <>
                     <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>
-                        Can't reach this?
+                        Can&apos;t reach this?
                     </DialogTitle>
                     <DialogContent sx={{ textAlign: 'center' }}>
                         <Typography sx={{ color: '#6b7280' }}>
-                            If this location is unreachable or unsafe, we'll move it somewhere new.
+                            If this location is unreachable or unsafe, we&apos;ll move it somewhere new.
                         </Typography>
                     </DialogContent>
                     <DialogActions sx={{ justifyContent: 'center', pb: 2, gap: 1 }}>
@@ -80,7 +80,7 @@ export default function ReportHazardDialog({ open, onClose, onReport }: ReportHa
             {step === 'categorise' && (
                 <>
                     <DialogTitle sx={{ fontWeight: 700, textAlign: 'center' }}>
-                        Why can't you get there?
+                        Why can&apos;t you get there?
                     </DialogTitle>
                     <DialogContent>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
