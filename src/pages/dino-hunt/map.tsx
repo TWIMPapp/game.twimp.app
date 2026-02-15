@@ -360,7 +360,7 @@ export default function DinoHuntMap() {
                 )}
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <IconButton
-                        onClick={() => setShowResetConfirm(true)}
+                        onClick={() => collectedCount > 0 ? setShowResetConfirm(true) : handleResetLocation()}
                         title="Reset to current location"
                         sx={{ color: 'rgba(255,255,255,0.7)' }}
                     >
