@@ -56,7 +56,18 @@ export default function PlayCustomTrail() {
     const router = useRouter();
     const { id, user_id } = router.query;
     const trailId = id as string;
-    const [userId] = useState(() => (user_id as string) || `player_${Date.now()}`);
+    const [userId] = useState(() => {
+        if (user_id) return user_id as string;
+        if (typeof window !== 'undefined') {
+            let id = localStorage.getItem('twimp_user_id');
+            if (!id) {
+                id = crypto.randomUUID();
+                localStorage.setItem('twimp_user_id', id);
+            }
+            return id;
+        }
+        return `player_${Date.now()}`;
+    });
 
     const [gameState, setGameState] = useState<GameState>('loading');
     const [trailInfo, setTrailInfo] = useState<TrailInfo | null>(null);
