@@ -8,6 +8,7 @@ import Map from '@/components/Map';
 import { MapRef } from '@/components/Map';
 import PageHeader from '@/components/PageHeader';
 import { CustomTrailAPI } from '@/services/API/CustomTrailAPI';
+import ReportHazardDialog from '@/components/ReportHazardDialog';
 import { Marker } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import { Status } from '@/typings/Status.enum';
@@ -94,6 +95,7 @@ export default function CreatorStatus() {
     const [data, setData] = useState<CreatorViewData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [hazardPinIndex, setHazardPinIndex] = useState<number | null>(null);
     const mapRef = useRef<MapRef>(null);
     const pollRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -157,7 +159,8 @@ export default function CreatorStatus() {
         subtitle: pin.globallyCollected ? `Found by ${pin.collectedBy?.slice(0, 8) || 'someone'}` : 'Uncollected',
         ...resolveIcon(pin.icon),
         colour: (pin.colour || 'red') as Colour,
-        status: pin.globallyCollected ? Status.Visited : Status.Active
+        status: pin.globallyCollected ? Status.Visited : Status.Active,
+        pinIndex: idx,
     }));
 
     // Player markers (blue dots)
@@ -173,6 +176,23 @@ export default function CreatorStatus() {
         }));
 
     const allMarkers = [...pinMarkers, ...playerMarkers];
+
+    // Handle marker click — open hazard report for uncollected pins on random trails
+    const handleMarkerClick = (_index: number, marker: Marker) => {
+        if (trail.mode !== 'random') return;
+        if (marker.pinIndex === undefined) return;
+        const pin = trail.pins[marker.pinIndex];
+        if (!pin || pin.globallyCollected) return;
+        setHazardPinIndex(marker.pinIndex);
+    };
+
+    // Handle hazard report submission
+    const handleReportHazard = async (category: string) => {
+        if (hazardPinIndex === null || !creatorId || !trailId) return;
+        await CustomTrailAPI.creatorReportHazard(trailId as string, creatorId, hazardPinIndex, category);
+        setHazardPinIndex(null);
+        fetchStatus();
+    };
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#F8F5F2' }}>
@@ -217,6 +237,7 @@ export default function CreatorStatus() {
                     userLocation={trail.startLocation}
                     zoom={15}
                     onPlayerMove={() => {}}
+                    onMarkerClick={handleMarkerClick}
                 />
             </Box>
 
@@ -243,6 +264,13 @@ export default function CreatorStatus() {
                     ))}
                 </Box>
             )}
+
+            {/* Report Hazard */}
+            <ReportHazardDialog
+                open={hazardPinIndex !== null}
+                onClose={() => setHazardPinIndex(null)}
+                onReport={handleReportHazard}
+            />
         </Box>
     );
 }
