@@ -343,7 +343,7 @@ export default function EasterEventComingSoon() {
                                 <Button
                                     variant="contained"
                                     onClick={handleShare}
-                                    startIcon={copied ? <CheckIcon /> : (typeof navigator !== 'undefined' && navigator.share) ? <ShareIcon /> : <ContentCopyIcon />}
+                                    startIcon={copied ? <CheckIcon /> : (typeof navigator !== 'undefined' && 'share' in navigator) ? <ShareIcon /> : <ContentCopyIcon />}
                                     sx={{
                                         borderRadius: '14px',
                                         fontFamily: FONT,
