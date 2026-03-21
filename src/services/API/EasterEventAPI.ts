@@ -62,4 +62,8 @@ export class EasterEventAPI {
     static async clearCustomTrail(userId: string) {
         return this.action('clear-custom-trail').post({ user_id: userId }, {});
     }
+
+    static async registerInterest(town: string) {
+        return this.action('register-interest').post({ town }, {});
+    }
 }
