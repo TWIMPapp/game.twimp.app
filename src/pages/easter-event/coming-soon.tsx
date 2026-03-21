@@ -423,7 +423,7 @@ export default function EasterEventComingSoon() {
                             <StepItem number={2} text="Head outside and find digital eggs in your local area" />
                             <StepItem number={3} text="Answer questions to reveal clues" />
                             <StepItem number={4} text="Work together to solve riddles" />
-                            <StepItem number={5} text="Save Easter!" />
+                            <StepItem number={5} text="Save Easter Egg Hunts!" />
                         </Box>
                     </CardContent>
                 </Card>
