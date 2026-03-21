@@ -247,7 +247,7 @@ export default function EasterEventComingSoon() {
                                         mb: 0.5
                                     }}
                                 >
-                                    Easter Egg Hunts have been ruined!                                </Typography>
+                                    Easter Egg Hunts are at risk!                                </Typography>
                                 <Typography
                                     sx={{
                                         fontFamily: FONT,
@@ -423,7 +423,7 @@ export default function EasterEventComingSoon() {
                             <StepItem number={2} text="Head outside and find digital eggs in your local area" />
                             <StepItem number={3} text="Answer questions to reveal clues" />
                             <StepItem number={4} text="Work together to solve riddles" />
-                            <StepItem number={5} text="Save Easter Egg Hunts!" />
+                            <StepItem number={5} text="Save Easter!" />
                         </Box>
                     </CardContent>
                 </Card>
