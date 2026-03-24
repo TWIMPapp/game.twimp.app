@@ -37,6 +37,30 @@ export default function EasterEventComingSoon() {
         setSubmitted(true);
     };
 
+    const handleAddToCalendar = () => {
+        const ics = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//TWIMP//Easter Event//EN',
+            'BEGIN:VEVENT',
+            'DTSTART:20260327T090000Z',
+            'DTEND:20260327T100000Z',
+            'SUMMARY:The Eggstraordinary Case of the Missing Eggs starts today!',
+            'DESCRIPTION:Head to game.twimp.app/easter-event to begin the adventure.',
+            'URL:https://game.twimp.app/easter-event',
+            'END:VEVENT',
+            'END:VCALENDAR'
+        ].join('\r\n');
+
+        const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'easter-egg-hunt.ics';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     const handleShare = async () => {
         if (navigator.share) {
             try {
@@ -327,7 +351,7 @@ export default function EasterEventComingSoon() {
                                         mb: 0.5
                                     }}
                                 >
-                                    You&apos;re in! Now spread the word
+                                    You&apos;re in! Don&apos;t miss a thing
                                 </Typography>
                                 <Typography
                                     sx={{
@@ -338,29 +362,69 @@ export default function EasterEventComingSoon() {
                                         mb: 2.5
                                     }}
                                 >
-                                    The more families near you that join, the better your chances of cracking the case
+                                    Follow along, mark your calendar, and get your neighbours involved
                                 </Typography>
-                                <Button
-                                    variant="contained"
-                                    onClick={handleShare}
-                                    startIcon={copied ? <CheckIcon /> : (typeof navigator !== 'undefined' && 'share' in navigator) ? <ShareIcon /> : <ContentCopyIcon />}
-                                    sx={{
-                                        borderRadius: '14px',
-                                        fontFamily: FONT,
-                                        fontWeight: 700,
-                                        textTransform: 'none',
-                                        px: 4,
-                                        py: 1.25,
-                                        fontSize: '1rem',
-                                        backgroundColor: 'white !important',
-                                        color: '#16a34a',
-                                        '&:hover': {
-                                            backgroundColor: '#f0fdf4 !important'
-                                        }
-                                    }}
-                                >
-                                    {copied ? 'Link copied!' : 'Share with friends'}
-                                </Button>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                    <Button
+                                        variant="contained"
+                                        onClick={() => window.open('https://www.facebook.com/events/1477037810255016/?active_tab=discussion', '_blank')}
+                                        sx={{
+                                            borderRadius: '14px',
+                                            fontFamily: FONT,
+                                            fontWeight: 700,
+                                            textTransform: 'none',
+                                            py: 1.25,
+                                            fontSize: '0.95rem',
+                                            backgroundColor: '#1877F2 !important',
+                                            color: 'white',
+                                            '&:hover': {
+                                                backgroundColor: '#1565C0 !important'
+                                            }
+                                        }}
+                                    >
+                                        Follow on Facebook
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleAddToCalendar}
+                                        sx={{
+                                            borderRadius: '14px',
+                                            fontFamily: FONT,
+                                            fontWeight: 700,
+                                            textTransform: 'none',
+                                            py: 1.25,
+                                            fontSize: '0.95rem',
+                                            backgroundColor: 'white !important',
+                                            color: '#16a34a',
+                                            '&:hover': {
+                                                backgroundColor: '#f0fdf4 !important'
+                                            }
+                                        }}
+                                    >
+                                        Add to Calendar
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleShare}
+                                        startIcon={copied ? <CheckIcon /> : (typeof navigator !== 'undefined' && 'share' in navigator) ? <ShareIcon /> : <ContentCopyIcon />}
+                                        sx={{
+                                            borderRadius: '14px',
+                                            fontFamily: FONT,
+                                            fontWeight: 700,
+                                            textTransform: 'none',
+                                            py: 1.25,
+                                            fontSize: '0.95rem',
+                                            backgroundColor: 'rgba(255,255,255,0.2) !important',
+                                            color: 'white',
+                                            border: '1px solid rgba(255,255,255,0.4)',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(255,255,255,0.3) !important'
+                                            }
+                                        }}
+                                    >
+                                        {copied ? 'Link copied!' : 'Invite your friends'}
+                                    </Button>
+                                </Box>
                             </Box>
                         )}
                     </CardContent>
