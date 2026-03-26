@@ -70,8 +70,12 @@ const colorToHex: Record<string, string> = {
 };
 
 // Convert an emoji character to a data-URL SVG for use as a map marker icon
-const emojiToIconUrl = (emoji: string, size = 48): string => {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="${Math.round(size * 0.75)}">${emoji}</text></svg>`;
+// Optional bgColor renders a colored circle behind the emoji for visibility
+const emojiToIconUrl = (emoji: string, size = 48, bgColor?: string): string => {
+  const bg = bgColor
+    ? `<circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 1}" fill="${bgColor}" fill-opacity="0.85" stroke="white" stroke-width="2"/>`
+    : '';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">${bg}<text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="${Math.round(size * (bgColor ? 0.55 : 0.75))}">${emoji}</text></svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 };
 
@@ -264,7 +268,7 @@ const MapComponent = forwardRef<MapRef, {
     taskMarkers?.map((marker) => ({
       ...marker,
       image_url: marker?.emoji
-        ? emojiToIconUrl(marker.emoji)
+        ? emojiToIconUrl(marker.emoji, 48, marker.emojiBg)
         : marker?.image_url
           ? marker.image_url
           : marker?.colour

@@ -64,7 +64,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleSignIn = async (provider: 'google' | 'apple') => {
     try {
-      await nextAuthSignIn(provider, { callbackUrl: '/' });
+      const callbackUrl = typeof window !== 'undefined' ? window.location.pathname : '/';
+      await nextAuthSignIn(provider, { callbackUrl });
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;

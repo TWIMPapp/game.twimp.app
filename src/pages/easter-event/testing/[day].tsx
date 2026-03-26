@@ -163,12 +163,13 @@ function ClueDisplay({ clue }: { clue: EncodedClue }) {
     );
 }
 
-const EASTER_EVENT_LIVE = false; // Set to true when ready to launch
-
-export default function EasterEventHub() {
+export default function EasterEventTestingHub() {
     const router = useRouter();
     const { isAuthenticated } = useAuth();
     const [loginModalOpen, setLoginModalOpen] = useState(false);
+    const { day } = router.query;
+    const testDay = day !== undefined ? parseInt(day as string) - 1 : undefined; // URL is 1-indexed, API is 0-indexed
+
     const [loading, setLoading] = useState(true);
     const [gameData, setGameData] = useState<any>(null);
     const [puzzleDialogOpen, setPuzzleDialogOpen] = useState(false);
@@ -184,17 +185,14 @@ export default function EasterEventHub() {
     const [dataFetchedAt, setDataFetchedAt] = useState<number>(Date.now());
 
     // Live countdown timer for puzzles
-    // Uses server-provided relative times (timeRemaining, nextPuzzleIn) which respect TEST_DAY_OVERRIDE
     useEffect(() => {
         const updateCountdown = () => {
             const puzzleStatus = gameData?.puzzleStatus;
             if (!puzzleStatus) return;
 
-            // Calculate elapsed time since data was fetched
             const elapsed = Date.now() - dataFetchedAt;
 
             if (puzzleStatus.active && puzzleStatus.solved && puzzleStatus.nextPuzzleIn) {
-                // Countdown to next puzzle after solving current one
                 const remaining = puzzleStatus.nextPuzzleIn - elapsed;
                 if (remaining > 0) {
                     setPuzzleCountdown(formatTimeRemainingLive(remaining));
@@ -203,7 +201,6 @@ export default function EasterEventHub() {
                     fetchGameData();
                 }
             } else if (puzzleStatus.active && !puzzleStatus.solved && puzzleStatus.timeRemaining) {
-                // Countdown for current active puzzle
                 const remaining = puzzleStatus.timeRemaining - elapsed;
                 if (remaining > 0) {
                     setPuzzleCountdown(formatTimeRemainingLive(remaining));
@@ -212,7 +209,6 @@ export default function EasterEventHub() {
                     fetchGameData();
                 }
             } else if (!puzzleStatus.active && puzzleStatus.nextPuzzleIn) {
-                // Countdown to next puzzle when none is active
                 const remaining = puzzleStatus.nextPuzzleIn - elapsed;
                 if (remaining > 0) {
                     setPuzzleCountdown(formatTimeRemainingLive(remaining));
@@ -224,15 +220,17 @@ export default function EasterEventHub() {
         };
 
         updateCountdown();
-        const interval = setInterval(updateCountdown, 60000); // Update once per minute
+        const interval = setInterval(updateCountdown, 60000);
         return () => clearInterval(interval);
     }, [gameData?.puzzleStatus, dataFetchedAt]);
 
     useEffect(() => {
-        if (!EASTER_EVENT_LIVE) {
-            router.replace('/easter-event/coming-soon');
-            return;
-        }
+        if (testDay === undefined) return; // Wait for router
+
+        // Set test day context for all API calls — persist in sessionStorage
+        // so the map page can pick it up too
+        EasterEventAPI.setTestDay(testDay);
+        sessionStorage.setItem('easter_test_day', String(testDay));
 
         let userId = localStorage.getItem('twimp_user_id');
         if (!userId) {
@@ -244,7 +242,10 @@ export default function EasterEventHub() {
 
         // Re-fetch when returning from map (page becomes visible again)
         const handleVisibility = () => {
-            if (document.visibilityState === 'visible') fetchGameData();
+            if (document.visibilityState === 'visible') {
+                EasterEventAPI.setTestDay(testDay);
+                fetchGameData();
+            }
         };
         document.addEventListener('visibilitychange', handleVisibility);
         window.addEventListener('focus', handleVisibility);
@@ -252,17 +253,18 @@ export default function EasterEventHub() {
         return () => {
             document.removeEventListener('visibilitychange', handleVisibility);
             window.removeEventListener('focus', handleVisibility);
+            // Don't clear _testDay here — map page needs it
         };
-    }, []);
+    }, [testDay]);
 
     const fetchGameData = async () => {
         const userId = localStorage.getItem('twimp_user_id');
-        if (!userId) return;
+        if (!userId || testDay === undefined) return;
 
         try {
             const res: any = await EasterEventAPI.getGameScreen(userId);
             setGameData(res);
-            setDataFetchedAt(Date.now()); // Track when data was fetched for countdown calculations
+            setDataFetchedAt(Date.now());
         } catch (err) {
             console.error('Failed to fetch game data:', err);
         } finally {
@@ -274,10 +276,10 @@ export default function EasterEventHub() {
         const userId = localStorage.getItem('twimp_user_id');
         if (!userId) return;
 
-        // Get current location and start the game
         navigator.geolocation.getCurrentPosition(async (pos) => {
             try {
                 await EasterEventAPI.start(userId, pos.coords.latitude, pos.coords.longitude);
+                sessionStorage.setItem('easter_testing', 'true');
                 router.push('/easter-event/map');
             } catch (err) {
                 console.error('Failed to start game:', err);
@@ -287,6 +289,7 @@ export default function EasterEventHub() {
 
     const handleChapterClick = async (chapter: Chapter) => {
         if (chapter.locked) return;
+        const userId = localStorage.getItem('twimp_user_id');
 
         try {
             const res: any = await EasterEventAPI.getChapter(chapter.id);
@@ -326,7 +329,6 @@ export default function EasterEventHub() {
 
             if (res.correct) {
                 setPuzzleFeedback({ type: 'success', message: res.message });
-                // Refresh game data to show new letters
                 setTimeout(() => {
                     fetchGameData();
                     setPuzzleDialogOpen(false);
@@ -380,6 +382,13 @@ export default function EasterEventHub() {
         <Box className="min-h-screen bg-gradient-to-b from-green-50 to-yellow-50 pb-24">
             {/* Logo */}
             <PageHeader compact />
+
+            {/* Test mode banner */}
+            <Box sx={{ background: '#ef4444', color: 'white', px: 2, py: 1, textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    TEST MODE &mdash; Day {day}
+                </Typography>
+            </Box>
 
             {/* Header with Easter Bunny */}
             <Box

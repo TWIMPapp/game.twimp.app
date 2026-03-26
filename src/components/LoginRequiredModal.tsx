@@ -26,10 +26,17 @@ export default function LoginRequiredModal({
   const { signIn } = useAuth();
 
   const actionText = {
-    save: 'save your game',
+    save: 'Save Your Progress',
     share: 'share your game with others',
     publish: 'publish your game',
     create: 'create your own game',
+  };
+
+  const actionDescription = {
+    save: 'To ensure your progress is saved, sign in with Google or Facebook.',
+    share: 'Sign in with your Google or Facebook account to create and share your own games with the Twimp community.',
+    publish: 'Sign in with your Google or Facebook account to create and share your own games with the Twimp community.',
+    create: 'Sign in with your Google or Facebook account to create and share your own games with the Twimp community.',
   };
 
   const handleGoogleSignIn = async () => {
@@ -55,13 +62,12 @@ export default function LoginRequiredModal({
       <DialogTitle>
         <Box className="flex items-center gap-2">
           <LockIcon sx={{ color: '#FF2E5B' }} />
-          <span>Create an Account to {actionText[action]}</span>
+          <span>{action === 'save' ? actionText[action] : `Create an Account to ${actionText[action]}`}</span>
         </Box>
       </DialogTitle>
       <DialogContent>
-        <Typography variant="body2" className="text-gray-600 mb-6">
-          Sign in with your Google or Facebook account to create and share your own games with the
-          Twimp community.
+        <Typography variant="body2" className="text-gray-600" sx={{ mb: 3 }}>
+          {actionDescription[action]}
         </Typography>
 
         <Box className="flex flex-col gap-4 mb-6">

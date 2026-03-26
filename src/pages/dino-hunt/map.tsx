@@ -168,16 +168,31 @@ export default function DinoHuntMap() {
 
         for (let i = 0; i < session.eggs.length; i++) {
             const egg = session.eggs[i];
-            if (egg.collected) continue; // Hide collected eggs
             const catInfo = CATEGORY_INFO[egg.categoryId] || { name: '?', emoji: '🥚', eggColor: '#888' };
-            markers.push({
-                lat: egg.lat,
-                lng: egg.lng,
-                title: catInfo.emoji,
-                subtitle: catInfo.name,
-                colour: EGG_COLOR_MAP[catInfo.eggColor] || Colour.Orange,
-                pinIndex: i,
-            });
+
+            if (egg.collected) {
+                // Show green tick for collected eggs
+                markers.push({
+                    lat: egg.lat,
+                    lng: egg.lng,
+                    title: '✓',
+                    subtitle: catInfo.name,
+                    emoji: '✓',
+                    emojiBg: '#22C55E',
+                    colour: Colour.Green,
+                });
+            } else {
+                markers.push({
+                    lat: egg.lat,
+                    lng: egg.lng,
+                    title: catInfo.emoji,
+                    subtitle: catInfo.name,
+                    emoji: catInfo.emoji,
+                    emojiBg: catInfo.eggColor,
+                    colour: EGG_COLOR_MAP[catInfo.eggColor] || Colour.Orange,
+                    pinIndex: i,
+                });
+            }
         }
 
         // Golden egg marker
@@ -187,6 +202,8 @@ export default function DinoHuntMap() {
                 lng: session.startPosition.lng,
                 title: '🥚',
                 subtitle: 'Golden Egg!',
+                emoji: '🥚',
+                emojiBg: '#FFD700',
                 colour: Colour.Yellow,
             });
         }

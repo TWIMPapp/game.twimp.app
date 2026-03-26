@@ -82,7 +82,14 @@ export default function EasterEventMap() {
     const [spawnRadius, setSpawnRadius] = useState<SpawnRadius | null>(null);
     const [safetyDialogOpen, setSafetyDialogOpen] = useState(false);
     const [dailyProgress, setDailyProgress] = useState<{ collected: number; max: number } | null>(null);
-    const [trailMode, setTrailMode] = useState<TrailMode>('mode_select');
+    const [trailMode, _setTrailMode] = useState<TrailMode>('mode_select');
+    const hasEnteredPlayingRef = useRef(false);
+    const setTrailMode = (mode: TrailMode) => {
+        if (mode === 'playing') hasEnteredPlayingRef.current = true;
+        // Prevent regressing to mode_select once playing has started (guard against re-renders)
+        if (mode === 'mode_select' && hasEnteredPlayingRef.current) return;
+        _setTrailMode(mode);
+    };
     const [isCustomTrail, setIsCustomTrail] = useState(false);
     const [isBonusMode, setIsBonusMode] = useState(false);
     const [showBonusPopup, setShowBonusPopup] = useState(false);
@@ -130,7 +137,20 @@ export default function EasterEventMap() {
     };
 
     // Trail mode handlers
-    const handleSelectNearMe = () => {
+    const handleSelectNearMe = async () => {
+        // Reset spawn location to current position each time "Near Me" is selected
+        const userId = localStorage.getItem('twimp_user_id');
+        if (userId && userLocation) {
+            try {
+                const res: any = await EasterEventAPI.resetSpawnLocation(userId, userLocation.lat, userLocation.lng);
+                if (res) {
+                    setSession(res);
+                    updateSpawnRadius(res);
+                }
+            } catch (err) {
+                console.error('Failed to reset spawn location:', err);
+            }
+        }
         setTrailMode('playing');
         setIsCustomTrail(false);
         if (session && !session.safetyVerified) {
@@ -173,9 +193,16 @@ export default function EasterEventMap() {
 
     // Initial load
     useEffect(() => {
-        if (!EASTER_EVENT_LIVE) {
+        const isTesting = typeof window !== 'undefined' && sessionStorage.getItem('easter_testing') === 'true';
+        if (!EASTER_EVENT_LIVE && !isTesting) {
             router.replace('/easter-event/coming-soon');
             return;
+        }
+
+        // Restore test day context from testing page
+        const storedTestDay = typeof window !== 'undefined' ? sessionStorage.getItem('easter_test_day') : null;
+        if (storedTestDay !== null) {
+            EasterEventAPI.setTestDay(parseInt(storedTestDay));
         }
 
         let visitorId = localStorage.getItem('twimp_user_id');
@@ -221,7 +248,7 @@ export default function EasterEventMap() {
             setUserLocation(initialLoc);
             fetchInitialData(initialLoc.lat, initialLoc.lng);
         });
-    }, [router]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Geolocation watching
     useEffect(() => {
@@ -244,12 +271,21 @@ export default function EasterEventMap() {
         userLocationRef.current = userLocation;
     }, [userLocation]);
 
+    // Track whether a popup is open to pause AWTY polling
+    const popupOpenRef = useRef(false);
+    useEffect(() => {
+        popupOpenRef.current = !!(celebrationPopup || questionPopup || goldenEggPopup || letterPopup);
+    }, [celebrationPopup, questionPopup, goldenEggPopup, letterPopup]);
+
     // AWTY Polling
     useEffect(() => {
         const userId = localStorage.getItem('twimp_user_id');
         if (!userId) return;
 
         const checkAWTY = async () => {
+            // Pause polling while any popup is open
+            if (popupOpenRef.current) return;
+
             const currentLoc = userLocationRef.current;
             if (!currentLoc) return;
 
@@ -370,8 +406,16 @@ export default function EasterEventMap() {
                     setDailyProgress(res.dailyProgress);
                 }
 
-                // Handle bonus eggs differently - no letter popup
-                if (res.isBonusEgg) {
+                // Handle golden egg - show GERARDIA reveal
+                if (res.isGoldenEgg) {
+                    setTimeout(() => {
+                        setQuestionPopup(null);
+                        setAnswer('');
+                        setFeedback(null);
+                        setSubmitting(false);
+                        setGoldenEggResult(res);
+                    }, 1500);
+                } else if (res.isBonusEgg) {
                     setTimeout(() => {
                         setQuestionPopup(null);
                         setAnswer('');
@@ -402,11 +446,19 @@ export default function EasterEventMap() {
 
                 setSubmitting(false);
 
-                setTimeout(() => {
-                    setQuestionPopup(null);
-                    setAnswer('');
-                    setFeedback(null);
-                }, 2500);
+                // For golden egg, let them try again (don't dismiss)
+                if (questionPopup?.isGoldenEgg) {
+                    setTimeout(() => {
+                        setAnswer('');
+                        setFeedback(null);
+                    }, 1500);
+                } else {
+                    setTimeout(() => {
+                        setQuestionPopup(null);
+                        setAnswer('');
+                        setFeedback(null);
+                    }, 2500);
+                }
             }
         } catch (err) {
             console.error(err);
@@ -429,8 +481,11 @@ export default function EasterEventMap() {
             setCelebrationPopup(null);
             setCollecting(false);
 
-            if (isGolden) {
-                // Golden egg - show golden egg popup (no question)
+            if (isGolden && task) {
+                // Golden egg - show question first, then reveal after correct answer
+                setQuestionPopup({ ...task, isGoldenEgg: true });
+            } else if (isGolden) {
+                // Golden egg with no task (fallback)
                 setGoldenEggPopup(true);
             } else if (task) {
                 // Regular egg - show question popup (task from AWTY response)
@@ -474,7 +529,8 @@ export default function EasterEventMap() {
                 lng: session.currentEgg.lng,
                 title: session.currentEgg.isGoldenEgg ? 'Golden Egg!' : 'Easter Egg',
                 subtitle: session.currentEgg.isGoldenEgg ? 'Special!' : 'Collect me!',
-                colour: getColourEnum(theme)
+                colour: getColourEnum(theme),
+                image_url: getEggSvgPath(theme)
             }];
         }
         return [];
@@ -517,7 +573,7 @@ export default function EasterEventMap() {
     return (
         <Box className="h-screen flex flex-col bg-gray-50 overflow-hidden">
             {/* Header */}
-            <Box className="px-4 py-3 bg-white shadow-sm flex items-center justify-between z-10" sx={{ flexShrink: 0 }}>
+            <Box className="px-4 py-3 bg-white shadow-sm flex items-center justify-between" sx={{ flexShrink: 0, position: 'relative', zIndex: 1 }}>
                 {/* Left: Remaining Eggs / Bonus Mode - hide during mode selection */}
                 {trailMode === 'playing' ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -563,7 +619,7 @@ export default function EasterEventMap() {
                         </IconButton>
                     )}
                     <IconButton
-                        onClick={() => router.push('/easter-event')}
+                        onClick={() => router.back()}
                         size="small"
                         className={styles['theme-green']}
                         sx={{
@@ -623,6 +679,7 @@ export default function EasterEventMap() {
                 onClose={() => { }}
                 maxWidth="sm"
                 fullWidth
+                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center' }
                 }}
@@ -720,6 +777,7 @@ export default function EasterEventMap() {
                 onClose={() => { }}
                 maxWidth="sm"
                 fullWidth
+                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', overflow: 'hidden', p: 0 }
                 }}
@@ -729,15 +787,29 @@ export default function EasterEventMap() {
                     const themeClass = styles[`theme-${theme}`];
                     const eggClass = styles[`egg-${theme}`];
 
+                    const isGoldenQ = questionPopup.isGoldenEgg;
+                    const hasOptions = questionPopup.options && questionPopup.options.length > 0;
+
                     return (
-                        <Box className={themeClass}>
-                            <DialogTitle component="div" className={eggClass} sx={{ p: 3, textAlign: 'center' }}>
-                                <Typography variant="body2" className="font-bold uppercase tracking-widest opacity-90">
-                                    {isBonusMode ? 'BONUS' : questionPopup.subject} Question
-                                </Typography>
-                                <Typography variant="h5" component="p" className="font-extrabold mt-1">
-                                    {isBonusMode ? 'Answer for Fun!' : 'Answer to Unlock Codex'}
-                                </Typography>
+                        <Box className={isGoldenQ ? styles['theme-gold'] : themeClass}>
+                            <DialogTitle component="div" className={isGoldenQ ? styles['egg-gold'] : eggClass} sx={{ p: 3, textAlign: 'center' }}>
+                                {isGoldenQ ? (
+                                    <>
+                                        <Typography className="text-3xl mb-1">🌟</Typography>
+                                        <Typography variant="h5" component="p" className="font-extrabold mt-1">
+                                            The Golden Egg
+                                        </Typography>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Typography variant="body2" className="font-bold uppercase tracking-widest opacity-90">
+                                            {isBonusMode ? 'BONUS' : questionPopup.subject} Question
+                                        </Typography>
+                                        <Typography variant="h5" component="p" className="font-extrabold mt-1">
+                                            {isBonusMode ? 'Answer for Fun!' : 'Answer to Unlock Codex'}
+                                        </Typography>
+                                    </>
+                                )}
                             </DialogTitle>
                             <DialogContent sx={{ p: 3, pt: 4 }}>
                                 <Box className="bg-gray-50 p-4 rounded-2xl border-2 border-dashed border-gray-200 mb-4">
@@ -745,40 +817,70 @@ export default function EasterEventMap() {
                                         {questionPopup.content}
                                     </Typography>
                                 </Box>
-                                <TextField
-                                    fullWidth
-                                    label="Your Answer"
-                                    variant="outlined"
-                                    value={answer}
-                                    onChange={(e) => setAnswer(e.target.value)}
-                                    disabled={submitting || !!feedback}
-                                    onKeyPress={(e) => {
-                                        if (e.key === 'Enter' && !submitting && answer.trim() && !feedback) {
-                                            handleAnswerSubmit();
-                                        }
-                                    }}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: '16px',
-                                            '& fieldset': {
-                                                borderColor: 'var(--egg-primary)'
-                                            },
-                                            '&:hover fieldset': {
-                                                borderColor: 'var(--egg-primary)'
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: 'var(--egg-primary)',
-                                                borderWidth: '2px'
+                                {hasOptions ? (
+                                    <Box className="space-y-2">
+                                        {questionPopup.options.map((option: string, i: number) => (
+                                            <Button
+                                                key={i}
+                                                variant={answer === option ? 'contained' : 'outlined'}
+                                                fullWidth
+                                                disabled={submitting || !!feedback}
+                                                onClick={() => setAnswer(option)}
+                                                sx={{
+                                                    borderRadius: '16px',
+                                                    py: 1.5,
+                                                    textTransform: 'none',
+                                                    fontWeight: 700,
+                                                    fontSize: '1rem',
+                                                    borderColor: 'var(--egg-primary)',
+                                                    color: answer === option ? 'white' : 'var(--egg-text)',
+                                                    backgroundColor: answer === option ? 'var(--egg-primary) !important' : 'transparent',
+                                                    '&:hover': {
+                                                        borderColor: 'var(--egg-primary)',
+                                                        backgroundColor: answer === option ? 'var(--egg-primary) !important' : 'rgba(var(--egg-primary-rgb, 0,0,0), 0.05)'
+                                                    }
+                                                }}
+                                            >
+                                                {option}
+                                            </Button>
+                                        ))}
+                                    </Box>
+                                ) : (
+                                    <TextField
+                                        fullWidth
+                                        label="Your Answer"
+                                        variant="outlined"
+                                        value={answer}
+                                        onChange={(e) => setAnswer(e.target.value)}
+                                        disabled={submitting || !!feedback}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter' && !submitting && answer.trim() && !feedback) {
+                                                handleAnswerSubmit();
                                             }
-                                        },
-                                        '& .MuiInputLabel-root': {
-                                            color: 'var(--egg-primary)'
-                                        },
-                                        '& .MuiInputLabel-root.Mui-focused': {
-                                            color: 'var(--egg-primary)'
-                                        }
-                                    }}
-                                />
+                                        }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '16px',
+                                                '& fieldset': {
+                                                    borderColor: 'var(--egg-primary)'
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: 'var(--egg-primary)'
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: 'var(--egg-primary)',
+                                                    borderWidth: '2px'
+                                                }
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                color: 'var(--egg-primary)'
+                                            },
+                                            '& .MuiInputLabel-root.Mui-focused': {
+                                                color: 'var(--egg-primary)'
+                                            }
+                                        }}
+                                    />
+                                )}
                             </DialogContent>
                             <DialogActions sx={{ px: 3, pb: 3 }}>
                                 <Button
@@ -786,7 +888,7 @@ export default function EasterEventMap() {
                                     fullWidth
                                     disabled={submitting || !!feedback || !answer.trim()}
                                     onClick={handleAnswerSubmit}
-                                    className={`${styles['submit-button']} ${eggClass}`}
+                                    className={`${styles['submit-button']} ${isGoldenQ ? styles['egg-gold'] : eggClass}`}
                                 >
                                     {submitting ? <CircularProgress size={24} color="inherit" /> : feedback?.type === 'success' ? '✓ Correct' : feedback?.type === 'error' ? '✗ Incorrect' : 'Submit Answer'}
                                 </Button>
@@ -802,6 +904,7 @@ export default function EasterEventMap() {
                 onClose={() => { }}
                 maxWidth="sm"
                 fullWidth
+                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center' }
                 }}
@@ -831,6 +934,7 @@ export default function EasterEventMap() {
                 onClose={() => setGoldenEggResult(null)}
                 maxWidth="sm"
                 fullWidth
+                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center' }
                 }}
@@ -876,6 +980,7 @@ export default function EasterEventMap() {
                 onClose={() => setLetterPopup(null)}
                 maxWidth="xs"
                 fullWidth
+                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center', overflow: 'hidden' }
                 }}
@@ -999,6 +1104,7 @@ export default function EasterEventMap() {
                 onClose={() => {}}
                 maxWidth="sm"
                 fullWidth
+                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center' }
                 }}

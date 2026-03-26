@@ -43,6 +43,7 @@ export interface Marker {
   subtitle: string;
   image_url?: string;
   emoji?: string;
+  emojiBg?: string;      // Hex color for circle background behind emoji
   colour?: Colour;
   status?: Status;
   pinIndex?: number;
