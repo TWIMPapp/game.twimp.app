@@ -41,8 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [status]);
 
   // Sync twimp_user_id between localStorage and server.
-  // If the server already has one (from another device), adopt it locally.
-  // If not, send ours to the server.
+  // Server record wins — if it already has a twimp_user_id, adopt it locally.
+  // If not, the local one gets sent and stored server-side.
   useEffect(() => {
     if (linkedRef.current) return;
     const email = session?.user?.email;
@@ -53,30 +53,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     (async () => {
       try {
-        // Check if user exists and already has a twimp_user_id
-        const res = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            name: session?.user?.name,
+            image: session?.user?.image,
+            twimp_user_id: localId || undefined,
+            provider: 'google',
+          }),
+        });
+
         if (res.ok) {
           const userData = await res.json();
-          if (userData.twimp_user_id) {
-            // Server has a twimp_user_id — adopt it locally for cross-device sync
+          // Server has canonical twimp_user_id — adopt it locally
+          if (userData.twimp_user_id && userData.twimp_user_id !== localId) {
             localStorage.setItem('twimp_user_id', userData.twimp_user_id);
-            return;
           }
-        }
-
-        // No server record or no twimp_user_id — create/update with our local one
-        if (localId) {
-          await fetch('/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email,
-              name: session?.user?.name,
-              image: session?.user?.image,
-              twimp_user_id: localId,
-              provider: 'google',
-            }),
-          });
         }
       } catch {
         // Silently fail — non-critical

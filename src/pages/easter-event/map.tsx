@@ -579,11 +579,7 @@ export default function EasterEventMap() {
     return (
         <Box className="h-screen flex flex-col bg-gray-50 overflow-hidden">
             {/* Header */}
-            <Box id="easter-map-header" className="px-4 py-3 bg-white shadow-sm flex items-center justify-between" sx={{ flexShrink: 0, border: '2px solid red', position: 'relative' }}>
-                {/* DEBUG */}
-                <Typography sx={{ position: 'absolute', top: 0, left: 4, fontSize: '8px', color: 'red' }}>
-                    {trailMode}
-                </Typography>
+            <Box className="px-4 py-3 bg-white shadow-sm flex items-center justify-between" sx={{ flexShrink: 0 }}>
                 {/* Left: Remaining Eggs / Bonus Mode - hide during mode selection */}
                 {trailMode === 'playing' ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
