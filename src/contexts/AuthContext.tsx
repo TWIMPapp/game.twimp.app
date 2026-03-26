@@ -40,26 +40,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(status === 'loading');
   }, [status]);
 
-  // Link localStorage twimp_user_id to the authenticated user record.
-  // Also acts as a backup for user creation if the server-side signIn event failed.
+  // Sync twimp_user_id between localStorage and server.
+  // If the server already has one (from another device), adopt it locally.
+  // If not, send ours to the server.
   useEffect(() => {
     if (linkedRef.current) return;
     const email = session?.user?.email;
     if (!email) return;
-    const twimpUserId = typeof window !== 'undefined' ? localStorage.getItem('twimp_user_id') : null;
-    if (!twimpUserId) return;
     linkedRef.current = true;
-    fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        name: session?.user?.name,
-        image: session?.user?.image,
-        twimp_user_id: twimpUserId,
-        provider: 'google',
-      }),
-    }).catch(() => {});
+
+    const localId = typeof window !== 'undefined' ? localStorage.getItem('twimp_user_id') : null;
+
+    (async () => {
+      try {
+        // Check if user exists and already has a twimp_user_id
+        const res = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
+        if (res.ok) {
+          const userData = await res.json();
+          if (userData.twimp_user_id) {
+            // Server has a twimp_user_id — adopt it locally for cross-device sync
+            localStorage.setItem('twimp_user_id', userData.twimp_user_id);
+            return;
+          }
+        }
+
+        // No server record or no twimp_user_id — create/update with our local one
+        if (localId) {
+          await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              name: session?.user?.name,
+              image: session?.user?.image,
+              twimp_user_id: localId,
+              provider: 'google',
+            }),
+          });
+        }
+      } catch {
+        // Silently fail — non-critical
+      }
+    })();
   }, [session?.user?.email, session?.user?.name, session?.user?.image]);
 
   const handleSignIn = async (provider: 'google' | 'apple') => {

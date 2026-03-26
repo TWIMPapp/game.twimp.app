@@ -82,12 +82,17 @@ export default function EasterEventMap() {
     const [spawnRadius, setSpawnRadius] = useState<SpawnRadius | null>(null);
     const [safetyDialogOpen, setSafetyDialogOpen] = useState(false);
     const [dailyProgress, setDailyProgress] = useState<{ collected: number; max: number } | null>(null);
-    const [trailMode, _setTrailMode] = useState<TrailMode>('mode_select');
-    const hasEnteredPlayingRef = useRef(false);
+    // Persist trailMode in sessionStorage so it survives component remounts
+    const [trailMode, _setTrailMode] = useState<TrailMode>(() => {
+        if (typeof window !== 'undefined' && sessionStorage.getItem('easter_playing') === 'true') {
+            return 'playing';
+        }
+        return 'mode_select';
+    });
     const setTrailMode = (mode: TrailMode) => {
-        if (mode === 'playing') hasEnteredPlayingRef.current = true;
-        // Prevent regressing to mode_select once playing has started (guard against re-renders)
-        if (mode === 'mode_select' && hasEnteredPlayingRef.current) return;
+        if (mode === 'playing') {
+            sessionStorage.setItem('easter_playing', 'true');
+        }
         _setTrailMode(mode);
     };
     const [isCustomTrail, setIsCustomTrail] = useState(false);
@@ -210,7 +215,7 @@ export default function EasterEventMap() {
             visitorId = crypto.randomUUID();
             localStorage.setItem('twimp_user_id', visitorId);
         }
-        const userId = visitorId; // Capture for closure
+        const userId = visitorId;
 
         const fetchInitialData = async (lat: number, lng: number) => {
             try {
@@ -570,10 +575,15 @@ export default function EasterEventMap() {
         );
     }
 
+
     return (
         <Box className="h-screen flex flex-col bg-gray-50 overflow-hidden">
             {/* Header */}
-            <Box className="px-4 py-3 bg-white shadow-sm flex items-center justify-between" sx={{ flexShrink: 0, position: 'relative', zIndex: 1 }}>
+            <Box id="easter-map-header" className="px-4 py-3 bg-white shadow-sm flex items-center justify-between" sx={{ flexShrink: 0, border: '2px solid red', position: 'relative' }}>
+                {/* DEBUG */}
+                <Typography sx={{ position: 'absolute', top: 0, left: 4, fontSize: '8px', color: 'red' }}>
+                    {trailMode}
+                </Typography>
                 {/* Left: Remaining Eggs / Bonus Mode - hide during mode selection */}
                 {trailMode === 'playing' ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -679,7 +689,6 @@ export default function EasterEventMap() {
                 onClose={() => { }}
                 maxWidth="sm"
                 fullWidth
-                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center' }
                 }}
@@ -777,7 +786,6 @@ export default function EasterEventMap() {
                 onClose={() => { }}
                 maxWidth="sm"
                 fullWidth
-                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', overflow: 'hidden', p: 0 }
                 }}
@@ -904,7 +912,6 @@ export default function EasterEventMap() {
                 onClose={() => { }}
                 maxWidth="sm"
                 fullWidth
-                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center' }
                 }}
@@ -934,7 +941,6 @@ export default function EasterEventMap() {
                 onClose={() => setGoldenEggResult(null)}
                 maxWidth="sm"
                 fullWidth
-                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center' }
                 }}
@@ -980,7 +986,6 @@ export default function EasterEventMap() {
                 onClose={() => setLetterPopup(null)}
                 maxWidth="xs"
                 fullWidth
-                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center', overflow: 'hidden' }
                 }}
@@ -1104,7 +1109,6 @@ export default function EasterEventMap() {
                 onClose={() => {}}
                 maxWidth="sm"
                 fullWidth
-                disablePortal
                 PaperProps={{
                     sx: { borderRadius: '24px', p: 3, textAlign: 'center' }
                 }}

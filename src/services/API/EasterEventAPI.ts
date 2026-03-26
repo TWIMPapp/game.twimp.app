@@ -1,6 +1,7 @@
 import { APIService } from './API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 
+
 export class EasterEventAPI {
     // Unified game endpoints
     private static playAPI = new APIService('play' as Endpoint);
