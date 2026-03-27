@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Typography, Card, CardContent, TextField, Button } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -24,6 +24,11 @@ export default function EasterEventComingSoon() {
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    // Event is live — redirect to main page
+    useEffect(() => {
+        window.location.replace('/easter-event');
+    }, []);
 
     const handleSubmitTown = async () => {
         if (!town.trim() || submitting) return;

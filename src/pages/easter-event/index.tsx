@@ -27,6 +27,7 @@ import PageHeader from '@/components/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
 import Wordle from '@/components/easter-event/Wordle';
+import LetterReveal from '@/components/easter-event/LetterReveal';
 
 interface EncodedCharacter {
     char: string;
@@ -164,7 +165,7 @@ function ClueDisplay({ clue }: { clue: EncodedClue }) {
     );
 }
 
-const EASTER_EVENT_LIVE = false; // Set to true when ready to launch
+const EASTER_EVENT_LIVE = true;
 
 export default function EasterEventHub() {
     const router = useRouter();
@@ -182,6 +183,7 @@ export default function EasterEventHub() {
     const [missionsExpanded, setMissionsExpanded] = useState(true);
     const [cluesExpanded, setCluesExpanded] = useState(true);
     const [puzzleCountdown, setPuzzleCountdown] = useState<string>('');
+    const [puzzleLetterReveal, setPuzzleLetterReveal] = useState<{ letter: string; symbol: string } | null>(null);
     const [dataFetchedAt, setDataFetchedAt] = useState<number>(Date.now());
 
     // Live countdown timer for puzzles
@@ -321,12 +323,22 @@ export default function EasterEventHub() {
                 answer
             );
             if (res.correct) {
-                setPuzzleFeedback({ type: 'success', message: res.message });
                 setTimeout(() => {
-                    fetchGameData();
                     setPuzzleDialogOpen(false);
                     setPuzzleFeedback(null);
-                }, 2000);
+
+                    if (res.awardedLetters && res.awardedLetters.length > 0) {
+                        setTimeout(() => {
+                            const letter = res.awardedLetters[0];
+                            const symbol = res.awardedSymbols?.[0]?.symbol
+                                || gameData?.codex?.find((e: any) => e.letter === letter)?.symbol
+                                || '?';
+                            setPuzzleLetterReveal({ letter, symbol });
+                        }, 500);
+                    } else {
+                        fetchGameData();
+                    }
+                }, 1500);
             }
         } catch (err) {
             console.error('Failed to submit puzzle answer:', err);
@@ -524,7 +536,7 @@ export default function EasterEventHub() {
                                         )}
                                         <Box>
                                             <Typography className="font-bold text-gray-800">
-                                                Chapter {chapter.id}: {chapter.title}
+                                                {chapter.locked ? `Chapter ${chapter.id}` : `Chapter ${chapter.id}: ${chapter.title}`}
                                             </Typography>
                                             {chapter.locked && (
                                                 <Typography variant="caption" className="text-gray-500">
@@ -974,6 +986,17 @@ export default function EasterEventHub() {
                     </DialogActions>
                 )}
             </Dialog>
+
+            {/* Puzzle Letter Reveal */}
+            <LetterReveal
+                open={!!puzzleLetterReveal}
+                letter={puzzleLetterReveal?.letter || ''}
+                symbol={puzzleLetterReveal?.symbol || ''}
+                onClose={() => {
+                    setPuzzleLetterReveal(null);
+                    fetchGameData();
+                }}
+            />
 
             {/* Chapter Dialog */}
             < Dialog

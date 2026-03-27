@@ -27,6 +27,7 @@ import PageHeader from '@/components/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
 import Wordle from '@/components/easter-event/Wordle';
+import LetterReveal from '@/components/easter-event/LetterReveal';
 
 interface EncodedCharacter {
     char: string;
@@ -166,6 +167,14 @@ function ClueDisplay({ clue }: { clue: EncodedClue }) {
 
 export default function EasterEventTestingHub() {
     const router = useRouter();
+
+    // Only available on localhost
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+            router.replace('/easter-event');
+        }
+    }, []);
+
     const { isAuthenticated } = useAuth();
     const [loginModalOpen, setLoginModalOpen] = useState(false);
     const { day } = router.query;
@@ -183,6 +192,7 @@ export default function EasterEventTestingHub() {
     const [missionsExpanded, setMissionsExpanded] = useState(true);
     const [cluesExpanded, setCluesExpanded] = useState(true);
     const [puzzleCountdown, setPuzzleCountdown] = useState<string>('');
+    const [puzzleLetterReveal, setPuzzleLetterReveal] = useState<{ letter: string; symbol: string } | null>(null);
     const [dataFetchedAt, setDataFetchedAt] = useState<number>(Date.now());
 
     // Live countdown timer for puzzles
@@ -324,12 +334,25 @@ export default function EasterEventTestingHub() {
                 answer
             );
             if (res.correct) {
-                setPuzzleFeedback({ type: 'success', message: res.message });
+                // Close puzzle dialog first
                 setTimeout(() => {
-                    fetchGameData();
                     setPuzzleDialogOpen(false);
                     setPuzzleFeedback(null);
-                }, 2000);
+
+                    // Then show letter reveal after dialog has closed
+                    if (res.awardedLetters && res.awardedLetters.length > 0) {
+                        setTimeout(() => {
+                            const letter = res.awardedLetters[0];
+                            // Use the symbol from the response if available, otherwise look up from codex
+                            const symbol = res.awardedSymbols?.[0]?.symbol
+                                || gameData?.codex?.find((e: any) => e.letter === letter)?.symbol
+                                || '?';
+                            setPuzzleLetterReveal({ letter, symbol });
+                        }, 500);
+                    } else {
+                        fetchGameData();
+                    }
+                }, 1500);
             }
         } catch (err) {
             console.error('Failed to submit puzzle answer:', err);
@@ -407,9 +430,24 @@ export default function EasterEventTestingHub() {
             <PageHeader compact />
 
             {/* Test mode banner */}
-            <Box sx={{ background: '#ef4444', color: 'white', px: 2, py: 1, textAlign: 'center' }}>
+            <Box sx={{ background: '#ef4444', color: 'white', px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="body2" sx={{ fontWeight: 700 }}>
                     TEST MODE &mdash; Day {day}
+                </Typography>
+                <Typography
+                    variant="caption"
+                    onClick={async () => {
+                        const userId = localStorage.getItem('twimp_user_id');
+                        if (!userId) return;
+                        await EasterEventAPI.restart(userId);
+                        sessionStorage.removeItem('easter_playing');
+                        sessionStorage.removeItem('easter_test_day');
+                        sessionStorage.removeItem('easter_testing');
+                        window.location.reload();
+                    }}
+                    sx={{ cursor: 'pointer', textDecoration: 'underline', fontWeight: 600 }}
+                >
+                    Reset
                 </Typography>
             </Box>
 
@@ -533,7 +571,7 @@ export default function EasterEventTestingHub() {
                                         )}
                                         <Box>
                                             <Typography className="font-bold text-gray-800">
-                                                Chapter {chapter.id}: {chapter.title}
+                                                {chapter.locked ? `Chapter ${chapter.id}` : `Chapter ${chapter.id}: ${chapter.title}`}
                                             </Typography>
                                             {chapter.locked && (
                                                 <Typography variant="caption" className="text-gray-500">
@@ -985,6 +1023,17 @@ export default function EasterEventTestingHub() {
                     </DialogActions>
                 )}
             </Dialog>
+
+            {/* Puzzle Letter Reveal */}
+            <LetterReveal
+                open={!!puzzleLetterReveal}
+                letter={puzzleLetterReveal?.letter || ''}
+                symbol={puzzleLetterReveal?.symbol || ''}
+                onClose={() => {
+                    setPuzzleLetterReveal(null);
+                    fetchGameData();
+                }}
+            />
 
             {/* Chapter Dialog */}
             < Dialog

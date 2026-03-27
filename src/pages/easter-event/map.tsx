@@ -61,7 +61,7 @@ const getColourEnum = (theme: string): Colour => {
     return THEME_TO_COLOUR[theme] || Colour.Pink;
 };
 
-const EASTER_EVENT_LIVE = false; // Set to true when ready to launch
+const EASTER_EVENT_LIVE = true;
 
 export default function EasterEventMap() {
     const [session, setSession] = useState<any>(null);
