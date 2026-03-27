@@ -26,6 +26,7 @@ import easterBunnyImg from '@/assets/images/easterbunny.png';
 import PageHeader from '@/components/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
+import Wordle from '@/components/easter-event/Wordle';
 
 interface EncodedCharacter {
     char: string;
@@ -310,6 +311,28 @@ export default function EasterEventTestingHub() {
             setChapterDialogOpen(false);
             setSelectedChapter(null);
             setCurrentScene(0);
+        }
+    };
+
+    const handleComponentPuzzleSolved = async (answer: string) => {
+        if (!gameData?.puzzleStatus?.puzzle) return;
+        const userId = localStorage.getItem('twimp_user_id');
+        try {
+            const res: any = await EasterEventAPI.submitPuzzleAnswer(
+                userId!,
+                gameData.puzzleStatus.puzzle.id,
+                answer
+            );
+            if (res.correct) {
+                setPuzzleFeedback({ type: 'success', message: res.message });
+                setTimeout(() => {
+                    fetchGameData();
+                    setPuzzleDialogOpen(false);
+                    setPuzzleFeedback(null);
+                }, 2000);
+            }
+        } catch (err) {
+            console.error('Failed to submit puzzle answer:', err);
         }
     };
 
@@ -873,7 +896,7 @@ export default function EasterEventTestingHub() {
             />
 
             {/* Puzzle Dialog */}
-            < Dialog
+            <Dialog
                 open={puzzleDialogOpen}
                 onClose={() => !puzzleSubmitting && setPuzzleDialogOpen(false)}
                 maxWidth="sm"
@@ -882,64 +905,86 @@ export default function EasterEventTestingHub() {
             >
                 <DialogTitle className="text-center bg-purple-500 text-white">
                     <Typography variant="h6" component="p" className="font-bold">
-                        🔮 Cryptic Puzzle
+                        🔮 {gameData?.puzzleStatus?.puzzle?.title || 'Cryptic Puzzle'}
                     </Typography>
                 </DialogTitle>
                 <DialogContent sx={{ pt: 3 }}>
-                    <Box className="text-center mb-4">
-                        <Box className="bg-gray-100 p-4 rounded-xl mb-4">
-                            <Typography variant="body2" className="text-gray-600 italic">
-                                💡 Hint: {gameData?.puzzleStatus?.puzzle?.hint}
-                            </Typography>
+                    {gameData?.puzzleStatus?.puzzle?.component ? (
+                        // Component-based puzzle (e.g. Wordle)
+                        <Box>
+                            {gameData.puzzleStatus.puzzle.component.name === 'Wordle' && (
+                                <Wordle
+                                    answer={gameData.puzzleStatus.puzzle.component.answer}
+                                    onSolved={handleComponentPuzzleSolved}
+                                />
+                            )}
+                            {puzzleFeedback && (
+                                <Box className={`mt-3 p-2 rounded-lg text-center ${puzzleFeedback.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                    <Typography className="font-bold">{puzzleFeedback.message}</Typography>
+                                </Box>
+                            )}
                         </Box>
-                        <TextField
-                            fullWidth
-                            label="Your Answer"
-                            variant="outlined"
-                            value={puzzleAnswer}
-                            onChange={(e) => setPuzzleAnswer(e.target.value)}
-                            disabled={puzzleSubmitting}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter' && !puzzleSubmitting && puzzleAnswer.trim()) {
-                                    handlePuzzleSubmit();
-                                }
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px'
-                                }
-                            }}
-                        />
-                        {puzzleFeedback && (
-                            <Box className={`mt-3 p-2 rounded-lg ${puzzleFeedback.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                <Typography className="font-bold">{puzzleFeedback.message}</Typography>
-                            </Box>
-                        )}
-                    </Box>
+                    ) : (
+                        // Text-based puzzle (hint + text input)
+                        <Box className="text-center mb-4">
+                            {gameData?.puzzleStatus?.puzzle?.hint && (
+                                <Box className="bg-gray-100 p-4 rounded-xl mb-4">
+                                    <Typography variant="body2" className="text-gray-600 italic">
+                                        💡 Hint: {gameData.puzzleStatus.puzzle.hint}
+                                    </Typography>
+                                </Box>
+                            )}
+                            <TextField
+                                fullWidth
+                                label="Your Answer"
+                                variant="outlined"
+                                value={puzzleAnswer}
+                                onChange={(e) => setPuzzleAnswer(e.target.value)}
+                                disabled={puzzleSubmitting}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter' && !puzzleSubmitting && puzzleAnswer.trim()) {
+                                        handlePuzzleSubmit();
+                                    }
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: '12px'
+                                    }
+                                }}
+                            />
+                            {puzzleFeedback && (
+                                <Box className={`mt-3 p-2 rounded-lg ${puzzleFeedback.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                    <Typography className="font-bold">{puzzleFeedback.message}</Typography>
+                                </Box>
+                            )}
+                        </Box>
+                    )}
                 </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 3 }}>
-                    <Button
-                        variant="outlined"
-                        onClick={() => setPuzzleDialogOpen(false)}
-                        disabled={puzzleSubmitting}
-                        sx={{ borderRadius: '12px' }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handlePuzzleSubmit}
-                        disabled={puzzleSubmitting || !puzzleAnswer.trim()}
-                        sx={{
-                            borderRadius: '12px',
-                            background: 'linear-gradient(45deg, #9333EA 0%, #7C3AED 100%) !important',
-                            backgroundColor: 'transparent !important'
-                        }}
-                    >
-                        {puzzleSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Submit'}
-                    </Button>
-                </DialogActions>
-            </Dialog >
+                {!gameData?.puzzleStatus?.puzzle?.component && (
+                    <DialogActions sx={{ px: 3, pb: 3 }}>
+                        <Button
+                            variant="outlined"
+                            onClick={() => setPuzzleDialogOpen(false)}
+                            disabled={puzzleSubmitting}
+                            sx={{ borderRadius: '12px' }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={handlePuzzleSubmit}
+                            disabled={puzzleSubmitting || !puzzleAnswer.trim()}
+                            sx={{
+                                borderRadius: '12px',
+                                background: 'linear-gradient(45deg, #9333EA 0%, #7C3AED 100%) !important',
+                                backgroundColor: 'transparent !important'
+                            }}
+                        >
+                            {puzzleSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Submit'}
+                        </Button>
+                    </DialogActions>
+                )}
+            </Dialog>
 
             {/* Chapter Dialog */}
             < Dialog
