@@ -98,6 +98,7 @@ export default function EasterEventMap() {
     const [isCustomTrail, setIsCustomTrail] = useState(false);
     const [isBonusMode, setIsBonusMode] = useState(false);
     const [showBonusPopup, setShowBonusPopup] = useState(false);
+    const [exitDialogOpen, setExitDialogOpen] = useState(false);
     const bonusPopupShownRef = useRef(false);
     const mapRef = useRef<MapRef>(null);
     const router = useRouter();
@@ -579,26 +580,26 @@ export default function EasterEventMap() {
     return (
         <Box className="h-screen flex flex-col bg-gray-50 overflow-hidden">
             {/* Header */}
-            <Box className="px-4 py-3 bg-white shadow-sm flex items-center justify-between" sx={{ flexShrink: 0 }}>
-                {/* Left: Remaining Eggs / Bonus Mode - hide during mode selection */}
-                {trailMode === 'playing' ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Box
-                            component="img"
-                            src={isBonusMode ? "/icons/egg-orange.svg" : "/icons/egg-green.svg"}
-                            alt="Eggs"
-                            sx={{ width: 24, height: 24 }}
-                        />
-                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: isBonusMode ? '#f97316' : '#22c55e' }}>
-                            {isBonusMode ? `${progress.max}/${progress.max} ✓` : (progress.max - progress.collected)}
-                        </Typography>
-                    </Box>
-                ) : (
-                    <Box sx={{ width: 40 }} />
-                )}
+            <Box className="px-4 py-3 bg-white shadow-sm flex items-center justify-between" sx={{ flexShrink: 0, position: 'relative' }}>
+                {/* Left: Remaining Eggs / Bonus Mode */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 40 }}>
+                    {trailMode === 'playing' && (
+                        <>
+                            <Box
+                                component="img"
+                                src={isBonusMode ? "/icons/egg-orange.svg" : "/icons/egg-green.svg"}
+                                alt="Eggs"
+                                sx={{ width: 24, height: 24 }}
+                            />
+                            <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: isBonusMode ? '#f97316' : '#22c55e' }}>
+                                {isBonusMode ? `${progress.max}/${progress.max} ✓` : (progress.max - progress.collected)}
+                            </Typography>
+                        </>
+                    )}
+                </Box>
 
-                {/* Center: Timer (perfectly centered) - hide during mode selection */}
-                {trailMode === 'playing' && (
+                {/* Center: Timer - only in nearby mode */}
+                {trailMode === 'playing' && !isCustomTrail && (
                     <Box sx={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
                         <Box className="bg-green-100 px-2 py-1 rounded-xl text-center">
                             <Typography className="text-[9px] font-bold text-green-600 leading-tight">RESPAWN</Typography>
@@ -607,7 +608,7 @@ export default function EasterEventMap() {
                     </Box>
                 )}
 
-                {/* Right: Hazard + Close Buttons */}
+                {/* Right: Always-visible close + optional hazard */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {trailMode === 'playing' && !isCustomTrail && (
                         <IconButton
@@ -625,7 +626,7 @@ export default function EasterEventMap() {
                         </IconButton>
                     )}
                     <IconButton
-                        onClick={() => router.back()}
+                        onClick={() => setExitDialogOpen(true)}
                         size="small"
                         className={styles['theme-green']}
                         sx={{
@@ -648,7 +649,7 @@ export default function EasterEventMap() {
                     userLocation={userLocation}
                     testMode={testMode}
                     zoom={20}
-                    spawnRadius={trailMode === 'playing' ? spawnRadius || undefined : undefined}
+                    spawnRadius={trailMode === 'playing' && !isCustomTrail ? spawnRadius || undefined : undefined}
                     onPlayerMove={(lat, lng) => {
                         setUserLocation({ lat, lng });
                     }}
@@ -1172,6 +1173,79 @@ export default function EasterEventMap() {
                 onSelectNearMe={handleSelectNearMe}
                 onSelectAlongPath={handleSelectAlongPath}
             />
+
+            {/* Exit Dialog */}
+            <Dialog
+                open={exitDialogOpen}
+                onClose={() => setExitDialogOpen(false)}
+                maxWidth="xs"
+                fullWidth
+                PaperProps={{ sx: { borderRadius: '24px', p: 2 } }}
+            >
+                <Box className="text-center" sx={{ py: 1 }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', mb: 2 }}>
+                        What would you like to do?
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            onClick={() => {
+                                setExitDialogOpen(false);
+                                // Clear custom trail and reset to mode select
+                                const userId = localStorage.getItem('twimp_user_id');
+                                if (userId && isCustomTrail) {
+                                    EasterEventAPI.clearCustomTrail(userId).catch(() => {});
+                                }
+                                setIsCustomTrail(false);
+                                sessionStorage.removeItem('easter_playing');
+                                _setTrailMode('mode_select');
+                            }}
+                            sx={{
+                                borderRadius: '14px',
+                                py: 1.5,
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                fontSize: '1rem',
+                                background: 'linear-gradient(45deg, #22C55E 0%, #16A34A 100%) !important',
+                                backgroundColor: 'transparent !important'
+                            }}
+                        >
+                            Switch Mode
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            fullWidth
+                            onClick={() => {
+                                setExitDialogOpen(false);
+                                sessionStorage.removeItem('easter_playing');
+                                router.back();
+                            }}
+                            sx={{
+                                borderRadius: '14px',
+                                py: 1.5,
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                fontSize: '1rem',
+                                borderColor: '#6b7280',
+                                color: '#6b7280'
+                            }}
+                        >
+                            Back to HQ
+                        </Button>
+                        <Button
+                            onClick={() => setExitDialogOpen(false)}
+                            sx={{
+                                textTransform: 'none',
+                                color: '#9ca3af',
+                                fontWeight: 600
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                    </Box>
+                </Box>
+            </Dialog>
         </Box>
     );
 }
