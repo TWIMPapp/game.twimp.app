@@ -216,9 +216,9 @@ export default function Wordle({ answer, onSolved }: WordleProps) {
             </Box>
 
             {/* Keyboard */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1, width: '100%', maxWidth: 360 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px', mt: 1, width: '100%' }}>
                 {KEYBOARD_ROWS.map((row, rowIdx) => (
-                    <Box key={rowIdx} sx={{ display: 'flex', justifyContent: 'center', gap: 0.4 }}>
+                    <Box key={rowIdx} sx={{ display: 'flex', justifyContent: 'center', gap: '3px', px: 0.5 }}>
                         {row.map(key => {
                             const isWide = key === 'ENTER' || key === '⌫';
                             const state = keyStates[key];
@@ -230,7 +230,7 @@ export default function Wordle({ answer, onSolved }: WordleProps) {
                                     key={key}
                                     onClick={() => handleKey(key)}
                                     sx={{
-                                        minWidth: isWide ? 52 : 30,
+                                        flex: isWide ? 1.5 : 1,
                                         height: 42,
                                         display: 'flex',
                                         alignItems: 'center',
@@ -239,7 +239,7 @@ export default function Wordle({ answer, onSolved }: WordleProps) {
                                         backgroundColor: bgColor,
                                         color: textColor,
                                         fontWeight: 700,
-                                        fontSize: isWide ? '0.65rem' : '0.85rem',
+                                        fontSize: isWide ? '0.6rem' : '0.8rem',
                                         cursor: 'pointer',
                                         userSelect: 'none',
                                         transition: 'background-color 0.2s',
