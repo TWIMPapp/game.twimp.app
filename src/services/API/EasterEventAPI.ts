@@ -66,11 +66,11 @@ export class EasterEventAPI {
     }
 
     static async setCustomTrail(userId: string, locations: Array<{ lat: number; lng: number }>) {
-        return this.action('set-custom-trail').post({ user_id: userId, locations }, {});
+        return this.nextAPI.post({ game_ref: 'easter-event', user_id: userId, action: 'set-custom-trail', locations, ...this.testParams() }, {});
     }
 
     static async clearCustomTrail(userId: string) {
-        return this.action('clear-custom-trail').post({ user_id: userId }, {});
+        return this.nextAPI.post({ game_ref: 'easter-event', user_id: userId, action: 'clear-custom-trail', ...this.testParams() }, {});
     }
 
     static async registerInterest(town: string) {

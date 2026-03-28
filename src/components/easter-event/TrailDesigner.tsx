@@ -66,7 +66,7 @@ export default function TrailDesigner({
         if (userLocation) {
             const distFromUser = getDistanceMeters(lat, lng, userLocation.lat, userLocation.lng);
             if (distFromUser < MIN_SPACING_METERS) {
-                setErrorMessage(`Too close to your location! Must be at least 200m away.`);
+                setErrorMessage(`Too close to your location! Must be at least ${MIN_SPACING_METERS}m away.`);
                 setErrorOpen(true);
                 return;
             }
@@ -76,7 +76,7 @@ export default function TrailDesigner({
         for (let i = 0; i < placedEggs.length; i++) {
             const dist = getDistanceMeters(lat, lng, placedEggs[i].lat, placedEggs[i].lng);
             if (dist < MIN_SPACING_METERS) {
-                setErrorMessage(`Too close to Egg ${i + 1}! Must be at least 200m apart.`);
+                setErrorMessage(`Too close to Egg ${i + 1}! Must be at least ${MIN_SPACING_METERS}m apart.`);
                 setErrorOpen(true);
                 return;
             }
