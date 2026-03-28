@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import {
     Box,
@@ -22,6 +22,7 @@ import TrailDesigner from '@/components/easter-event/TrailDesigner';
 import styles from '@/styles/egg-hunt.module.css';
 import { Colour } from '@/typings/Colour.enum';
 import { Marker } from '@/typings/Task';
+import { getDistanceInMeters } from '@/utils/geo';
 
 type TrailMode = 'mode_select' | 'designing' | 'playing';
 
@@ -103,6 +104,45 @@ export default function EasterEventMap() {
     const mapRef = useRef<MapRef>(null);
     const router = useRouter();
 
+    // Auto-recenter: follow user unless they're interacting with the map
+    const userInteractingRef = useRef(false);
+    const interactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const DEFAULT_ZOOM = 18;
+
+    const handleMapInteractionStart = useCallback(() => {
+        userInteractingRef.current = true;
+        if (interactionTimerRef.current) {
+            clearTimeout(interactionTimerRef.current);
+        }
+    }, []);
+
+    const handleMapInteractionEnd = useCallback(() => {
+        if (interactionTimerRef.current) {
+            clearTimeout(interactionTimerRef.current);
+        }
+        interactionTimerRef.current = setTimeout(() => {
+            userInteractingRef.current = false;
+            // Gently pan and zoom back to user
+            if (mapRef.current && userLocationRef.current) {
+                mapRef.current.smoothRecenter(userLocationRef.current, DEFAULT_ZOOM);
+            }
+        }, 10000);
+    }, []);
+
+    // Follow user location when not interacting
+    useEffect(() => {
+        if (!userInteractingRef.current && userLocation && mapRef.current && trailMode === 'playing') {
+            mapRef.current.panTo(userLocation);
+        }
+    }, [userLocation, trailMode]);
+
+    // Cleanup interaction timer
+    useEffect(() => {
+        return () => {
+            if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
+        };
+    }, []);
+
     // Update spawn radius from any response that includes it
     const updateSpawnRadius = (res: any) => {
         if (res?.spawnRadius?.center) {
@@ -121,6 +161,7 @@ export default function EasterEventMap() {
             const res: any = await EasterEventAPI.acknowledgeSafety(userId);
             if (res.ok && res.session) {
                 setSession(res.session);
+                setIsCustomTrail(!!res.session.customTrail);
             }
             setSafetyDialogOpen(false);
         } catch (err) {
@@ -144,21 +185,32 @@ export default function EasterEventMap() {
 
     // Trail mode handlers
     const handleSelectNearMe = async () => {
-        // Reset spawn location to current position each time "Near Me" is selected
+        setTrailMode('playing');
+        setIsCustomTrail(false);
+
+        // Show spawn radius immediately using current location
+        const center = userLocation || session?.startPosition;
+        console.log('[NearMe] Setting spawn radius:', { center, radiusMeters: spawnRadius?.radiusMeters, userLocation, startPos: session?.startPosition });
+        if (center && (center.lat !== 0 || center.lng !== 0)) {
+            setSpawnRadius({
+                center,
+                radiusMeters: spawnRadius?.radiusMeters || 200
+            });
+        }
+
+        // Then reset on server (which will also spawn an egg)
         const userId = localStorage.getItem('twimp_user_id');
         if (userId && userLocation) {
             try {
                 const res: any = await EasterEventAPI.resetSpawnLocation(userId, userLocation.lat, userLocation.lng);
-                if (res) {
-                    setSession(res);
-                    updateSpawnRadius(res);
+                if (res?.session) {
+                    setSession(res.session);
                 }
             } catch (err) {
                 console.error('Failed to reset spawn location:', err);
             }
         }
-        setTrailMode('playing');
-        setIsCustomTrail(false);
+
         if (session && !session.safetyVerified) {
             setSafetyDialogOpen(true);
         }
@@ -271,7 +323,11 @@ export default function EasterEventMap() {
     }, [testMode]);
 
     const userLocationRef = useRef(userLocation);
-    const lastSentLocationRef = useRef<{ lat: number, lng: number } | null>(null);
+
+    const sessionRef = useRef(session);
+    useEffect(() => {
+        sessionRef.current = session;
+    }, [session]);
 
     useEffect(() => {
         userLocationRef.current = userLocation;
@@ -279,75 +335,134 @@ export default function EasterEventMap() {
 
     // Track whether a popup is open to pause AWTY polling
     const popupOpenRef = useRef(false);
+    const isPollingRef = useRef(false);
     useEffect(() => {
         popupOpenRef.current = !!(celebrationPopup || questionPopup || goldenEggPopup || letterPopup);
     }, [celebrationPopup, questionPopup, goldenEggPopup, letterPopup]);
 
-    // AWTY Polling
+    // Process AWTY response — shared between smart polling and heartbeat
+    const handleAWTYResponse = useCallback((res: any) => {
+        if (res.session) {
+            setSession(res.session);
+            setIsCustomTrail(!!res.session.customTrail);
+        }
+
+        if (res.dailyProgress) {
+            setDailyProgress(res.dailyProgress);
+        }
+
+        updateSpawnRadius(res);
+
+        if (res.isBonusEgg && !bonusPopupShownRef.current) {
+            setIsBonusMode(true);
+            setShowBonusPopup(true);
+            bonusPopupShownRef.current = true;
+        } else if (res.isBonusEgg) {
+            setIsBonusMode(true);
+        }
+
+        if (res.arrived) {
+            const subject = res.session?.currentEgg?.subject || 'SCIENCE';
+            const isGoldenEgg = res.isGoldenEgg || false;
+            const isBonusEgg = res.isBonusEgg || false;
+            setCelebrationPopup({ subject, isGoldenEgg, isBonusEgg, task: res.task });
+        }
+    }, []);
+
+    // Smart AWTY Polling — client-side distance check + adaptive interval + heartbeat
+    const PROXIMITY_THRESHOLD = 50;   // Call AWTY when within 50m
+    const HEARTBEAT_INTERVAL = 60000; // 60s heartbeat for session sync / egg expiry
+    const CLOSE_POLL_INTERVAL = 5000; // 5s when near egg
+    const FAR_POLL_INTERVAL = 15000;  // 15s when far but moving
+
     useEffect(() => {
         const userId = localStorage.getItem('twimp_user_id');
         if (!userId) return;
 
-        const checkAWTY = async () => {
-            // Pause polling while any popup is open
-            if (popupOpenRef.current) return;
+        let timeoutId: ReturnType<typeof setTimeout>;
+        let lastAwtyCall = 0;
+        let lastPolledLoc: { lat: number; lng: number } | null = null;
+        let cancelled = false;
 
-            const currentLoc = userLocationRef.current;
-            if (!currentLoc) return;
+        const hasUserMoved = (currentLoc: { lat: number; lng: number }): boolean => {
+            if (!lastPolledLoc) return true;
+            const dist = getDistanceInMeters(currentLoc.lat, currentLoc.lng, lastPolledLoc.lat, lastPolledLoc.lng);
+            return dist > 3; // Consider moved if >3m
+        };
 
-            const lastSent = lastSentLocationRef.current;
-            if (lastSent) {
-                const dist = Math.sqrt(
-                    Math.pow(currentLoc.lat - lastSent.lat, 2) +
-                    Math.pow(currentLoc.lng - lastSent.lng, 2)
-                );
-                if (dist < 0.00001) return;
-            }
-
+        const callAWTY = async (currentLoc: { lat: number; lng: number }) => {
             try {
                 const res: any = await EasterEventAPI.awty(userId, currentLoc.lat, currentLoc.lng);
-                console.log("[EasterEventMap] AWTY Check:", res.message);
-
-                if (res.session) {
-                    setSession(res.session);
-                }
-
-                if (res.dailyProgress) {
-                    setDailyProgress(res.dailyProgress);
-                }
-
-                // Update spawn radius if included in response
-                updateSpawnRadius(res);
-
-                // Check if we're now in bonus mode
-                if (res.isBonusEgg && !bonusPopupShownRef.current) {
-                    setIsBonusMode(true);
-                    setShowBonusPopup(true);
-                    bonusPopupShownRef.current = true;
-                } else if (res.isBonusEgg) {
-                    setIsBonusMode(true);
-                }
-
-                // User arrived at egg - show celebration popup first
-                // Task is included in AWTY response, no need to call confirmArrival
-                if (res.arrived) {
-                    const subject = res.session?.currentEgg?.subject || 'SCIENCE';
-                    const isGoldenEgg = res.isGoldenEgg || false;
-                    const isBonusEgg = res.isBonusEgg || false;
-                    setCelebrationPopup({ subject, isGoldenEgg, isBonusEgg, task: res.task });
-                }
-
-                lastSentLocationRef.current = currentLoc;
+                handleAWTYResponse(res);
+                lastAwtyCall = Date.now();
+                lastPolledLoc = currentLoc;
             } catch (err) {
                 console.error("AWTY check failed:", err);
             }
         };
 
-        const interval = setInterval(checkAWTY, 5000);
-        checkAWTY();
+        const smartPoll = async () => {
+            if (cancelled || isPollingRef.current) return;
+            isPollingRef.current = true;
 
-        return () => clearInterval(interval);
-    }, []);
+            if (popupOpenRef.current) {
+                isPollingRef.current = false;
+                timeoutId = setTimeout(smartPoll, 1000);
+                return;
+            }
+
+            const currentLoc = userLocationRef.current;
+            if (!currentLoc) {
+                isPollingRef.current = false;
+                timeoutId = setTimeout(smartPoll, 1000);
+                return;
+            }
+
+            const egg = sessionRef.current?.currentEgg;
+            const now = Date.now();
+            const moved = hasUserMoved(currentLoc);
+            let nextInterval = FAR_POLL_INTERVAL;
+
+            if (egg) {
+                const dist = getDistanceInMeters(currentLoc.lat, currentLoc.lng, egg.lat, egg.lng);
+                const expired = egg.expireTime && egg.expireTime < now;
+
+                if (expired) {
+                    // Egg expired — always call regardless of movement
+                    await callAWTY(currentLoc);
+                } else if (moved && dist < PROXIMITY_THRESHOLD) {
+                    // Close to egg and moving — call AWTY for collection check
+                    await callAWTY(currentLoc);
+                } else if (moved && dist < 200 && now - lastAwtyCall > CLOSE_POLL_INTERVAL) {
+                    // Getting close and moving — call if not called recently
+                    await callAWTY(currentLoc);
+                } else if (moved && now - lastAwtyCall > HEARTBEAT_INTERVAL) {
+                    // Far from egg, moving — heartbeat
+                    await callAWTY(currentLoc);
+                }
+                // Not moving or called recently — skip, loop will check again in 5s
+            } else {
+                // No egg — call AWTY to get one spawned
+                if (now - lastAwtyCall > CLOSE_POLL_INTERVAL) {
+                    await callAWTY(currentLoc);
+                }
+            }
+
+            nextInterval = CLOSE_POLL_INTERVAL;
+
+            isPollingRef.current = false;
+            timeoutId = setTimeout(smartPoll, nextInterval);
+        };
+
+        // Initial call
+        smartPoll();
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timeoutId);
+            isPollingRef.current = false;
+        };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Timer effect
     useEffect(() => {
@@ -406,6 +521,7 @@ export default function EasterEventMap() {
 
                 if (res.session) {
                     setSession(res.session);
+                    setIsCustomTrail(!!res.session.customTrail);
                 }
 
                 if (res.dailyProgress) {
@@ -448,6 +564,7 @@ export default function EasterEventMap() {
 
                 if (res.session) {
                     setSession(res.session);
+                    setIsCustomTrail(!!res.session.customTrail);
                 }
 
                 setSubmitting(false);
@@ -648,12 +765,14 @@ export default function EasterEventMap() {
                     taskMarkers={trailMode === 'playing' ? markers : []}
                     userLocation={userLocation}
                     testMode={testMode}
-                    zoom={20}
+                    zoom={DEFAULT_ZOOM}
                     spawnRadius={trailMode === 'playing' && !isCustomTrail ? spawnRadius || undefined : undefined}
                     onPlayerMove={(lat, lng) => {
                         setUserLocation({ lat, lng });
                     }}
                     designerMode={trailMode === 'mode_select'}
+                    onMapInteractionStart={handleMapInteractionStart}
+                    onMapInteractionEnd={handleMapInteractionEnd}
                 />
 
                 {/* Bonus Mode Indicator */}
@@ -1190,12 +1309,12 @@ export default function EasterEventMap() {
                         <Button
                             variant="contained"
                             fullWidth
-                            onClick={() => {
+                            onClick={async () => {
                                 setExitDialogOpen(false);
                                 // Clear custom trail and reset to mode select
                                 const userId = localStorage.getItem('twimp_user_id');
                                 if (userId && isCustomTrail) {
-                                    EasterEventAPI.clearCustomTrail(userId).catch(() => {});
+                                    await EasterEventAPI.clearCustomTrail(userId).catch(() => {});
                                 }
                                 setIsCustomTrail(false);
                                 sessionStorage.removeItem('easter_playing');

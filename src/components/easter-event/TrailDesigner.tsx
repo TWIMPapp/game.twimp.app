@@ -46,11 +46,14 @@ export default function TrailDesigner({
     const hasEggs = placedEggs.length > 0;
     const exceededMax = placedEggs.length >= maxEggs;
 
-    // Build exclusion zones from placed eggs
-    const exclusionZones: ExclusionZone[] = placedEggs.map(egg => ({
-        center: egg,
-        radiusMeters: MIN_SPACING_METERS
-    }));
+    // Build exclusion zones from placed eggs + user location
+    const exclusionZones: ExclusionZone[] = [
+        ...(userLocation ? [{ center: userLocation, radiusMeters: MIN_SPACING_METERS }] : []),
+        ...placedEggs.map(egg => ({
+            center: egg,
+            radiusMeters: MIN_SPACING_METERS
+        }))
+    ];
 
     // Convert placed eggs to map markers - eggs beyond max are orange
     const markers: Marker[] = placedEggs.map((egg, idx) => ({
@@ -222,12 +225,13 @@ export default function TrailDesigner({
                             flex: 1,
                             py: 1.5,
                             borderRadius: '16px',
-                            backgroundColor: '#22c55e',
+                            backgroundColor: '#22c55e !important',
+                            color: 'white',
                             fontWeight: 700,
                             fontSize: '1.1rem',
                             textTransform: 'none',
                             '&:hover': {
-                                backgroundColor: '#16a34a'
+                                backgroundColor: '#16a34a !important'
                             }
                         }}
                     >

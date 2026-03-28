@@ -12,6 +12,7 @@ export interface MapRef {
   panTo: (location: { lat: number; lng: number }) => void;
   setZoom: (zoom: number) => void;
   panAndZoom: (location: { lat: number; lng: number }, zoom: number) => void;
+  smoothRecenter: (location: { lat: number; lng: number }, zoom: number) => void;
 }
 
 export interface MapProps {
@@ -112,6 +113,8 @@ const MapComponent = forwardRef<MapRef, {
   spawnRadiusColor?: string;
   startingPointLocation?: { lat: number; lng: number } | null;
   onMarkerClick?: (index: number, marker: Marker) => void;
+  onMapInteractionStart?: () => void;
+  onMapInteractionEnd?: () => void;
 }>(function MapComponent({
   taskMarkers,
   userLocation,
@@ -125,7 +128,9 @@ const MapComponent = forwardRef<MapRef, {
   targetMarkerIndex,
   spawnRadiusColor = '#ffffff',
   startingPointLocation = null,
-  onMarkerClick
+  onMarkerClick,
+  onMapInteractionStart,
+  onMapInteractionEnd
 }, ref) {
   const [center, setCenter] = useState({ lat: 0, lng: 0 });
   const [isGoogleMapsAPILoaded, setIsGoogleMapsAPILoaded] = useState(false);
@@ -148,6 +153,25 @@ const MapComponent = forwardRef<MapRef, {
     setZoom: (zoomLevel: number) => {
       if (mapRef.current) {
         mapRef.current.setZoom(zoomLevel);
+      }
+    },
+    smoothRecenter: (location: { lat: number; lng: number }, targetZoom: number) => {
+      if (!mapRef.current) return;
+      const map = mapRef.current;
+      const currentZoom = map.getZoom() || targetZoom;
+
+      // First pan to location (this animates natively)
+      map.panTo(location);
+
+      // Then animate zoom in steps
+      if (currentZoom !== targetZoom) {
+        const steps = Math.abs(currentZoom - targetZoom);
+        const direction = currentZoom < targetZoom ? 1 : -1;
+        for (let i = 1; i <= steps; i++) {
+          setTimeout(() => {
+            map.setZoom(currentZoom + (direction * i));
+          }, i * 150);
+        }
       }
     },
     panAndZoom: (location: { lat: number; lng: number }, zoomLevel: number) => {
@@ -306,6 +330,9 @@ const MapComponent = forwardRef<MapRef, {
               }}
               onLoad={onLoad}
               onUnmount={onUnmount}
+              onDragStart={() => onMapInteractionStart?.()}
+              onDragEnd={() => onMapInteractionEnd?.()}
+              onZoomChanged={() => { onMapInteractionStart?.(); onMapInteractionEnd?.(); }}
               onRightClick={(e) => {
                 if (designerMode && onLongPress && e.latLng) {
                   e.domEvent.preventDefault();

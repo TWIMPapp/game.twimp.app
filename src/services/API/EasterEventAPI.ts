@@ -73,6 +73,10 @@ export class EasterEventAPI {
         return this.nextAPI.post({ game_ref: 'easter-event', user_id: userId, action: 'clear-custom-trail', ...this.testParams() }, {});
     }
 
+    static async sendHelp(userId: string, message: string) {
+        return this.nextAPI.post({ game_ref: 'easter-event', user_id: userId, action: 'help', message, ...this.testParams() }, {});
+    }
+
     static async registerInterest(town: string) {
         return this.action('register-interest').post({ town }, {});
     }

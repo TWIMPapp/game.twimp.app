@@ -193,6 +193,10 @@ export default function EasterEventTestingHub() {
     const [cluesExpanded, setCluesExpanded] = useState(true);
     const [puzzleCountdown, setPuzzleCountdown] = useState<string>('');
     const [puzzleLetterReveal, setPuzzleLetterReveal] = useState<{ letter: string; symbol: string } | null>(null);
+    const [helpExpanded, setHelpExpanded] = useState(false);
+    const [helpMessage, setHelpMessage] = useState('');
+    const [helpSending, setHelpSending] = useState(false);
+    const [helpSent, setHelpSent] = useState(false);
     const [dataFetchedAt, setDataFetchedAt] = useState<number>(Date.now());
 
     // Live countdown timer for puzzles
@@ -425,7 +429,7 @@ export default function EasterEventTestingHub() {
     }
 
     return (
-        <Box className="min-h-screen bg-gradient-to-b from-green-50 to-yellow-50 pb-24">
+        <Box className="min-h-screen bg-gradient-to-b from-green-50 to-yellow-50 pb-36">
             {/* Logo */}
             <PageHeader compact />
 
@@ -825,6 +829,84 @@ export default function EasterEventTestingHub() {
                         <CodexGrid codex={gameData?.codex || []} />
                     </CardContent>
                 </Card >
+
+                {/* Help Section */}
+                <Card
+                    className="rounded-2xl shadow-md overflow-hidden"
+                    sx={{
+                        background: '#ffffff',
+                        border: '1px solid #e5e7eb'
+                    }}
+                >
+                    <CardContent>
+                        <Box
+                            className="flex items-center justify-between cursor-pointer"
+                            onClick={() => setHelpExpanded(!helpExpanded)}
+                        >
+                            <Typography variant="h6" className="font-bold flex items-center gap-2 text-gray-800">
+                                💬 Need Help?
+                            </Typography>
+                            <IconButton size="small" sx={{ color: '#6b7280' }}>
+                                {helpExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            </IconButton>
+                        </Box>
+                        <Collapse in={helpExpanded}>
+                        {helpSent ? (
+                            <Typography variant="body2" sx={{ color: '#22c55e', fontWeight: 600, textAlign: 'center', py: 2 }}>
+                                ✓ Message sent! We&apos;ll get back to you soon.
+                            </Typography>
+                        ) : (
+                            <Box>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    placeholder="Tell us what&apos;s wrong or ask a question..."
+                                    value={helpMessage}
+                                    onChange={(e) => setHelpMessage(e.target.value)}
+                                    disabled={helpSending}
+                                    sx={{
+                                        mb: 1.5,
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: '12px'
+                                        }
+                                    }}
+                                />
+                                <Button
+                                    variant="contained"
+                                    fullWidth
+                                    disabled={!helpMessage.trim() || helpSending}
+                                    onClick={async () => {
+                                        const userId = localStorage.getItem('twimp_user_id');
+                                        if (!userId) return;
+                                        setHelpSending(true);
+                                        try {
+                                            const res: any = await EasterEventAPI.sendHelp(userId, helpMessage);
+                                            if (res?.ok) {
+                                                setHelpSent(true);
+                                            } else {
+                                                console.error('Help send failed:', res);
+                                            }
+                                        } catch (err) {
+                                            console.error('Help send error:', err);
+                                        }
+                                        setHelpSending(false);
+                                    }}
+                                    sx={{
+                                        borderRadius: '12px',
+                                        textTransform: 'none',
+                                        fontWeight: 700,
+                                        backgroundColor: '#6366f1 !important',
+                                        '&:hover': { backgroundColor: '#4f46e5 !important' }
+                                    }}
+                                >
+                                    {helpSending ? <CircularProgress size={24} color="inherit" /> : 'Send'}
+                                </Button>
+                            </Box>
+                        )}
+                        </Collapse>
+                    </CardContent>
+                </Card>
             </Box >
 
             {/* Fixed CTA Button */}

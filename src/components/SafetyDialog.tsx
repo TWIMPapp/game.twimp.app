@@ -25,8 +25,8 @@ export default function SafetyDialog({ open, onAcknowledge }: SafetyDialogProps)
     const handleAcknowledge = () => {
         if (acknowledged) {
             onAcknowledge();
-            // Reset checkbox after a small delay so dialog closes first
-            setTimeout(() => setAcknowledged(false), 100);
+            // Reset checkbox after dialog close animation completes
+            setTimeout(() => setAcknowledged(false), 1000);
         }
     };
 
@@ -173,8 +173,9 @@ export default function SafetyDialog({ open, onAcknowledge }: SafetyDialogProps)
                         py: 1.5,
                         borderRadius: '12px',
                         background: acknowledged
-                            ? 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)'
+                            ? 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important'
                             : undefined,
+                        backgroundColor: acknowledged ? 'transparent !important' : undefined,
                         fontWeight: 'bold',
                         fontSize: '1rem'
                     }}
