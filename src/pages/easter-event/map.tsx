@@ -709,7 +709,7 @@ export default function EasterEventMap() {
                                 sx={{ width: 24, height: 24 }}
                             />
                             <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: isBonusMode ? '#f97316' : '#22c55e' }}>
-                                {isBonusMode ? `${progress.max}/${progress.max} ✓` : (progress.max - progress.collected)}
+                                {!dailyProgress ? '...' : isBonusMode ? `${progress.max}/${progress.max} ✓` : Math.max(0, progress.max - progress.collected)}
                             </Typography>
                         </>
                     )}

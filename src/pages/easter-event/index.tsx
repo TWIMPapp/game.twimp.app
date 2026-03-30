@@ -251,7 +251,10 @@ export default function EasterEventHub() {
 
         // Re-fetch when returning from map (page becomes visible again)
         const handleVisibility = () => {
-            if (document.visibilityState === 'visible') fetchGameData();
+            if (document.visibilityState === 'visible') {
+                setLoading(true);
+                fetchGameData();
+            }
         };
         document.addEventListener('visibilitychange', handleVisibility);
         window.addEventListener('focus', handleVisibility);
@@ -887,7 +890,7 @@ export default function EasterEventHub() {
                     zIndex: 1000
                 }}
             >
-                {(gameData?.dailyProgress?.collected || 0) >= (gameData?.dailyProgress?.max || 5) ? (
+                {!loading && gameData && (gameData.dailyProgress?.collected || 0) >= (gameData.dailyProgress?.max || 5) ? (
                     <Box className="text-center">
                         <Typography
                             sx={{
@@ -949,7 +952,7 @@ export default function EasterEventHub() {
                                 alt=""
                                 sx={{ width: 28, height: 28, mr: 1 }}
                             />
-                            Find The Eggs ({gameData?.dailyProgress?.collected || 0}/{gameData?.dailyProgress?.max || 5})
+                            {loading ? 'Find The Eggs' : `Find The Eggs (${gameData?.dailyProgress?.collected || 0}/${gameData?.dailyProgress?.max || 5})`}
                         </Button>
                         {!isAuthenticated && (
                             <Typography
