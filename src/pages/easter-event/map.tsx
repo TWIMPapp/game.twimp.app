@@ -177,6 +177,10 @@ export default function EasterEventMap() {
             const res: any = await EasterEventAPI.reportHazard(userId);
             if (res.ok && res.session) {
                 setSession(res.session);
+                setIsCustomTrail(!!res.session.customTrail);
+            }
+            if (res.dailyProgress) {
+                setDailyProgress(res.dailyProgress);
             }
         } catch (err) {
             console.error('Failed to report hazard:', err);
