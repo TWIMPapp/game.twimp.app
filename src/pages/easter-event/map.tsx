@@ -277,6 +277,7 @@ export default function EasterEventMap() {
         const fetchInitialData = async (lat: number, lng: number) => {
             try {
                 const res: any = await EasterEventAPI.start(userId, lat, lng);
+                console.log('[DEBUG] /play response:', { isBonusEgg: res.isBonusEgg, currentEgg_isBonusEgg: res.currentEgg?.isBonusEgg, dailyProgress: res.dailyProgress });
                 setSession(res);
                 updateSpawnRadius(res);
 
@@ -358,6 +359,7 @@ export default function EasterEventMap() {
         updateSpawnRadius(res);
 
         if (res.isBonusEgg && !bonusPopupShownRef.current) {
+            console.error('[DEBUG] Bonus popup triggered!', { isBonusEgg: res.isBonusEgg, dailyProgress: res.dailyProgress, currentEgg: res.session?.currentEgg?.isBonusEgg });
             setIsBonusMode(true);
             setShowBonusPopup(true);
             bonusPopupShownRef.current = true;
