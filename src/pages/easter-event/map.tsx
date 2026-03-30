@@ -67,6 +67,7 @@ const EASTER_EVENT_LIVE = true;
 export default function EasterEventMap() {
     const [session, setSession] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [gameReady, setGameReady] = useState(false); // true after /play completes
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [testMode, setTestMode] = useState(process.env.NODE_ENV !== 'production');
@@ -303,14 +304,22 @@ export default function EasterEventMap() {
                 console.error(err);
             } finally {
                 setLoading(false);
+                setGameReady(true);
             }
         };
 
-        navigator.geolocation.getCurrentPosition((pos) => {
-            const initialLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            setUserLocation(initialLoc);
-            fetchInitialData(initialLoc.lat, initialLoc.lng);
-        });
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const initialLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                setUserLocation(initialLoc);
+                fetchInitialData(initialLoc.lat, initialLoc.lng);
+            },
+            (err) => {
+                console.error('Geolocation error:', err);
+                setLoading(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Geolocation watching
@@ -382,6 +391,8 @@ export default function EasterEventMap() {
     const FAR_POLL_INTERVAL = 15000;  // 15s when far but moving
 
     useEffect(() => {
+        if (!gameReady) return; // Don't poll until /play has completed
+
         const userId = localStorage.getItem('twimp_user_id');
         if (!userId) return;
 
@@ -468,7 +479,7 @@ export default function EasterEventMap() {
             clearTimeout(timeoutId);
             isPollingRef.current = false;
         };
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [gameReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Timer effect
     useEffect(() => {
