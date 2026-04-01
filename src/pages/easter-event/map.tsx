@@ -84,19 +84,7 @@ export default function EasterEventMap() {
     const [spawnRadius, setSpawnRadius] = useState<SpawnRadius | null>(null);
     const [safetyDialogOpen, setSafetyDialogOpen] = useState(false);
     const [dailyProgress, setDailyProgress] = useState<{ collected: number; max: number } | null>(null);
-    // Persist trailMode in sessionStorage so it survives component remounts
-    const [trailMode, _setTrailMode] = useState<TrailMode>(() => {
-        if (typeof window !== 'undefined' && sessionStorage.getItem('easter_playing') === 'true') {
-            return 'playing';
-        }
-        return 'mode_select';
-    });
-    const setTrailMode = (mode: TrailMode) => {
-        if (mode === 'playing') {
-            sessionStorage.setItem('easter_playing', 'true');
-        }
-        _setTrailMode(mode);
-    };
+    const [trailMode, setTrailMode] = useState<TrailMode>('mode_select');
     const [isCustomTrail, setIsCustomTrail] = useState(false);
     const [isBonusMode, setIsBonusMode] = useState(false);
     const [showBonusPopup, setShowBonusPopup] = useState(false);
@@ -1334,8 +1322,7 @@ export default function EasterEventMap() {
                                     await EasterEventAPI.clearCustomTrail(userId).catch(() => {});
                                 }
                                 setIsCustomTrail(false);
-                                sessionStorage.removeItem('easter_playing');
-                                _setTrailMode('mode_select');
+                                setTrailMode('mode_select');
                             }}
                             sx={{
                                 borderRadius: '14px',
@@ -1354,7 +1341,6 @@ export default function EasterEventMap() {
                             fullWidth
                             onClick={() => {
                                 setExitDialogOpen(false);
-                                sessionStorage.removeItem('easter_playing');
                                 router.back();
                             }}
                             sx={{
