@@ -251,11 +251,6 @@ export default function EasterEventMap() {
         }
 
         // Restore test day context from testing page
-        const storedTestDay = typeof window !== 'undefined' ? sessionStorage.getItem('easter_test_day') : null;
-        if (storedTestDay !== null) {
-            EasterEventAPI.setTestDay(parseInt(storedTestDay));
-        }
-
         let visitorId = localStorage.getItem('twimp_user_id');
         if (!visitorId) {
             visitorId = crypto.randomUUID();

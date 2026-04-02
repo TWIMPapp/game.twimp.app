@@ -244,8 +244,7 @@ export default function EasterEventTestingHub() {
 
         // Set test day context for all API calls — persist in sessionStorage
         // so the map page can pick it up too
-        EasterEventAPI.setTestDay(testDay);
-        sessionStorage.setItem('easter_test_day', String(testDay));
+
 
         let userId = localStorage.getItem('twimp_user_id');
         if (!userId) {
@@ -258,7 +257,6 @@ export default function EasterEventTestingHub() {
         // Re-fetch when returning from map (page becomes visible again)
         const handleVisibility = () => {
             if (document.visibilityState === 'visible') {
-                EasterEventAPI.setTestDay(testDay);
                 fetchGameData();
             }
         };
@@ -445,7 +443,6 @@ export default function EasterEventTestingHub() {
                         if (!userId) return;
                         await EasterEventAPI.restart(userId);
                         sessionStorage.removeItem('easter_playing');
-                        sessionStorage.removeItem('easter_test_day');
                         sessionStorage.removeItem('easter_testing');
                         window.location.reload();
                     }}
