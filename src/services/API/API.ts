@@ -12,7 +12,8 @@ export class APIService {
   }
 
   public async get<T>(params: QueryParams): Promise<T> {
-    const url = `${BASE_URL}/${this._endpoint}${stringifyQueryParams(params)}`;
+    const cacheBustedParams = { ...params, _t: Date.now() };
+    const url = `${BASE_URL}/${this._endpoint}${stringifyQueryParams(cacheBustedParams)}`;
 
     // Detailed Logging
     console.group(`[TWIMP-FE] GET ${this._endpoint}`);
@@ -20,7 +21,7 @@ export class APIService {
     console.groupEnd();
 
     try {
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: { 'Cache-Control': 'no-cache' } });
 
       console.group(`[TWIMP-FE] GET ${this._endpoint} - SUCCESS`);
       console.log('Data:', response.data);
