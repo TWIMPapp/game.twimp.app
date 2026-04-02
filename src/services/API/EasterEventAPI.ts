@@ -28,7 +28,7 @@ export class EasterEventAPI {
     }
 
     static async getChapter(chapterId: number) {
-        return this.action(`chapter/${chapterId}`).get({ ...this.testParams() });
+        return this.action(`chapter/${chapterId}`).get({});
     }
 
     // Actions via unified /next endpoint
