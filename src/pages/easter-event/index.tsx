@@ -169,7 +169,7 @@ const EASTER_EVENT_LIVE = true;
 
 export default function EasterEventHub() {
     const router = useRouter();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
     const [loginModalOpen, setLoginModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [gameData, setGameData] = useState<any>(null);
@@ -259,11 +259,24 @@ export default function EasterEventHub() {
         document.addEventListener('visibilitychange', handleVisibility);
         window.addEventListener('focus', handleVisibility);
 
+
         return () => {
             document.removeEventListener('visibilitychange', handleVisibility);
             window.removeEventListener('focus', handleVisibility);
         };
     }, []);
+
+    // Re-fetch when auth state changes (user signs in/out, ID may have changed)
+    useEffect(() => {
+        if (isAuthenticated) {
+            // Small delay to let AuthContext sync twimp_user_id from server
+            const timer = setTimeout(() => {
+                setLoading(true);
+                fetchGameData();
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [isAuthenticated]);
 
     const fetchGameData = async () => {
         const userId = localStorage.getItem('twimp_user_id');

@@ -76,14 +76,13 @@ export default function LoginRequiredModal({
             variant="contained"
             onClick={handleGoogleSignIn}
             sx={{
-              backgroundColor: 'white !important',
-              color: '#1f2937',
-              border: '1px solid #e5e7eb',
+              backgroundColor: '#ea4335 !important',
+              color: 'white',
               textTransform: 'none',
               fontSize: '1rem',
               fontWeight: 600,
               py: 1.5,
-              '&:hover': { backgroundColor: '#f3f4f6 !important' },
+              '&:hover': { backgroundColor: '#d33426 !important' },
             }}
           >
             Continue with Google
