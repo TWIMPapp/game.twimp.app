@@ -461,24 +461,38 @@ export default function PlayCustomTrail() {
                             return '#3b82f6';                    // Blue
                         };
 
-                        let borderTop = 'transparent', borderRight = 'transparent',
-                            borderBottom = 'transparent', borderLeft = 'transparent';
+                        const getTemperatureOpacity = (dist: number) => {
+                            if (dist < 100) return 0.6;
+                            if (dist < 200) return 0.45;
+                            if (dist < 600) return 0.3;
+                            return 0.2;
+                        };
 
-                        // In hot/cold mode, show pins within 50m so they can actually collect
+                        const getTemperaturePulse = (dist: number) => {
+                            if (dist < 100) return '1.5s';
+                            if (dist < 200) return '2.5s';
+                            return 'none';
+                        };
+
+                        const noSignal = { color: 'rgba(255,255,255,0.5)', opacity: 0.15, pulse: 'none' };
+                        let edgeTop = { ...noSignal };
+                        let edgeRight = { ...noSignal };
+                        let edgeBottom = { ...noSignal };
+                        let edgeLeft = { ...noSignal };
+
                         let hotColdMarkers: Marker[] = [];
 
                         if (isHotCold && userLocation) {
                             const uncollected = trailPins.filter(p => !p.collected);
 
-                            // Find closest pin in each hemisphere
                             let closestNorth = Infinity, closestSouth = Infinity,
                                 closestEast = Infinity, closestWest = Infinity;
 
                             uncollected.forEach(pin => {
                                 const dist = getDistanceInMeters(userLocation.lat, userLocation.lng, pin.lat, pin.lng);
 
-                                // Reveal pin if within 50m
-                                if (dist < 50) {
+                                // Reveal pin if within 75m (buffer for GPS drift)
+                                if (dist < 75) {
                                     hotColdMarkers.push({
                                         lat: pin.lat,
                                         lng: pin.lng,
@@ -490,33 +504,29 @@ export default function PlayCustomTrail() {
                                     });
                                 }
 
-                                // Pin is north of player
                                 if (pin.lat > userLocation.lat && dist < closestNorth) closestNorth = dist;
-                                // Pin is south
                                 if (pin.lat < userLocation.lat && dist < closestSouth) closestSouth = dist;
-                                // Pin is east
                                 if (pin.lng > userLocation.lng && dist < closestEast) closestEast = dist;
-                                // Pin is west
                                 if (pin.lng < userLocation.lng && dist < closestWest) closestWest = dist;
                             });
 
-                            borderTop = closestNorth < Infinity ? getTemperatureColor(closestNorth) : '#3b82f6';
-                            borderBottom = closestSouth < Infinity ? getTemperatureColor(closestSouth) : '#3b82f6';
-                            borderRight = closestEast < Infinity ? getTemperatureColor(closestEast) : '#3b82f6';
-                            borderLeft = closestWest < Infinity ? getTemperatureColor(closestWest) : '#3b82f6';
+                            const makeEdge = (dist: number) => ({
+                                color: dist < Infinity ? getTemperatureColor(dist) : '#3b82f6',
+                                opacity: dist < Infinity ? getTemperatureOpacity(dist) : 0.2,
+                                pulse: dist < Infinity ? getTemperaturePulse(dist) : 'none'
+                            });
+
+                            edgeTop = makeEdge(closestNorth);
+                            edgeBottom = makeEdge(closestSouth);
+                            edgeRight = makeEdge(closestEast);
+                            edgeLeft = makeEdge(closestWest);
                         }
 
                         return (
                             <Box sx={{
                                 flex: 1,
                                 position: 'relative',
-                                overflow: 'hidden',
-                                borderTop: isHotCold ? `6px solid ${borderTop}` : 'none',
-                                borderRight: isHotCold ? `6px solid ${borderRight}` : 'none',
-                                borderBottom: isHotCold ? `6px solid ${borderBottom}` : 'none',
-                                borderLeft: isHotCold ? `6px solid ${borderLeft}` : 'none',
-                                boxSizing: 'border-box',
-                                transition: 'border-color 1s ease'
+                                overflow: 'hidden'
                             }}>
                                 <Map
                                     ref={mapRef}
@@ -530,6 +540,56 @@ export default function PlayCustomTrail() {
                                     targetMarkerIndex={isHotCold ? undefined : currentTargetMarkerIndex}
                                     onMarkerClick={handleMarkerClick}
                                 />
+
+                                {/* Hot/Cold edge overlays */}
+                                {isHotCold && (
+                                    <>
+                                        {/* Edge overlays */}
+                                        {[
+                                            { edge: edgeTop, sx: { top: 0, left: 0, right: 0, height: 30, background: `linear-gradient(to bottom, ${edgeTop.color}, transparent)` } },
+                                            { edge: edgeBottom, sx: { bottom: 0, left: 0, right: 0, height: 30, background: `linear-gradient(to top, ${edgeBottom.color}, transparent)` } },
+                                            { edge: edgeLeft, sx: { top: 0, bottom: 0, left: 0, width: 30, background: `linear-gradient(to right, ${edgeLeft.color}, transparent)` } },
+                                            { edge: edgeRight, sx: { top: 0, bottom: 0, right: 0, width: 30, background: `linear-gradient(to left, ${edgeRight.color}, transparent)` } },
+                                        ].map((item, i) => (
+                                            <Box key={`edge-${i}`} sx={{
+                                                position: 'absolute',
+                                                ...item.sx,
+                                                opacity: item.edge.opacity,
+                                                transition: 'all 1s ease',
+                                                animation: item.edge.pulse !== 'none' ? `hotColdPulse ${item.edge.pulse} ease-in-out infinite` : 'none',
+                                                pointerEvents: 'none',
+                                                zIndex: 5
+                                            }} />
+                                        ))}
+                                        {/* Corner glows */}
+                                        {[
+                                            { top: 0, left: 0, colors: [edgeTop, edgeLeft] },
+                                            { top: 0, right: 0, colors: [edgeTop, edgeRight] },
+                                            { bottom: 0, left: 0, colors: [edgeBottom, edgeLeft] },
+                                            { bottom: 0, right: 0, colors: [edgeBottom, edgeRight] },
+                                        ].map((corner, i) => {
+                                            const warmest = [...corner.colors].sort((a, b) => b.opacity - a.opacity)[0];
+                                            return (
+                                                <Box key={`corner-${i}`} sx={{
+                                                    position: 'absolute',
+                                                    ...(corner.top !== undefined ? { top: 0 } : { bottom: 0 }),
+                                                    ...(corner.left !== undefined ? { left: 0 } : { right: 0 }),
+                                                    width: 50, height: 50,
+                                                    background: `radial-gradient(circle at ${corner.left !== undefined ? '0% ' : '100% '}${corner.top !== undefined ? '0%' : '100%'}, ${warmest.color}, transparent)`,
+                                                    opacity: warmest.opacity * 0.8,
+                                                    transition: 'all 1s ease',
+                                                    pointerEvents: 'none', zIndex: 5
+                                                }} />
+                                            );
+                                        })}
+                                        <style>{`
+                                            @keyframes hotColdPulse {
+                                                0%, 100% { transform: scaleY(1); }
+                                                50% { transform: scaleY(1.5); }
+                                            }
+                                        `}</style>
+                                    </>
+                                )}
                             </Box>
                         );
                     })()}
