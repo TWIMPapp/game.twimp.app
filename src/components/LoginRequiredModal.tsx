@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 interface LoginRequiredMessageProps {
   open: boolean;
   onClose: () => void;
-  action: 'save' | 'share' | 'publish' | 'create';
+  action: 'save' | 'share' | 'publish' | 'create' | 'signin';
 }
 
 export default function LoginRequiredModal({
@@ -30,6 +30,7 @@ export default function LoginRequiredModal({
     share: 'share your game with others',
     publish: 'publish your game',
     create: 'create your own game',
+    signin: 'Sign In / Create Account',
   };
 
   const actionDescription = {
@@ -37,6 +38,7 @@ export default function LoginRequiredModal({
     share: 'Sign in with your Google or Facebook account to create and share your own games with the Twimp community.',
     publish: 'Sign in with your Google or Facebook account to create and share your own games with the Twimp community.',
     create: 'Sign in with your Google or Facebook account to create and share your own games with the Twimp community.',
+    signin: 'Sign in to save your progress across devices and access all features.',
   };
 
   const handleGoogleSignIn = async () => {
@@ -62,7 +64,7 @@ export default function LoginRequiredModal({
       <DialogTitle>
         <Box className="flex items-center gap-2">
           <LockIcon sx={{ color: '#FF2E5B' }} />
-          <span>{action === 'save' ? actionText[action] : `Create an Account to ${actionText[action]}`}</span>
+          <span>{action === 'save' || action === 'signin' ? actionText[action] : `Create an Account to ${actionText[action]}`}</span>
         </Box>
       </DialogTitle>
       <DialogContent>

@@ -32,8 +32,8 @@ export class CustomTrailAPI {
         return this.createAPI.post(params, {});
     }
 
-    static async getTrail(id: string) {
-        return this.trailAPI(id).get({});
+    static async getTrail(id: string, userId?: string) {
+        return this.trailAPI(id).get(userId ? { user_id: userId } : {});
     }
 
     static async getCreatorView(id: string, creatorId: string) {

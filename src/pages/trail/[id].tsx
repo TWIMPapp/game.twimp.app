@@ -96,6 +96,7 @@ export default function PlayCustomTrail() {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [resetting, setResetting] = useState(false);
     const [hazardPinIndex, setHazardPinIndex] = useState<number | null>(null);
+    const [existingProgress, setExistingProgress] = useState<{ collected: number; total: number; completed: boolean } | null>(null);
 
     const awtyRef = useRef<NodeJS.Timeout | null>(null);
     const awtyInFlight = useRef(false);
@@ -106,10 +107,11 @@ export default function PlayCustomTrail() {
         if (!trailId) return;
         (async () => {
             try {
-                const result: any = await CustomTrailAPI.getTrail(trailId);
+                const result: any = await CustomTrailAPI.getTrail(trailId, userId);
                 if (result.ok) {
                     setTrailInfo(result.trail);
                     setIsHotCold(result.trail.settings?.hotCold === true);
+                    if (result.existingProgress) setExistingProgress(result.existingProgress);
                     setGameState('preview');
                 } else {
                     setErrorMessage(result.message || 'Trail not found');
@@ -384,7 +386,11 @@ export default function PlayCustomTrail() {
                             backgroundColor: '#FF2E5B !important',
                         }}
                     >
-                        Start!
+                        {existingProgress
+                            ? existingProgress.completed
+                                ? 'Play Again!'
+                                : `Continue (${existingProgress.collected}/${existingProgress.total})`
+                            : 'Start!'}
                     </Button>
                 </Box>
             )}

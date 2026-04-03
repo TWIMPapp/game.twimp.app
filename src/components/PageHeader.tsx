@@ -1,8 +1,11 @@
-import { Box, Typography, Button, Avatar } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, Button, Avatar, IconButton } from '@mui/material';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import logoImg from '@/assets/images/logo.png';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
+import LoginRequiredModal from './LoginRequiredModal';
 
 const FONT = "'Poppins', sans-serif";
 
@@ -20,6 +23,7 @@ interface PageHeaderProps {
 export default function PageHeader({ compact = false, showCreate = false, onCreateClick }: PageHeaderProps) {
     const router = useRouter();
     const { isAuthenticated, user } = useAuth();
+    const [loginModalOpen, setLoginModalOpen] = useState(false);
 
     const handleLogoClick = () => {
         if (router.pathname !== '/') {
@@ -27,7 +31,7 @@ export default function PageHeader({ compact = false, showCreate = false, onCrea
         }
     };
 
-    return (
+    return (<>
         <Box sx={{
             px: 2, pt: compact ? 1.5 : 2, pb: compact ? 1 : 1.5,
             bgcolor: 'white', mx: 2, mt: compact ? 1.5 : 2, borderRadius: '16px',
@@ -73,7 +77,7 @@ export default function PageHeader({ compact = false, showCreate = false, onCrea
                         Create
                     </Button>
                 )}
-                {isAuthenticated && user?.image && (
+                {isAuthenticated && user?.image ? (
                     <Avatar
                         src={user.image}
                         alt={user.name || 'Account'}
@@ -88,8 +92,26 @@ export default function PageHeader({ compact = false, showCreate = false, onCrea
                             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                         }}
                     />
+                ) : (
+                    <IconButton
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setLoginModalOpen(true);
+                        }}
+                        sx={{ color: '#9ca3af' }}
+                    >
+                        <AccountCircleIcon sx={{ fontSize: compact ? 28 : 34 }} />
+                    </IconButton>
                 )}
             </Box>
         </Box>
+
+        <LoginRequiredModal
+            open={loginModalOpen}
+            onClose={() => setLoginModalOpen(false)}
+            action="signin"
+        />
+    </>
     );
 }
