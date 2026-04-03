@@ -18,6 +18,7 @@ import { Marker } from '@/typings/Task';
 import { getPinMarkerProps } from '@/config/pinIcons';
 import ReportHazardDialog from '@/components/ReportHazardDialog';
 import PageHeader from '@/components/PageHeader';
+import logoImg from '@/assets/images/logo.png';
 import { getDistanceInMeters } from '@/utils/geo';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { IconButton } from '@mui/material';
@@ -26,14 +27,18 @@ const AWTY_INTERVAL = 5000;
 
 type GameState = 'loading' | 'preview' | 'playing' | 'arrived' | 'question' | 'success' | 'completed' | 'error';
 
+interface TrailSettings {
+    competitive: boolean;
+    hotCold: boolean;
+}
+
 interface TrailInfo {
     id: string;
     theme: string;
     name?: string;
     startLocation: { lat: number; lng: number };
     pinCount: number;
-    competitive: boolean;
-    hotCold: boolean;
+    settings: TrailSettings;
     playCount: number;
     mode?: 'random' | 'custom';
 }
@@ -103,7 +108,7 @@ export default function PlayCustomTrail() {
                 const result: any = await CustomTrailAPI.getTrail(trailId);
                 if (result.ok) {
                     setTrailInfo(result.trail);
-                    setIsHotCold(result.trail.hotCold === true);
+                    setIsHotCold(result.trail.settings?.hotCold === true);
                     setGameState('preview');
                 } else {
                     setErrorMessage(result.message || 'Trail not found');
@@ -323,7 +328,8 @@ export default function PlayCustomTrail() {
 
     return (
         <Box sx={{ minHeight: '100vh', backgroundColor: '#F8F5F2' }}>
-            <PageHeader compact />
+            {/* Show PageHeader on non-playing states */}
+            {gameState !== 'playing' && <PageHeader compact />}
 
             {/* Loading */}
             {gameState === 'loading' && (
@@ -354,7 +360,7 @@ export default function PlayCustomTrail() {
                     {trailInfo.theme !== 'valentine' && (
                         <Typography sx={{ color: '#6b7280', textAlign: 'center' }}>
                             {themeLabel} &middot; {trailInfo.pinCount} location{trailInfo.pinCount !== 1 ? 's' : ''} to find
-                            {trailInfo.competitive && ' (Competitive)'}
+                            {trailInfo.settings?.competitive && ' (Competitive)'}
                         </Typography>
                     )}
                     {trailInfo.theme !== 'valentine' && trailInfo.playCount > 0 && (
@@ -388,35 +394,40 @@ export default function PlayCustomTrail() {
                     {/* Header */}
                     <Box sx={{
                         display: 'flex',
-                        justifyContent: 'space-between',
                         alignItems: 'center',
-                        p: 2,
+                        gap: 1.5,
+                        px: 2,
+                        py: 1.5,
                         backgroundColor: 'white',
                         borderBottom: '1px solid #e5e7eb',
                         zIndex: 10
                     }}>
-                        <Typography sx={{ fontWeight: 700 }}>
+                        <img
+                            src={logoImg.src}
+                            alt="Twimp"
+                            style={{ height: 28, cursor: 'pointer' }}
+                            onClick={() => router.push('/')}
+                        />
+                        <Typography sx={{ fontWeight: 700, flex: 1, fontSize: '0.9rem' }}>
                             {trailInfo?.name || themeLabel}
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography sx={{ fontWeight: 600, color: '#FF2E5B' }}>
-                                {session
-                                    ? isCompetitive
-                                        ? `You: ${session.collectedPins.length} | ${(session as any).remainingPins ?? '?'} left`
-                                        : `${session.collectedPins.length}/${session.totalPins}`
-                                    : ''}
-                            </Typography>
-                            {trailInfo?.mode === 'random' && (
-                                <IconButton
-                                    size="small"
-                                    onClick={() => (session?.collectedPins?.length ?? 0) > 0 ? setShowResetConfirm(true) : handleResetLocation()}
-                                    title="Reset to current location"
-                                    sx={{ color: '#9ca3af' }}
-                                >
-                                    <MyLocationIcon fontSize="small" />
-                                </IconButton>
-                            )}
-                        </Box>
+                        <Typography sx={{ fontWeight: 600, color: '#FF2E5B', fontSize: '0.85rem' }}>
+                            {session
+                                ? isCompetitive
+                                    ? `You: ${session.collectedPins.length} | ${(session as any).remainingPins ?? '?'} left`
+                                    : `${session.collectedPins.length}/${session.totalPins}`
+                                : ''}
+                        </Typography>
+                        {trailInfo?.mode === 'random' && (
+                            <IconButton
+                                size="small"
+                                onClick={() => (session?.collectedPins?.length ?? 0) > 0 ? setShowResetConfirm(true) : handleResetLocation()}
+                                title="Reset to current location"
+                                sx={{ color: '#9ca3af' }}
+                            >
+                                <MyLocationIcon fontSize="small" />
+                            </IconButton>
+                        )}
                     </Box>
 
                     {/* Hint */}

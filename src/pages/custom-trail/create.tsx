@@ -274,8 +274,10 @@ export default function CreateCustomTrail() {
                 theme,
                 name: name.trim() || undefined,
                 start_location: startLocation,
-                competitive,
-                hot_cold: hotCold
+                settings: {
+                    competitive,
+                    hotCold
+                }
             };
 
             if (mode === 'random') {
