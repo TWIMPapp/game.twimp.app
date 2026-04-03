@@ -17,6 +17,8 @@ import { Colour } from '@/typings/Colour.enum';
 import { Marker } from '@/typings/Task';
 import { getPinMarkerProps } from '@/config/pinIcons';
 import ReportHazardDialog from '@/components/ReportHazardDialog';
+import PageHeader from '@/components/PageHeader';
+import { getDistanceInMeters } from '@/utils/geo';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { IconButton } from '@mui/material';
 
@@ -31,6 +33,7 @@ interface TrailInfo {
     startLocation: { lat: number; lng: number };
     pinCount: number;
     competitive: boolean;
+    hotCold: boolean;
     playCount: number;
     mode?: 'random' | 'custom';
 }
@@ -82,6 +85,7 @@ export default function PlayCustomTrail() {
     const [answerError, setAnswerError] = useState<string | null>(null);
     const [activePinIndex, setActivePinIndex] = useState<number | undefined>(undefined);
     const [isCompetitive, setIsCompetitive] = useState(false);
+    const [isHotCold, setIsHotCold] = useState(false);
     const [testMode, setTestMode] = useState(process.env.NODE_ENV !== 'production');
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [resetting, setResetting] = useState(false);
@@ -99,6 +103,7 @@ export default function PlayCustomTrail() {
                 const result: any = await CustomTrailAPI.getTrail(trailId);
                 if (result.ok) {
                     setTrailInfo(result.trail);
+                    setIsHotCold(result.trail.hotCold === true);
                     setGameState('preview');
                 } else {
                     setErrorMessage(result.message || 'Trail not found');
@@ -318,6 +323,7 @@ export default function PlayCustomTrail() {
 
     return (
         <Box sx={{ minHeight: '100vh', backgroundColor: '#F8F5F2' }}>
+            <PageHeader compact />
 
             {/* Loading */}
             {gameState === 'loading' && (
@@ -434,21 +440,85 @@ export default function PlayCustomTrail() {
                     )}
 
                     {/* Map */}
-                    <Box sx={{ flex: 1 }}>
-                        <Map
-                            ref={mapRef}
-                            taskMarkers={markers}
-                            userLocation={userLocation}
-                            testMode={testMode}
-                            zoom={16}
-                            onPlayerMove={(lat, lng) => {
-                                if (testMode) setUserLocation({ lat, lng });
-                            }}
-                            // Custom trails are always sequential - only show indicator for current target pin
-                            targetMarkerIndex={currentTargetMarkerIndex}
-                            onMarkerClick={handleMarkerClick}
-                        />
-                    </Box>
+                    {(() => {
+                        // Hot/cold: compute directional border colours
+                        const getTemperatureColor = (dist: number) => {
+                            if (dist < 100) return '#ef4444';   // Red
+                            if (dist < 200) return '#f97316';   // Orange
+                            if (dist < 600) return '#eab308';   // Yellow
+                            return '#3b82f6';                    // Blue
+                        };
+
+                        let borderTop = 'transparent', borderRight = 'transparent',
+                            borderBottom = 'transparent', borderLeft = 'transparent';
+
+                        // In hot/cold mode, show pins within 50m so they can actually collect
+                        let hotColdMarkers: Marker[] = [];
+
+                        if (isHotCold && userLocation) {
+                            const uncollected = trailPins.filter(p => !p.collected);
+
+                            // Find closest pin in each hemisphere
+                            let closestNorth = Infinity, closestSouth = Infinity,
+                                closestEast = Infinity, closestWest = Infinity;
+
+                            uncollected.forEach(pin => {
+                                const dist = getDistanceInMeters(userLocation.lat, userLocation.lng, pin.lat, pin.lng);
+
+                                // Reveal pin if within 50m
+                                if (dist < 50) {
+                                    hotColdMarkers.push({
+                                        lat: pin.lat,
+                                        lng: pin.lng,
+                                        title: `Pin ${pin.order + 1}`,
+                                        subtitle: 'Find me!',
+                                        colour: Colour.Red,
+                                        pinIndex: pin.order,
+                                        ...(pin.icon ? getPinMarkerProps(pin.icon) : {})
+                                    });
+                                }
+
+                                // Pin is north of player
+                                if (pin.lat > userLocation.lat && dist < closestNorth) closestNorth = dist;
+                                // Pin is south
+                                if (pin.lat < userLocation.lat && dist < closestSouth) closestSouth = dist;
+                                // Pin is east
+                                if (pin.lng > userLocation.lng && dist < closestEast) closestEast = dist;
+                                // Pin is west
+                                if (pin.lng < userLocation.lng && dist < closestWest) closestWest = dist;
+                            });
+
+                            borderTop = closestNorth < Infinity ? getTemperatureColor(closestNorth) : '#3b82f6';
+                            borderBottom = closestSouth < Infinity ? getTemperatureColor(closestSouth) : '#3b82f6';
+                            borderRight = closestEast < Infinity ? getTemperatureColor(closestEast) : '#3b82f6';
+                            borderLeft = closestWest < Infinity ? getTemperatureColor(closestWest) : '#3b82f6';
+                        }
+
+                        return (
+                            <Box sx={{
+                                flex: 1,
+                                borderTop: isHotCold ? `6px solid ${borderTop}` : 'none',
+                                borderRight: isHotCold ? `6px solid ${borderRight}` : 'none',
+                                borderBottom: isHotCold ? `6px solid ${borderBottom}` : 'none',
+                                borderLeft: isHotCold ? `6px solid ${borderLeft}` : 'none',
+                                transition: 'border-color 1s ease',
+                                position: 'relative'
+                            }}>
+                                <Map
+                                    ref={mapRef}
+                                    taskMarkers={isHotCold ? hotColdMarkers : markers}
+                                    userLocation={userLocation}
+                                    testMode={testMode}
+                                    zoom={16}
+                                    onPlayerMove={(lat, lng) => {
+                                        if (testMode) setUserLocation({ lat, lng });
+                                    }}
+                                    targetMarkerIndex={isHotCold ? undefined : currentTargetMarkerIndex}
+                                    onMarkerClick={handleMarkerClick}
+                                />
+                            </Box>
+                        );
+                    })()}
                 </Box>
             )}
 

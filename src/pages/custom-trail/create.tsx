@@ -18,6 +18,8 @@ import EnhancedTrailDesigner from '@/components/custom-trail/EnhancedTrailDesign
 import ShareLinkDisplay from '@/components/custom-trail/ShareLinkDisplay';
 import Map, { MapRef } from '@/components/Map';
 import { CustomTrailAPI } from '@/services/API';
+import { useAuth } from '@/contexts/AuthContext';
+import LoginRequiredModal from '@/components/LoginRequiredModal';
 import { Colour } from '@/typings/Colour.enum';
 import { Marker } from '@/typings/Task';
 import PIN_ICONS, { getPinIcon, getPinMarkerProps, PinIcon } from '@/config/pinIcons';
@@ -82,7 +84,16 @@ const secondaryButton = {
 
 export default function CreateCustomTrail() {
     const router = useRouter();
+    const { isAuthenticated } = useAuth();
+    const [loginModalOpen, setLoginModalOpen] = useState(false);
     const { user_id, theme: themeParam, mode: modeParam, count: countParam, radius: radiusParam } = router.query;
+
+    // Gate: require sign-in to create trails
+    useEffect(() => {
+        if (!isAuthenticated) {
+            setLoginModalOpen(true);
+        }
+    }, [isAuthenticated]);
 
     const [step, setStep] = useState<Step>('mode');
     const [mapPhase, setMapPhase] = useState<MapPhase>('set_start');
@@ -93,6 +104,7 @@ export default function CreateCustomTrail() {
     const [randomCount, setRandomCount] = useState(5);
     const [spawnRadius, setSpawnRadius] = useState(500);
     const [competitive, setCompetitive] = useState(false);
+    const [hotCold, setHotCold] = useState(false);
     const [customPins, setCustomPins] = useState<any[] | null>(null);
     const [createdTrailId, setCreatedTrailId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -262,7 +274,8 @@ export default function CreateCustomTrail() {
                 theme,
                 name: name.trim() || undefined,
                 start_location: startLocation,
-                competitive
+                competitive,
+                hot_cold: hotCold
             };
 
             if (mode === 'random') {
@@ -344,6 +357,18 @@ export default function CreateCustomTrail() {
 
     return (
         <Box sx={{ minHeight: '100vh', backgroundColor: '#F8F5F2' }}>
+
+            {/* Auth gate */}
+            <LoginRequiredModal
+                open={loginModalOpen && !isAuthenticated}
+                onClose={() => {
+                    if (!isAuthenticated) {
+                        router.back();
+                    }
+                    setLoginModalOpen(false);
+                }}
+                action="create"
+            />
 
             {/* Active trail — blocks creation until stopped */}
             {activeTrail && step !== 'creating' && step !== 'done' && (
@@ -654,6 +679,25 @@ export default function CreateCustomTrail() {
                                     {mode === 'random'
                                         ? 'Players compete to collect pins — first come, first served. Once a pin is claimed, it\'s gone!'
                                         : 'Players race to see who completes the trail first. Everyone follows the same route.'}
+                                </Typography>
+                            </Box>
+                        }
+                        sx={{ ml: 0, mb: 2 }}
+                    />
+
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={hotCold}
+                                onChange={(e) => setHotCold(e.target.checked)}
+                                size="small"
+                            />
+                        }
+                        label={
+                            <Box>
+                                <Typography sx={{ fontWeight: 600, fontSize: '0.85rem' }}>Hot / Cold mode</Typography>
+                                <Typography variant="caption" sx={{ color: '#6b7280', display: 'block' }}>
+                                    Hide pin locations on the map. Players use temperature clues to find each pin.
                                 </Typography>
                             </Box>
                         }
