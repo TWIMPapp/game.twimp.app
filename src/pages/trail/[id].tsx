@@ -30,6 +30,7 @@ type GameState = 'loading' | 'preview' | 'playing' | 'arrived' | 'question' | 's
 interface TrailSettings {
     competitive: boolean;
     hotCold: boolean;
+    allowRespawn: boolean;
 }
 
 interface TrailInfo {
@@ -418,7 +419,7 @@ export default function PlayCustomTrail() {
                                     : `${session.collectedPins.length}/${session.totalPins}`
                                 : ''}
                         </Typography>
-                        {trailInfo?.mode === 'random' && (
+                        {trailInfo?.settings?.allowRespawn && (
                             <IconButton
                                 size="small"
                                 onClick={() => (session?.collectedPins?.length ?? 0) > 0 ? setShowResetConfirm(true) : handleResetLocation()}
@@ -508,12 +509,14 @@ export default function PlayCustomTrail() {
                         return (
                             <Box sx={{
                                 flex: 1,
+                                position: 'relative',
+                                overflow: 'hidden',
                                 borderTop: isHotCold ? `6px solid ${borderTop}` : 'none',
                                 borderRight: isHotCold ? `6px solid ${borderRight}` : 'none',
                                 borderBottom: isHotCold ? `6px solid ${borderBottom}` : 'none',
                                 borderLeft: isHotCold ? `6px solid ${borderLeft}` : 'none',
-                                transition: 'border-color 1s ease',
-                                position: 'relative'
+                                boxSizing: 'border-box',
+                                transition: 'border-color 1s ease'
                             }}>
                                 <Map
                                     ref={mapRef}
