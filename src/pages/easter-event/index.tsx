@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import {
     Box,
@@ -18,6 +18,8 @@ import {
     Collapse
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -180,6 +182,8 @@ export default function EasterEventHub() {
     const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
     const [selectedChapter, setSelectedChapter] = useState<any>(null);
     const [currentScene, setCurrentScene] = useState(0);
+    const [audioPlaying, setAudioPlaying] = useState(false);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
     const [missionsExpanded, setMissionsExpanded] = useState(true);
     const [cluesExpanded, setCluesExpanded] = useState(true);
     const [puzzleCountdown, setPuzzleCountdown] = useState<string>('');
@@ -323,7 +327,29 @@ export default function EasterEventHub() {
         }
     };
 
+    const stopAudio = () => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current = null;
+        }
+        setAudioPlaying(false);
+    };
+
+    const toggleAudio = (audioFile?: string) => {
+        if (audioPlaying) {
+            stopAudio();
+            return;
+        }
+        if (!audioFile) return;
+        const audio = new Audio(`/audio/easter/${audioFile}`);
+        audio.onended = () => setAudioPlaying(false);
+        audio.play().catch(() => {});
+        audioRef.current = audio;
+        setAudioPlaying(true);
+    };
+
     const handleNextScene = () => {
+        stopAudio();
         if (selectedChapter && currentScene < selectedChapter.scenes.length - 1) {
             setCurrentScene(prev => prev + 1);
         } else {
@@ -1113,14 +1139,25 @@ export default function EasterEventHub() {
                         </DialogTitle>
                         <DialogContent sx={{ pt: 3 }}>
                             <Box className="text-center">
-                                {selectedChapter.scenes[currentScene]?.character !== 'narrator' && (
-                                    <Typography className="text-4xl mb-3">
-                                        {selectedChapter.scenes[currentScene]?.character === 'easter_bunny' ? '🐰' : '🦊'}
-                                    </Typography>
-                                )}
                                 <Typography className="text-gray-700 whitespace-pre-line">
                                     {selectedChapter.scenes[currentScene]?.narration}
                                 </Typography>
+                                {selectedChapter.scenes[currentScene]?.audioFile && (
+                                    <IconButton
+                                        onClick={() => toggleAudio(selectedChapter.scenes[currentScene]?.audioFile)}
+                                        sx={{
+                                            mt: 2,
+                                            color: audioPlaying ? '#22c55e' : '#9ca3af',
+                                            animation: audioPlaying ? 'pulse 1.5s ease-in-out infinite' : 'none',
+                                            '@keyframes pulse': {
+                                                '0%, 100%': { transform: 'scale(1)' },
+                                                '50%': { transform: 'scale(1.15)' }
+                                            }
+                                        }}
+                                    >
+                                        {audioPlaying ? <VolumeUpIcon /> : <VolumeUpIcon />}
+                                    </IconButton>
+                                )}
                             </Box>
                         </DialogContent>
                         <DialogActions sx={{ px: 3, pb: 3, justifyContent: 'space-between' }}>
