@@ -33,17 +33,17 @@ const MIN_SPACING_METERS = 50;
 // Theme icon sets — references shared PIN_ICONS config
 const THEME_ICONS: Record<string, { icons: PinIcon[]; defaultIcon: string }> = {
     easter: {
-        icons: ['egg_red', 'egg_blue', 'egg_green', 'egg_gold', 'egg_orange', 'basket', 'treasure_chest', 'question_mark']
+        icons: ['egg_red', 'egg_blue', 'egg_green', 'egg_gold', 'egg_orange', 'basket', 'question_mark']
             .map(n => getPinIcon(n)!),
         defaultIcon: 'egg_red'
     },
     valentine: {
-        icons: ['heart_red', 'heart_pink', 'rose', 'love_letter', 'treasure_chest', 'question_mark']
+        icons: ['heart_red', 'heart_pink', 'rose', 'love_letter', 'question_mark']
             .map(n => getPinIcon(n)!),
         defaultIcon: 'heart_red'
     },
     general: {
-        icons: ['pin', 'treasure_chest', 'star', 'question_mark', 'flag', 'gift']
+        icons: ['pin', 'money_bag', 'star', 'question_mark', 'flag', 'gift', 'basket']
             .map(n => getPinIcon(n)!),
         defaultIcon: 'pin'
     }

@@ -28,7 +28,7 @@ const ICON_TO_EMOJI: Record<string, string> = {
     rose: '🌹',
     love_letter: '💌',
     basket: '🧺',
-    treasure_chest: '💰',
+    money_bag: '💰',
     question_mark: '❓',
     pin: '📍',
     star: '⭐',

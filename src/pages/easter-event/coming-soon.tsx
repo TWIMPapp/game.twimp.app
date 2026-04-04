@@ -17,7 +17,7 @@ const FEATURES = [
 ];
 
 const SHARE_URL = 'https://game.twimp.app/easter-event';
-const SHARE_TEXT = 'The Eggstraordinary Case of the Missing Eggs — a free 10-day Easter mystery adventure for families. Starts March 27th!';
+const SHARE_TEXT = 'The Eggstraordinary Case of the Missing Eggs — a free 10-day Easter mystery adventure for families. Starts April 3rd!';
 
 export default function EasterEventComingSoon() {
     const [town, setTown] = useState('');
@@ -48,8 +48,8 @@ export default function EasterEventComingSoon() {
             'VERSION:2.0',
             'PRODID:-//TWIMP//Easter Event//EN',
             'BEGIN:VEVENT',
-            'DTSTART:20260327T090000Z',
-            'DTEND:20260327T100000Z',
+            'DTSTART:20260403T090000Z',
+            'DTEND:20260403T100000Z',
             'SUMMARY:The Eggstraordinary Case of the Missing Eggs starts today!',
             'DESCRIPTION:Head to game.twimp.app/easter-event to begin the adventure.',
             'URL:https://game.twimp.app/easter-event',
@@ -193,7 +193,7 @@ export default function EasterEventComingSoon() {
                             opacity: 0.8
                         }}
                     >
-                        27 March &ndash; 5 April
+                        3 April &ndash; 12 April
                     </Typography>
 
                     {/* Feature pills + share URL — visible on md+ only */}
@@ -455,7 +455,7 @@ export default function EasterEventComingSoon() {
                     <FeatureCard
                         emoji="📅"
                         title="Runs for 10 days"
-                        description="New challenges encourage outdoor fun every day, building towards a big reveal on Easter Sunday."
+                        description="New challenges encourage outdoor fun every day, building towards a big reveal on the final day."
                     />
                     <FeatureCard
                         emoji="🆓"
@@ -488,7 +488,7 @@ export default function EasterEventComingSoon() {
                             <span>🔍</span> How it works
                         </Typography>
                         <Box className="space-y-3">
-                            <StepItem number={1} text="Come back here on March 27th to start" />
+                            <StepItem number={1} text="Come back here on April 3rd to start" />
                             <StepItem number={2} text="Head outside and find digital eggs in your local area" />
                             <StepItem number={3} text="Answer questions to reveal clues" />
                             <StepItem number={4} text="Work together to solve riddles" />

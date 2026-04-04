@@ -27,9 +27,8 @@ const PIN_ICONS: PinIcon[] = [
     { name: 'star', colour: 'gold', emoji: '⭐', label: 'Star' },
     { name: 'flag', colour: 'green', emoji: '🚩', label: 'Flag' },
     { name: 'gift', colour: 'blue', emoji: '🎁', label: 'Gift' },
-    // Shared
     { name: 'basket', colour: 'green', emoji: '🧺', label: 'Basket' },
-    { name: 'treasure_chest', colour: 'gold', emoji: '💰', label: 'Treasure' },
+    { name: 'money_bag', colour: 'gold', emoji: '💰', label: 'Money Bag' },
     { name: 'question_mark', colour: 'purple', emoji: '❓', label: 'Mystery' },
 ];
 

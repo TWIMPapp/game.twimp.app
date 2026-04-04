@@ -397,7 +397,7 @@ export default function PlayCustomTrail() {
 
             {/* Playing - Map View */}
             {gameState === 'playing' && (
-                <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
                     {/* Header */}
                     <Box sx={{
                         display: 'flex',
@@ -438,7 +438,7 @@ export default function PlayCustomTrail() {
                     </Box>
 
                     {/* Hint */}
-                    {hint && (
+                    {hint && !isHotCold && (
                         <Box sx={{
                             position: 'absolute',
                             top: 70,
@@ -550,50 +550,21 @@ export default function PlayCustomTrail() {
                                 {/* Hot/Cold edge overlays */}
                                 {isHotCold && (
                                     <>
-                                        {/* Edge overlays */}
-                                        {[
-                                            { edge: edgeTop, sx: { top: 0, left: 0, right: 0, height: 30, background: `linear-gradient(to bottom, ${edgeTop.color}, transparent)` } },
-                                            { edge: edgeBottom, sx: { bottom: 0, left: 0, right: 0, height: 30, background: `linear-gradient(to top, ${edgeBottom.color}, transparent)` } },
-                                            { edge: edgeLeft, sx: { top: 0, bottom: 0, left: 0, width: 30, background: `linear-gradient(to right, ${edgeLeft.color}, transparent)` } },
-                                            { edge: edgeRight, sx: { top: 0, bottom: 0, right: 0, width: 30, background: `linear-gradient(to left, ${edgeRight.color}, transparent)` } },
-                                        ].map((item, i) => (
-                                            <Box key={`edge-${i}`} sx={{
-                                                position: 'absolute',
-                                                ...item.sx,
-                                                opacity: item.edge.opacity,
-                                                transition: 'all 1s ease',
-                                                animation: item.edge.pulse !== 'none' ? `hotColdPulse ${item.edge.pulse} ease-in-out infinite` : 'none',
-                                                pointerEvents: 'none',
-                                                zIndex: 5
-                                            }} />
-                                        ))}
-                                        {/* Corner glows */}
-                                        {[
-                                            { top: 0, left: 0, colors: [edgeTop, edgeLeft] },
-                                            { top: 0, right: 0, colors: [edgeTop, edgeRight] },
-                                            { bottom: 0, left: 0, colors: [edgeBottom, edgeLeft] },
-                                            { bottom: 0, right: 0, colors: [edgeBottom, edgeRight] },
-                                        ].map((corner, i) => {
-                                            const warmest = [...corner.colors].sort((a, b) => b.opacity - a.opacity)[0];
-                                            return (
-                                                <Box key={`corner-${i}`} sx={{
-                                                    position: 'absolute',
-                                                    ...(corner.top !== undefined ? { top: 0 } : { bottom: 0 }),
-                                                    ...(corner.left !== undefined ? { left: 0 } : { right: 0 }),
-                                                    width: 50, height: 50,
-                                                    background: `radial-gradient(circle at ${corner.left !== undefined ? '0% ' : '100% '}${corner.top !== undefined ? '0%' : '100%'}, ${warmest.color}, transparent)`,
-                                                    opacity: warmest.opacity * 0.8,
-                                                    transition: 'all 1s ease',
-                                                    pointerEvents: 'none', zIndex: 5
-                                                }} />
-                                            );
-                                        })}
-                                        <style>{`
-                                            @keyframes hotColdPulse {
-                                                0%, 100% { transform: scaleY(1); }
-                                                50% { transform: scaleY(1.5); }
-                                            }
-                                        `}</style>
+                                        {/* Directional vignette overlay */}
+                                        <Box sx={{
+                                            position: 'absolute',
+                                            top: 0, left: 0, right: 0, bottom: 0,
+                                            pointerEvents: 'none',
+                                            zIndex: 5,
+                                            transition: 'all 1s ease',
+                                            boxShadow: [
+                                                `inset 0  60px 40px -30px ${edgeTop.color}`,
+                                                `inset 0 -60px 40px -30px ${edgeBottom.color}`,
+                                                `inset  60px 0 40px -30px ${edgeLeft.color}`,
+                                                `inset -60px 0 40px -30px ${edgeRight.color}`
+                                            ].join(', '),
+                                            opacity: Math.max(edgeTop.opacity, edgeBottom.opacity, edgeLeft.opacity, edgeRight.opacity),
+                                        }} />
                                     </>
                                 )}
                             </Box>
