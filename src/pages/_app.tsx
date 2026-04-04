@@ -41,6 +41,11 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     };
 
     fetchData();
+
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   }, []);
 
   return (

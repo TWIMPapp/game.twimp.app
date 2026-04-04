@@ -8,6 +8,9 @@ export default function Document() {
         <meta name="referrer" content="same-origin"></meta>
         <meta name="apple-mobile-web-app-capable" content="yes"></meta>
         <meta name="mobile-web-app-capable" content="yes"></meta>
+        <meta name="theme-color" content="#2DB87A"></meta>
+        <link rel="manifest" href="/manifest.json"></link>
+        <link rel="apple-touch-icon" href="/icon-512.png"></link>
       </Head>
       <body>
         <Main />

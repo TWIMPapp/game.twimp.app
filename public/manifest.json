@@ -1,0 +1,17 @@
+{
+  "name": "Twimp - The World Is My Playground",
+  "short_name": "Twimp",
+  "description": "Outdoor adventure games for families",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2DB87A",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
