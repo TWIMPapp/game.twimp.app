@@ -11,8 +11,8 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     }),
     FacebookProvider({
-      clientId: process.env.FACEBOOK_APP_ID || '',
-      clientSecret: process.env.FACEBOOK_APP_SECRET || '',
+      clientId: (process.env.FACEBOOK_APP_ID || '').trim(),
+      clientSecret: (process.env.FACEBOOK_APP_SECRET || '').trim(),
     }),
   ],
   pages: {
