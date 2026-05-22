@@ -10,6 +10,7 @@ import MapComponent from '@/components/Map';
 import { InventoryItem } from '@/typings/inventoryItem';
 import ItemsDialog from '@/components/ItemsDialog';
 import { TaskType } from '@/typings/TaskType.enum';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 const AWTY_INTERVAL = 5000;
 
@@ -62,6 +63,10 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
   const [open, setOpen] = useState<boolean>(false);
   const isAwtyRequestPending = useRef<boolean>(false);
   const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+  // Live GPS — feeds the blue dot, the recenter button, and the AWTY pings
+  // that progress the game. Without this hook userLocation is always null,
+  // /awty never fires, and the trail can't be played in the field.
+  const { position: userPosition } = useGeolocation();
 
   useEffect(() => {
     const fetchData = () => {
@@ -93,6 +98,17 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
     };
   }, [testTask]);
 
+  // Whenever the GPS gives us a new reading, ping AWTY. The handler already
+  // enforces a 5s cooldown so we won't flood the API even if the position
+  // updates every second.
+  useEffect(() => {
+    if (!userPosition || !params) return;
+    handleOnPlayerMove(userPosition.lat, userPosition.lng, userPosition.accuracy ?? 10);
+    // handleOnPlayerMove is a closure over params; intentionally re-fires on every
+    // position change (the cooldown ref dedupes API calls).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPosition, params]);
+
   const handleClose = () => {
     setOpen(false);
     if (nextTask) {
@@ -100,7 +116,7 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
     }
   };
 
-  const handleOnPlayerMove = async (lat: number, lng: number) => {
+  const handleOnPlayerMove = async (lat: number, lng: number, accuracy: number = 10) => {
     // Check if a request is already pending or in cooldown
     if (isAwtyRequestPending.current) {
       return;
@@ -111,7 +127,7 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
 
     // Create a position-like object for the API
     const position = {
-      coords: { latitude: lat, longitude: lng, accuracy: 10, altitude: null, altitudeAccuracy: null, heading: null, speed: null },
+      coords: { latitude: lat, longitude: lng, accuracy, altitude: null, altitudeAccuracy: null, heading: null, speed: null },
       timestamp: Date.now()
     } as GeolocationPosition;
 
@@ -168,7 +184,13 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
           </div>
         </Box>
       ) : null}
-      {task && <MapComponent taskMarkers={task?.markers ?? []} userLocation={null} onPlayerMove={handleOnPlayerMove} />}
+      {task && (
+        <MapComponent
+          taskMarkers={task?.markers ?? []}
+          userLocation={userPosition ? { lat: userPosition.lat, lng: userPosition.lng } : null}
+          onPlayerMove={handleOnPlayerMove}
+        />
+      )}
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
     </>
   );
