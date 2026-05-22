@@ -36,11 +36,6 @@ export default function FeaturedCard({ game, onClick }: FeaturedCardProps) {
                 >
                     {game.name}
                 </Typography>
-                {game.description && (
-                    <Typography variant="body2" className="opacity-90 max-w-[85%]">
-                        {game.description}
-                    </Typography>
-                )}
             </CardContent>
         </Card>
     );
