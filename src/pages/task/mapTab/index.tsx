@@ -10,7 +10,7 @@ interface MapResponse {
   markers: Marker[];
 }
 
-const getMarkers = (params: QueryParams): Promise<MapResponse> => {
+const getMarkers = (params: QueryParams): Promise<MapResponse | undefined> => {
   return new APIService(Endpoint.Map).get<MapResponse>({
     user_id: params?.user_id ?? '',
     trail_ref: params?.trail_ref ?? ''

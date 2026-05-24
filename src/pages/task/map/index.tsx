@@ -36,7 +36,7 @@ interface AwtyResponse {
 const AWTYPost = async (
   position: GeolocationPosition,
   params: QueryParams
-): Promise<AwtyResponse> => {
+): Promise<AwtyResponse | undefined> => {
   const prevTaskId = new TaskHandlerService().getPrevTaskIdFromSession();
 
   const body = {
@@ -54,6 +54,17 @@ const AWTYPost = async (
   });
 };
 
+// Dev-only convenience: when on localhost or visited with ?testMode=1, the
+// blue dot becomes a draggable Google Maps marker. Drag it to a pin to
+// simulate walking there — fires AWTY exactly as a real GPS update would.
+// Lets you walk a whole trail end-to-end from a desk in minutes instead of
+// putting on shoes.
+const detectTestMode = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return true;
+  return new URLSearchParams(window.location.search).get('testMode') === '1';
+};
+
 export default function Map({ testTask }: { testTask?: MapTask }) {
   const [task, setTask] = useState<MapTask>();
   const [nextTask, setNextTask] = useState<TaskUnion>();
@@ -67,6 +78,13 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
   // that progress the game. Without this hook userLocation is always null,
   // /awty never fires, and the trail can't be played in the field.
   const { position: userPosition } = useGeolocation();
+
+  // Test mode: the user-location marker is draggable. testLocation overrides
+  // the real GPS reading once the player drags. Seeded from the first marker
+  // on the current map task so there's always something to grab onto, even
+  // when desktop GPS returns nothing.
+  const [isTestMode] = useState<boolean>(detectTestMode);
+  const [testLocation, setTestLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     const fetchData = () => {
@@ -100,14 +118,32 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
 
   // Whenever the GPS gives us a new reading, ping AWTY. The handler already
   // enforces a 5s cooldown so we won't flood the API even if the position
-  // updates every second.
+  // updates every second. In test mode we don't auto-ping on the real GPS
+  // reading — the player drives explicitly via dragging.
   useEffect(() => {
+    if (isTestMode) return;
     if (!userPosition || !params) return;
     handleOnPlayerMove(userPosition.lat, userPosition.lng, userPosition.accuracy ?? 10);
     // handleOnPlayerMove is a closure over params; intentionally re-fires on every
     // position change (the cooldown ref dedupes API calls).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPosition, params]);
+  }, [userPosition, params, isTestMode]);
+
+  // Seed testLocation from whichever is best available: a real GPS reading
+  // (so the marker starts wherever your laptop thinks you are), or the first
+  // pin on the current map task (so you can drag onto it immediately).
+  useEffect(() => {
+    if (!isTestMode || testLocation) return;
+    if (userPosition) {
+      setTestLocation({ lat: userPosition.lat, lng: userPosition.lng });
+      return;
+    }
+    const firstMarker = task?.markers?.[0];
+    if (firstMarker && typeof firstMarker === 'object' && 'lat' in firstMarker) {
+      // Drop the marker ~30m south-west of the first pin so it's clearly off-pin.
+      setTestLocation({ lat: firstMarker.lat - 0.0003, lng: firstMarker.lng - 0.0003 });
+    }
+  }, [isTestMode, testLocation, userPosition, task]);
 
   const handleClose = () => {
     setOpen(false);
@@ -117,6 +153,10 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
   };
 
   const handleOnPlayerMove = async (lat: number, lng: number, accuracy: number = 10) => {
+    // In test mode, every drag updates the marker's home position so the
+    // next drag begins where the last one left off.
+    if (isTestMode) setTestLocation({ lat, lng });
+
     // Check if a request is already pending or in cooldown
     if (isAwtyRequestPending.current) {
       return;
@@ -187,8 +227,13 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
       {task && (
         <MapComponent
           taskMarkers={task?.markers ?? []}
-          userLocation={userPosition ? { lat: userPosition.lat, lng: userPosition.lng } : null}
+          userLocation={
+            isTestMode
+              ? testLocation
+              : userPosition ? { lat: userPosition.lat, lng: userPosition.lng } : null
+          }
           onPlayerMove={handleOnPlayerMove}
+          testMode={isTestMode}
         />
       )}
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>

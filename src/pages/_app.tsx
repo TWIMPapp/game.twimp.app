@@ -1,4 +1,5 @@
 import Loading from '../components/Loading';
+import ErrorSnackbar from '@/components/ErrorSnackbar';
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
@@ -76,6 +77,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                 <main className={`game`}>
                   <Component {...pageProps} />
                 </main>
+                <ErrorSnackbar />
               </ThemeProvider>
             </>
           ) : (
