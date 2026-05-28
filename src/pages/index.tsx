@@ -110,7 +110,17 @@ export default function Home() {
             return;
         }
 
-        // WALK games use the play API
+        // Built-in walk games go through the intro page (hero, description,
+        // Start/Continue). Stash the game object so the intro page can render
+        // immediately without re-fetching. Custom trails keep their existing
+        // direct-play flow below.
+        if (!game.ref.startsWith('custom-trail-')) {
+            sessionStorage.setItem('intro_game', JSON.stringify(game));
+            router.push(`/game/${game.ref}`);
+            return;
+        }
+
+        // Custom trails: direct play API → map
         const userId = localStorage.getItem('twimp_user_id');
         setLoading(true);
 
