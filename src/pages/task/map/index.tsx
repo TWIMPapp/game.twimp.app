@@ -234,6 +234,8 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
           }
           onPlayerMove={handleOnPlayerMove}
           testMode={isTestMode}
+          showMarkerLabels
+          fitToMarkers
         />
       )}
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>

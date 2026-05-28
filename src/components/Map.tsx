@@ -1,5 +1,5 @@
 import { GoogleMap, LoadScript, MarkerF, OverlayViewF, CircleF } from '@react-google-maps/api';
-import { useEffect, useState, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { useEffect, useState, useRef, useCallback, useImperativeHandle, forwardRef, Fragment } from 'react';
 import MarkerIcon from '@/assets/icons/marker-icon.png';
 import { Marker } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
@@ -107,6 +107,11 @@ const MapComponent = forwardRef<MapRef, {
   onLongPress?: (lat: number, lng: number) => void;
   exclusionZones?: ExclusionZone[];
   designerMode?: boolean;
+  // Story trails: render each marker's title as a label beneath the pin
+  showMarkerLabels?: boolean;
+  // Story trails: frame player + all markers (with top padding for the banner)
+  // instead of centring on a single pin
+  fitToMarkers?: boolean;
   // For sequential trails: only show distance indicator for this marker index
   // If undefined, shows indicators for all markers (backwards compatible)
   targetMarkerIndex?: number;
@@ -125,6 +130,8 @@ const MapComponent = forwardRef<MapRef, {
   onLongPress,
   exclusionZones = [],
   designerMode = false,
+  showMarkerLabels = false,
+  fitToMarkers = false,
   targetMarkerIndex,
   spawnRadiusColor = '#ffffff',
   startingPointLocation = null,
@@ -182,34 +189,80 @@ const MapComponent = forwardRef<MapRef, {
     }
   }), []);
 
+  // Latest user location without making it an effect dependency — we don't want
+  // to refit the viewport on every GPS tick, only when markers change or GPS
+  // first appears.
+  const userLocationRef = useRef(userLocation);
+  userLocationRef.current = userLocation;
+
+  // Story-trail maps: frame the player + all current markers, with extra top
+  // padding so pins sit below the "Ready to go?" banner. Per-side padding makes
+  // this direction-independent (works heading north or south), unlike centring
+  // on a single pin.
+  const fitToMarkersBounds = useCallback(() => {
+    if (!fitToMarkers || !mapRef.current || typeof google === 'undefined') return;
+    const pts = (taskMarkers || [])
+      .filter(m => typeof m?.lat === 'number' && typeof m?.lng === 'number')
+      .map(m => ({ lat: m.lat, lng: m.lng }));
+    const u = userLocationRef.current;
+    if (u) pts.push({ lat: u.lat, lng: u.lng });
+    if (pts.length === 0) return;
+
+    const bounds = new google.maps.LatLngBounds();
+    pts.forEach(p => bounds.extend(p));
+    // A single point makes fitBounds zoom to the max — pad it out for a sensible
+    // neighbourhood view (the top offset still applies).
+    if (pts.length < 2) {
+      const d = 0.0012;
+      bounds.extend({ lat: pts[0].lat + d, lng: pts[0].lng + d });
+      bounds.extend({ lat: pts[0].lat - d, lng: pts[0].lng - d });
+    }
+    mapRef.current.fitBounds(bounds, { top: 220, bottom: 80, left: 60, right: 60 });
+  }, [fitToMarkers, taskMarkers]);
+
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
-    if (userLocation) {
+    if (fitToMarkers) {
+      fitToMarkersBounds();
+    } else if (userLocation) {
       map.panTo(userLocation);
     } else if (center.lat !== 0 && center.lng !== 0) {
       map.panTo(center);
     }
     setViewportBounds(map.getBounds() || null);
-  }, [center, userLocation]);
+  }, [center, userLocation, fitToMarkers, fitToMarkersBounds]);
 
   const onUnmount = useCallback(() => {
     mapRef.current = null;
   }, []);
 
+  // Refit when the marker set changes (a new map task) or when GPS first becomes
+  // available. Keyed on a marker signature + a boolean for GPS presence so it
+  // does NOT refire on every position update.
+  const markerSig = (taskMarkers || []).map(m => `${m.lat},${m.lng}`).join('|');
+  const hasUserLocation = !!userLocation;
   useEffect(() => {
-    // Initial center
+    if (!isGoogleMapsAPILoaded || !mapRef.current || !fitToMarkers) return;
+    fitToMarkersBounds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markerSig, hasUserLocation, isGoogleMapsAPILoaded, fitToMarkers]);
+
+  useEffect(() => {
+    // Initial center. When fitToMarkers is on, fitToMarkersBounds owns the
+    // viewport — only seed the `center` state (for the pre-load render gate),
+    // don't panTo, or it would fight the fit.
     if (userLocation && center.lat === 0) {
       setCenter(userLocation);
-      if (mapRef.current) {
+      if (mapRef.current && !fitToMarkers) {
         mapRef.current.panTo(userLocation);
       }
     } else if (taskMarkers && taskMarkers.length > 0 && center.lat === 0) {
       setCenter({ lat: taskMarkers[0].lat, lng: taskMarkers[0].lng });
-      if (mapRef.current) {
+      if (mapRef.current && !fitToMarkers) {
         mapRef.current.panTo({ lat: taskMarkers[0].lat, lng: taskMarkers[0].lng });
       }
     }
-  }, [taskMarkers, userLocation]);
+  }, [taskMarkers, userLocation, fitToMarkers]);
 
 
 
@@ -351,17 +404,43 @@ const MapComponent = forwardRef<MapRef, {
                   const isColoredEgg = marker.title?.toLowerCase().includes('egg') && marker.colour;
                   const iconSize = isColoredEgg ? 64 : 48;
 
+                  const markerKey = `marker-${index}-${marker.lat.toFixed(6)}-${marker.lng.toFixed(6)}-${marker.colour || 'default'}`;
+
                   return (
-                    <MarkerF
-                      key={`marker-${index}-${marker.lat.toFixed(6)}-${marker.lng.toFixed(6)}-${marker.colour || 'default'}`}
-                      position={{ lat: marker.lat, lng: marker.lng }}
-                      icon={{
-                        url: marker.image_url as string,
-                        scaledSize: new google.maps.Size(iconSize, iconSize),
-                      }}
-                      zIndex={1}
-                      onClick={() => onMarkerClick?.(index, marker)}
-                    />
+                    <Fragment key={markerKey}>
+                      <MarkerF
+                        position={{ lat: marker.lat, lng: marker.lng }}
+                        icon={{
+                          url: marker.image_url as string,
+                          scaledSize: new google.maps.Size(iconSize, iconSize),
+                        }}
+                        zIndex={1}
+                        onClick={() => onMarkerClick?.(index, marker)}
+                      />
+                      {showMarkerLabels && marker.title && (
+                        <OverlayViewF
+                          position={{ lat: marker.lat, lng: marker.lng }}
+                          mapPaneName="floatPane"
+                        >
+                          <div
+                            style={{
+                              transform: `translate(-50%, ${iconSize / 2 + 2}px)`,
+                              backgroundColor: 'rgba(0,0,0,0.72)',
+                              color: 'white',
+                              padding: '2px 8px',
+                              borderRadius: '10px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                              pointerEvents: 'none',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                            }}
+                          >
+                            {marker.title}
+                          </div>
+                        </OverlayViewF>
+                      )}
+                    </Fragment>
                   );
                 })}
 

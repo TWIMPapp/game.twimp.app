@@ -65,17 +65,21 @@ export default function Information({ testTask }: { testTask?: InformationTask }
       }
     );
 
-    if (data) {
-      if (data.task) {
-        setNextTask(data.task);
+    if (data?.task) {
+      setNextTask(data.task);
 
-        if ((data.outcome?.items ?? [])?.length > 0) {
-          setItems(data?.outcome?.items ?? []);
-          setOpenItems(true);
-        } else {
-          new TaskHandlerService().goToTaskComponent(data.task as TaskUnion, params as QueryParams);
-        }
+      if ((data.outcome?.items ?? [])?.length > 0) {
+        setItems(data?.outcome?.items ?? []);
+        setOpenItems(true);
+        setNextTaskLoading(false); // dialog shown, we're not navigating yet
+      } else {
+        new TaskHandlerService().goToTaskComponent(data.task as TaskUnion, params as QueryParams);
+        // navigating away — spinner goes with the page
       }
+    } else {
+      // Server didn't return a next task (e.g. we're sitting on an unanswered
+      // question) — clear the spinner so the button can't get stuck.
+      setNextTaskLoading(false);
     }
   };
 
@@ -108,6 +112,17 @@ export default function Information({ testTask }: { testTask?: InformationTask }
       fetchData();
     }
   }, [testTask]);
+
+  // Android Back can restore this page from the bfcache with stale React state
+  // (notably nextTaskLoading=true), leaving the Next button stuck spinning.
+  // Reset it whenever the page is shown from the cache.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setNextTaskLoading(false);
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, []);
 
   return (
     <>
