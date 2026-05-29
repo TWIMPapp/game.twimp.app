@@ -27,9 +27,9 @@ const SentimentSnackbar = ({
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       sx={{ top: '5vh' }}
     >
-      <Alert severity={severityMap[outcome.sentiment]} sx={{ width: '100%', borderRadius: '16px' }}>
-        <h3 className="mt-0">{outcome.title}</h3>
-        <p>{outcome.subtitle}</p>
+      <Alert severity={severityMap[outcome.sentiment]} sx={{ width: '100%', borderRadius: '16px', alignItems: 'center' }}>
+        <span className="font-semibold">{outcome.title}</span>
+        {outcome.subtitle && <span className="block mt-1">{outcome.subtitle}</span>}
       </Alert>
     </Snackbar>
   );

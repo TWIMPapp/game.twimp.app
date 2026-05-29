@@ -40,6 +40,15 @@ export default function Finish() {
           {task?.content && (
             <div className="markdown-body mt-72 p-8 pb-52 rounded-tl-3xl rounded-tr-3xl relative">
               <Markdown remarkPlugins={[remarkGfm]}>{task.content}</Markdown>
+              <Button
+                variant="contained"
+                fullWidth
+                className="cy-finish mt-6"
+                onClick={() => window.location.assign('/')}
+                sx={{ borderRadius: '16px', py: 1.5 }}
+              >
+                Finish
+              </Button>
             </div>
           )}
         </div>

@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions, Account, User } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import FacebookProvider from 'next-auth/providers/facebook';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { JWT } from 'next-auth/jwt';
 import type { Session } from 'next-auth';
 
@@ -13,6 +14,33 @@ export const authOptions: NextAuthOptions = {
     FacebookProvider({
       clientId: (process.env.FACEBOOK_APP_ID || '').trim(),
       clientSecret: (process.env.FACEBOOK_APP_SECRET || '').trim(),
+    }),
+    // Passwordless email sign-in. The one-time token is issued + emailed by the
+    // backend; here we just burn it (via /api/auth/magic-consume) and, on
+    // success, mint the same JWT session as the social providers.
+    CredentialsProvider({
+      id: 'magic-link',
+      name: 'Email link',
+      credentials: { token: { label: 'Token', type: 'text' } },
+      async authorize(credentials) {
+        const token = credentials?.token;
+        if (!token) return null;
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        try {
+          const res = await fetch(`${backendUrl}/api/auth/magic-consume`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+          const data = await res.json();
+          if (res.ok && data?.ok && data.email) {
+            return { id: data.email as string, email: data.email as string };
+          }
+        } catch (e) {
+          console.error('[magic-link] authorize error', e);
+        }
+        return null;
+      },
     }),
   ],
   pages: {

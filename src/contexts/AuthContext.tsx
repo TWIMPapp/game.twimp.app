@@ -25,7 +25,8 @@ interface AuthContextType {
     name?: string;
     image?: string;
   } | null;
-  signIn: (provider: 'google' | 'apple') => Promise<void>;
+  signIn: (provider: 'google' | 'facebook') => Promise<void>;
+  requestMagicLink: (email: string) => Promise<{ ok: boolean; message?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -78,13 +79,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })();
   }, [session?.user?.email, session?.user?.name, session?.user?.image]);
 
-  const handleSignIn = async (provider: 'google' | 'apple') => {
+  const handleSignIn = async (provider: 'google' | 'facebook') => {
     try {
       const callbackUrl = typeof window !== 'undefined' ? window.location.pathname : '/';
       await nextAuthSignIn(provider, { callbackUrl });
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
+    }
+  };
+
+  const handleRequestMagicLink = async (
+    email: string
+  ): Promise<{ ok: boolean; message?: string }> => {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/magic-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      return { ok: !!data?.ok, message: data?.message };
+    } catch (error) {
+      console.error('Magic link request failed:', error);
+      return { ok: false, message: 'Could not send the link. Please try again.' };
     }
   };
 
@@ -110,6 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       : null,
     signIn: handleSignIn,
+    requestMagicLink: handleRequestMagicLink,
     signOut: handleSignOut,
   };
 

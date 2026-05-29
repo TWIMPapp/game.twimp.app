@@ -29,7 +29,7 @@ interface TrailSummary {
 
 const Account = () => {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, signIn, signOut } = useAuth();
+  const { user, isAuthenticated, isLoading, signIn, requestMagicLink, signOut } = useAuth();
   const [userName, setUserName] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -97,10 +97,24 @@ const Account = () => {
 
   const handleFacebookLogin = async () => {
     try {
-      await (signIn as any)('facebook');
+      await signIn('facebook');
     } catch (error) {
       console.error('Facebook login failed:', error);
     }
+  };
+
+  const [magicEmail, setMagicEmail] = useState('');
+  const [magicSending, setMagicSending] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
+  const [magicError, setMagicError] = useState<string | null>(null);
+
+  const handleEmailLink = async () => {
+    setMagicSending(true);
+    setMagicError(null);
+    const result = await requestMagicLink(magicEmail.trim());
+    setMagicSending(false);
+    if (result.ok) setMagicSent(true);
+    else setMagicError(result.message || 'Could not send the link. Please try again.');
   };
 
   const handleSaveName = async () => {
@@ -242,6 +256,43 @@ const Account = () => {
                     Continue with Facebook
                   </Button>
                 </Box>
+
+                <Divider sx={{ my: 3 }}>or</Divider>
+
+                {magicSent ? (
+                  <Box className="mb-4 text-center">
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>Check your email</Typography>
+                    <Typography variant="caption" className="text-gray-500">
+                      We&apos;ve sent a sign-in link to {magicEmail.trim()}. It expires in 15 minutes.
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Box className="flex flex-col gap-2 mb-4">
+                    <TextField
+                      type="email"
+                      label="Email"
+                      size="small"
+                      fullWidth
+                      value={magicEmail}
+                      onChange={(e) => setMagicEmail(e.target.value)}
+                      disabled={magicSending}
+                    />
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      onClick={handleEmailLink}
+                      disabled={magicSending || !magicEmail.trim()}
+                      sx={{ textTransform: 'none', fontWeight: 600, py: 1.25 }}
+                    >
+                      {magicSending ? 'Sending…' : 'Email me a sign-in link'}
+                    </Button>
+                    {magicError && (
+                      <Typography variant="caption" color="error">
+                        {magicError}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
 
                 <Divider sx={{ my: 4 }} />
 

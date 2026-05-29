@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -8,6 +8,7 @@ import {
   Typography,
   Box,
   Divider,
+  TextField,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,7 +24,23 @@ export default function LoginRequiredModal({
   onClose,
   action,
 }: LoginRequiredMessageProps) {
-  const { signIn } = useAuth();
+  const { signIn, requestMagicLink } = useAuth();
+  const [email, setEmail] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  const handleEmailLink = async () => {
+    setSending(true);
+    setEmailError(null);
+    const result = await requestMagicLink(email.trim());
+    setSending(false);
+    if (result.ok) {
+      setSent(true);
+    } else {
+      setEmailError(result.message || 'Could not send the link. Please try again.');
+    }
+  };
 
   const actionText = {
     save: 'Save Your Progress',
@@ -52,7 +69,7 @@ export default function LoginRequiredModal({
 
   const handleFacebookSignIn = async () => {
     try {
-      await (signIn as any)('facebook');
+      await signIn('facebook');
       onClose();
     } catch (error) {
       console.error('Facebook sign in failed:', error);
@@ -105,6 +122,45 @@ export default function LoginRequiredModal({
             Continue with Facebook
           </Button>
         </Box>
+
+        <Divider sx={{ my: 3 }}>or</Divider>
+
+        {sent ? (
+          <Box className="mb-6 text-center">
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              Check your email
+            </Typography>
+            <Typography variant="caption" className="text-gray-500">
+              We&apos;ve sent a sign-in link to {email.trim()}. It expires in 15 minutes.
+            </Typography>
+          </Box>
+        ) : (
+          <Box className="flex flex-col gap-2 mb-6">
+            <TextField
+              type="email"
+              label="Email"
+              size="small"
+              fullWidth
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={sending}
+            />
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleEmailLink}
+              disabled={sending || !email.trim()}
+              sx={{ textTransform: 'none', fontWeight: 600, py: 1.25 }}
+            >
+              {sending ? 'Sending…' : 'Email me a sign-in link'}
+            </Button>
+            {emailError && (
+              <Typography variant="caption" color="error">
+                {emailError}
+              </Typography>
+            )}
+          </Box>
+        )}
 
         <Divider sx={{ my: 4 }} />
 
