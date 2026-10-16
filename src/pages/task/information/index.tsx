@@ -17,7 +17,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import GamePage from '@/components/GamePage';
 import SwipeCard from '@/components/SwipeCard';
-import SwipeTutorial from '@/components/SwipeTutorial';
 import { useGamePage, useSwipeTutorial } from '@/hooks/useGamePage';
 // MapDialog is broken (calls a non-existent /map endpoint) — hidden for now;
 // it can come back as a third tab on the game page.
@@ -124,7 +123,7 @@ export default function Information({ testTask }: { testTask?: InformationTask }
           <Loading />
         </div>
       )}
-      <SwipeCard onSwipeLeft={goToNextTask} onSwipeRight={openGamePage} onAnySwipe={dismissTutorial}>
+      <SwipeCard onSwipeLeft={goToNextTask} onSwipeRight={openGamePage} onAnySwipe={dismissTutorial} demo={showTutorial && !!task} onDemoTap={dismissTutorial}>
       <div
         className={task?.image_url ? 'bg-cover bg-center bg-no-repeat absolute h-80 w-full' : ''}
         style={{ backgroundImage: task?.image_url ? 'url(' + task.image_url + ')' : undefined }}
@@ -188,7 +187,6 @@ export default function Information({ testTask }: { testTask?: InformationTask }
         )}
       </div>
       </SwipeCard>
-      {showTutorial && task && <SwipeTutorial onDismiss={dismissTutorial} />}
       {openItems && (
         <ItemsDialog items={items} open={openItems} handleClose={handleClose}></ItemsDialog>
       )}

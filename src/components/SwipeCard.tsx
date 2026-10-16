@@ -21,6 +21,10 @@ interface SwipeCardProps {
   /** Called on any completed swipe (used to dismiss the tutorial). */
   onAnySwipe?: () => void;
   className?: string;
+  /** First-card tutorial: the whole card peels left then right, revealing hints. */
+  demo?: boolean;
+  /** Called on the first touch while the demo is playing. */
+  onDemoTap?: () => void;
 }
 
 export default function SwipeCard({
@@ -28,7 +32,9 @@ export default function SwipeCard({
   onSwipeLeft,
   onSwipeRight,
   onAnySwipe,
-  className
+  className,
+  demo,
+  onDemoTap
 }: SwipeCardProps) {
   const [dx, setDx] = useState(0);
   const [animating, setAnimating] = useState(false);
@@ -61,6 +67,7 @@ export default function SwipeCard({
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (demo) onDemoTap?.();
     if (animating && dxRef.current !== 0) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const w = window.innerWidth;
@@ -139,6 +146,7 @@ export default function SwipeCard({
   };
 
   const rotate = dx / 40;
+  const demoOn = !!demo && dx === 0 && !animating;
 
   return (
     <div
@@ -152,9 +160,29 @@ export default function SwipeCard({
       onDragStart={(e) => e.preventDefault()}
       data-testid="swipe-card"
     >
+      {demoOn && (
+        <div
+          aria-hidden
+          className="fixed inset-0 bg-slate-800 pointer-events-none select-none"
+          style={{ zIndex: 0 }}
+          data-testid="swipe-tutorial"
+        >
+          <div className="swipe-demo-hint swipe-demo-hint-left absolute top-1/2 right-5 text-right text-white">
+            <div className="text-3xl">&larr;</div>
+            <div className="text-xl font-bold">Swipe left</div>
+            <div className="text-xs opacity-80">Next</div>
+          </div>
+          <div className="swipe-demo-hint swipe-demo-hint-right absolute top-1/2 left-5 text-white">
+            <div className="text-3xl">&rarr;</div>
+            <div className="text-xl font-bold">Swipe right</div>
+            <div className="text-xs opacity-80">Journal &amp; Items</div>
+          </div>
+        </div>
+      )}
       <div
-        className="relative w-full min-h-screen"
+        className={'relative w-full min-h-screen' + (demoOn ? ' swipe-demo-card bg-white dark:bg-gray-800' : '')}
         style={{
+          zIndex: demoOn ? 1 : undefined,
           transform: dx ? `translateX(${dx}px) rotate(${rotate}deg)` : undefined,
           transformOrigin: '50% 100%',
           transition: animating ? 'transform 300ms ease-out' : 'none',
