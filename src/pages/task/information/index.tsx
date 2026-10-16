@@ -8,17 +8,19 @@ import { NextResponse } from '@/typings/NextResponse';
 import QueryParams from '@/typings/QueryParams';
 import { InformationTask, TaskUnion } from '@/typings/Task';
 import { InventoryItem } from '@/typings/inventoryItem';
-import { Box, Button, SpeedDial, SpeedDialAction } from '@mui/material';
+import { SpeedDial, SpeedDialAction } from '@mui/material';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import BackpackIcon from '@mui/icons-material/Backpack';
-import MapIcon from '@mui/icons-material/Map';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import MenuIcon from '@mui/icons-material/Menu';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
-import InventoryDialog from '@/components/inventoryDialog';
-import MapDialog from '@/components/mapDialog';
+import GamePage from '@/components/GamePage';
+import SwipeCard from '@/components/SwipeCard';
+import SwipeTutorial from '@/components/SwipeTutorial';
+import { useGamePage, useSwipeTutorial } from '@/hooks/useGamePage';
+// MapDialog is broken (calls a non-existent /map endpoint) — hidden for now;
+// it can come back as a third tab on the game page.
 
 export default function Information({ testTask }: { testTask?: InformationTask }) {
   const [task, setTask] = useState<InformationTask>();
@@ -27,21 +29,8 @@ export default function Information({ testTask }: { testTask?: InformationTask }
   const [params, setParams] = useState<QueryParams>();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [openItems, setOpenItems] = useState<boolean>(false);
-  const [openJournal, setOpenJournal] = useState<boolean>(false);
-  const [openInventory, setOpenInventory] = useState<boolean>(false);
-  const [openMap, setOpenMap] = useState<boolean>(false);
-
-  const handleJournalClose = () => {
-    setOpenJournal(false);
-  };
-
-  const handleInventoryClose = () => {
-    setOpenInventory(false);
-  };
-
-  const handleMapClose = () => {
-    setOpenMap(false);
-  };
+  const { gamePageOpen, openGamePage, closeGamePage } = useGamePage();
+  const { showTutorial, dismissTutorial } = useSwipeTutorial(task?.content);
 
   const handleOpenSupport = () => {
     if ((window as any).$crisp) {
@@ -49,7 +38,8 @@ export default function Information({ testTask }: { testTask?: InformationTask }
     }
   };
 
-  const goToNextTask = async () => {
+  const goToNextTask = async (): Promise<boolean> => {
+    if (nextTaskLoading) return true;
     setNextTaskLoading(true);
 
     const body = {
@@ -76,10 +66,12 @@ export default function Information({ testTask }: { testTask?: InformationTask }
         new TaskHandlerService().goToTaskComponent(data.task as TaskUnion, params as QueryParams);
         // navigating away — spinner goes with the page
       }
+      return true;
     } else {
       // Server didn't return a next task (e.g. we're sitting on an unanswered
       // question) — clear the spinner so the button can't get stuck.
       setNextTaskLoading(false);
+      return false;
     }
   };
 
@@ -127,6 +119,12 @@ export default function Information({ testTask }: { testTask?: InformationTask }
   return (
     <>
       {!task && <Loading></Loading>}
+      {nextTaskLoading && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 0 }}>
+          <Loading />
+        </div>
+      )}
+      <SwipeCard onSwipeLeft={goToNextTask} onSwipeRight={openGamePage} onAnySwipe={dismissTutorial}>
       <div
         className={task?.image_url ? 'bg-cover bg-center bg-no-repeat absolute h-80 w-full' : ''}
         style={{ backgroundImage: task?.image_url ? 'url(' + task.image_url + ')' : undefined }}
@@ -156,23 +154,9 @@ export default function Information({ testTask }: { testTask?: InformationTask }
           <SpeedDialAction
             className="cy-speeddial-journal"
             icon={<MenuBookIcon />}
-            tooltipTitle="Journal"
+            tooltipTitle="Journal & Items"
             tooltipOpen
-            onClick={() => setOpenJournal(true)}
-          />
-          <SpeedDialAction
-            className="cy-speeddial-inventory"
-            icon={<BackpackIcon />}
-            tooltipTitle="Inventory"
-            tooltipOpen
-            onClick={() => setOpenInventory(true)}
-          />
-          <SpeedDialAction
-            className="cy-speeddial-map"
-            icon={<MapIcon />}
-            tooltipTitle="Map"
-            tooltipOpen
-            onClick={() => setOpenMap(true)}
+            onClick={openGamePage}
           />
           <SpeedDialAction
             className="cy-speeddial-support"
@@ -182,17 +166,6 @@ export default function Information({ testTask }: { testTask?: InformationTask }
             onClick={() => handleOpenSupport()}
           />
         </SpeedDial>
-        <Box
-          className="fixed rounded-3xl bg-white dark:bg-gray-800 dark:text-white shadow-md m-auto top-12 right-4"
-          sx={{ zIndex: 999 }}
-        >
-          <div className="flex justify-between p-2">
-            <Button className="cy-next px-4 py-2" onClick={goToNextTask} variant="text">
-              {/* show loader or text */}
-              {nextTaskLoading ? <Loading /> : 'Next →'}
-            </Button>
-          </div>
-        </Box>
 
         {task?.content && (
           <div className="markdown-body mt-72 p-8 pb-80 bg-white dark:bg-gray-800 dark:text-white rounded-tl-3xl rounded-tr-3xl relative">
@@ -214,12 +187,12 @@ export default function Information({ testTask }: { testTask?: InformationTask }
           </div>
         )}
       </div>
+      </SwipeCard>
+      {showTutorial && task && <SwipeTutorial onDismiss={dismissTutorial} />}
       {openItems && (
         <ItemsDialog items={items} open={openItems} handleClose={handleClose}></ItemsDialog>
       )}
-      {openJournal && <JournalDialog open={openJournal} handleClose={handleJournalClose} />}
-      {openInventory && <InventoryDialog open={openInventory} handleClose={handleInventoryClose} />}
-      {openMap && <MapDialog open={openMap} handleClose={handleMapClose} />}
+      {gamePageOpen && <GamePage open={gamePageOpen} handleClose={closeGamePage} />}
     </>
   );
 }

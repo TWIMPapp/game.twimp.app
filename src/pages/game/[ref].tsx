@@ -118,6 +118,8 @@ export default function GameIntro() {
       const result = data.body || data;
       if (result?.ok && result.task) {
         sessionStorage.setItem('task', JSON.stringify(result.task));
+        // Show the swipe tutorial on the first story card of this game.
+        sessionStorage.setItem('swipe_tutorial_pending', '1');
         router.push(`/task/map?trail_ref=${encodeURIComponent(ref)}&user_id=${encodeURIComponent(uid)}`);
       } else {
         ErrorBus.emit("Couldn't start the trail. Please try again.");

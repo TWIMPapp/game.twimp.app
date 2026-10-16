@@ -9,17 +9,9 @@ import { Endpoint } from '@/typings/Endpoint.enum';
 import QueryParams from '@/typings/QueryParams';
 import CloseIcon from '@mui/icons-material/Close';
 
-export default function JournalDialog({
-  open,
-  handleClose
-}: {
-  open: boolean;
-  handleClose: () => void;
-}) {
+export function JournalContent() {
   const [tasks, setTasks] = useState<TaskUnion[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
-
-  const JournalAPI = new APIService(Endpoint.Journal);
 
   useEffect(() => {
     setLoaded(false);
@@ -27,7 +19,7 @@ export default function JournalDialog({
       const _params = Object.fromEntries(
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
-      const data = await JournalAPI.get<TaskUnion[]>(_params);
+      const data = await new APIService(Endpoint.Journal).get<TaskUnion[]>(_params);
 
       if (data) {
         setTasks(data);
@@ -36,9 +28,33 @@ export default function JournalDialog({
     };
 
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  if (!loaded) return <Loading />;
+  return tasks?.length > 0 ? (
+    <TaskList tasks={tasks} />
+  ) : (
+    <Box
+      sx={{
+        display: 'flex',
+        width: '100%',
+        minHeight: '50vh',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+    >
+      Nothing to see here just yet 👀
+    </Box>
+  );
+}
+
+export default function JournalDialog({
+  open,
+  handleClose
+}: {
+  open: boolean;
+  handleClose: () => void;
+}) {
   return (
     <Dialog open={open} onClose={handleClose} fullScreen>
       <AppBar sx={{ position: 'relative', paddingTop: '30px' }}>
@@ -54,25 +70,7 @@ export default function JournalDialog({
           </IconButton>
         </Toolbar>
       </AppBar>
-      {loaded ? (
-        tasks?.length > 0 ? (
-          <TaskList tasks={tasks} />
-        ) : (
-          <Box
-            sx={{
-              display: 'flex',
-              width: '100%',
-              height: '100%',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-          >
-            Nothing to see here just yet 👀
-          </Box>
-        )
-      ) : (
-        <Loading />
-      )}
+      <JournalContent />
     </Dialog>
   );
 }

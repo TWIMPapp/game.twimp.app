@@ -12,6 +12,9 @@ import { NextResponse } from '@/typings/NextResponse';
 import { NEVIGATION_DELAY } from '@/constants';
 import ItemsDialog from '@/components/ItemsDialog';
 import { InventoryItem } from '@/typings/inventoryItem';
+import GamePage from '@/components/GamePage';
+import SwipeCard from '@/components/SwipeCard';
+import { useGamePage } from '@/hooks/useGamePage';
 
 const Multi = ({ testTask }: { testTask?: QuestionMultiTask }) => {
   const [task, setTask] = useState<QuestionMultiTask>();
@@ -73,6 +76,8 @@ const Multi = ({ testTask }: { testTask?: QuestionMultiTask }) => {
     }
   };
 
+  const { gamePageOpen, openGamePage, closeGamePage } = useGamePage();
+
   useEffect(() => {
     const fetchData = () => {
       const _params = Object.fromEntries(
@@ -97,6 +102,8 @@ const Multi = ({ testTask }: { testTask?: QuestionMultiTask }) => {
 
   return (
     <>
+      {/* Question cards: swipe right opens the game page; no swipe-left (answer to progress). */}
+      <SwipeCard onSwipeRight={openGamePage}>
       {task?.image_url && (
         <div
           className="bg-cover bg-center bg-no-repeat absolute h-60 w-full"
@@ -134,6 +141,8 @@ const Multi = ({ testTask }: { testTask?: QuestionMultiTask }) => {
           )}
         </div>
       )}
+      </SwipeCard>
+      {gamePageOpen && <GamePage open={gamePageOpen} handleClose={closeGamePage} />}
     </>
   );
 };
