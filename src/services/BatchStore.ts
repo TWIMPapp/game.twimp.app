@@ -27,7 +27,7 @@ interface StoredBatch {
 }
 
 const PREFIX = 'twimp_batch:';
-const META_KEYS = ['position', 'server_call_required', 'items', 'synced'];
+const META_KEYS = ['position', 'step_name', 'server_call_required', 'items', 'synced'];
 
 const keyFor = (ref?: string, user?: string) => (ref && user ? `${PREFIX}${ref}:${user}` : '');
 

@@ -70,6 +70,23 @@ export const LocalJournal = {
     LocalJournal.write(params, entries);
   },
 
+  /** Fill missing step_name / position on local entries from server journal data. */
+  backfill(params: QueryParams | undefined, server: any[]): JournalEntry[] {
+    const entries = LocalJournal.read(params);
+    for (const e of entries) {
+      if (e.step_name && typeof e.position === 'number') continue;
+      const s = server.find(t =>
+        typeof e.position === 'number' && typeof t.position === 'number' ? t.position === e.position : String(t.id) === String(e.id)
+      );
+      if (s) {
+        if (!e.step_name && s.step_name) e.step_name = s.step_name;
+        if (typeof e.position !== 'number' && typeof s.position === 'number') e.position = s.position;
+      }
+    }
+    LocalJournal.write(params, entries);
+    return entries;
+  },
+
   clear(ref?: string, user?: string) {
     const k = keyFor(ref, user);
     if (k) localStorage.removeItem(k);

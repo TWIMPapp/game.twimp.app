@@ -37,6 +37,8 @@ export function groupJournal(entries: JournalEntry[]): Group[] {
       g = { key, title: e.step_name || (s !== undefined ? `Stop ${s + 1}` : 'Earlier'), entries: [] };
       groups.push(g);
     }
+    // Any entry in the stop that knows the name supplies it for the heading.
+    if (e.step_name && g.title !== e.step_name && !g.entries.some(x => x.step_name)) g.title = e.step_name;
     g.entries.push(e);
   }
   return groups;

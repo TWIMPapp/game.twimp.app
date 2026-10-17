@@ -28,6 +28,15 @@ export function JournalContent() {
     if (local.length > 0) {
       setTasks(local as unknown as TaskUnion[]);
       setLoaded(true);
+      // Entries recorded without a stop name (older builds / lost metadata):
+      // backfill once from /journal by position (or id). Quiet on failure.
+      if (local.some(e => !e.step_name)) {
+        withTimeout(new APIService(Endpoint.Journal).get<any[]>(_params)).then(data => {
+          if (!Array.isArray(data)) return;
+          const merged = LocalJournal.backfill(_params, data);
+          setTasks(merged as unknown as TaskUnion[]);
+        });
+      }
       return;
     }
 
