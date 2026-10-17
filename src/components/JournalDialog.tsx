@@ -8,6 +8,7 @@ import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import { BatchStore, withTimeout } from '@/services/BatchStore';
 import { LocalJournal } from '@/services/LocalJournal';
+import JournalList from '@/components/JournalList';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
 import CloseIcon from '@mui/icons-material/Close';
@@ -62,7 +63,7 @@ export function JournalContent() {
       </Box>
     );
   return tasks?.length > 0 ? (
-    <TaskList tasks={tasks} />
+    <JournalList entries={tasks as any} />
   ) : (
     <Box
       sx={{

@@ -63,8 +63,8 @@ export function useBatchTask<T extends TaskUnion>(testTask?: T) {
     postWithTimeout('play', { game_ref: _params.trail_ref, user_id: _params.user_id }, RECOVERY_TIMEOUT_MS)
       .then(data => {
         if (data?.ok && data.task) {
-          BatchStore.saveFromResponse(_params, { task: data.task });
-          show(data.task);
+          BatchStore.saveFromResponse(_params, data);
+          show(BatchStore.current(_params) || data.task);
         } else {
           window.location.assign('/');
         }

@@ -11,6 +11,7 @@ export interface JournalEntry {
   content: string;
   image_url?: string;
   answer?: string;
+  step_name?: string;
 }
 
 const PREFIX = 'twimp_journal:';
@@ -52,6 +53,7 @@ export const LocalJournal = {
       title: card.title,
       content: typeof card.content === 'string' ? card.content : '',
       image_url: card.image_url,
+      step_name: card.step_name,
     };
     const i = entries.findIndex(e => sameEntry(e, entry));
     if (i >= 0) entries[i] = { ...entry, answer: entries[i].answer };

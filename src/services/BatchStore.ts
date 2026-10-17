@@ -14,6 +14,7 @@ import { BASE_URL } from '@/constants';
 
 export type BatchCard = TaskUnion & {
   position?: number;
+  step_name?: string;
   server_call_required?: boolean;
   items?: InventoryItem[];
   synced?: boolean;
@@ -75,6 +76,7 @@ export const BatchStore = {
     const first: BatchCard = {
       ...data.task,
       position: data.position,
+      step_name: data.step_name,
       server_call_required: false,
       items: [],
       synced: true,
