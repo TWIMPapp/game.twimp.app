@@ -225,7 +225,9 @@ export default function Information({ testTask }: { testTask?: InformationTask }
       {openItems && (
         <ItemsDialog items={items} open={openItems} handleClose={handleClose}></ItemsDialog>
       )}
-      {gamePageOpen && <GamePage open={gamePageOpen} handleClose={closeGamePage} />}
+      {gamePageOpen && (
+        <GamePage open={gamePageOpen} handleClose={closeGamePage} underCard={task ? <CardPreview card={task as any} /> : undefined} />
+      )}
     </>
   );
 }

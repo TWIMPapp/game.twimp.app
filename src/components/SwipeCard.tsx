@@ -141,8 +141,23 @@ export default function SwipeCard({
       else if (res === 'swapped') { setAnimating(false); setOffset(0); }
     } else if (passed && v > 0 && onSwipeRight) {
       onAnySwipe?.();
-      onSwipeRight();
-      snapBack();
+      if (underRight) {
+        // Fly the card off to the right, revealing the pre-rendered layer,
+        // then hand over (overlay opens on top of an identical view) and
+        // drop the transform with no transition.
+        setAnimating(true);
+        setOffset(w * 1.3);
+        window.setTimeout(() => {
+          onSwipeRight();
+          window.setTimeout(() => {
+            setAnimating(false);
+            setOffset(0);
+          }, 50);
+        }, 260);
+      } else {
+        onSwipeRight();
+        snapBack();
+      }
     } else {
       snapBack();
     }

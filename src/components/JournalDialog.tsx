@@ -14,8 +14,15 @@ import QueryParams from '@/typings/QueryParams';
 import CloseIcon from '@mui/icons-material/Close';
 
 export function JournalContent() {
-  const [tasks, setTasks] = useState<TaskUnion[]>([]);
-  const [loaded, setLoaded] = useState<boolean>(false);
+  // Seed synchronously from the local journal so the first paint already has
+  // content (no spinner frame when the game page opens).
+  const initialLocal = () => {
+    if (typeof window === 'undefined') return [];
+    const p = Object.fromEntries(new URLSearchParams(window.location.search)) as unknown as QueryParams;
+    return LocalJournal.read(p) as unknown as TaskUnion[];
+  };
+  const [tasks, setTasks] = useState<TaskUnion[]>(initialLocal);
+  const [loaded, setLoaded] = useState<boolean>(() => initialLocal().length > 0);
   const [failed, setFailed] = useState<boolean>(false);
 
   useEffect(() => {

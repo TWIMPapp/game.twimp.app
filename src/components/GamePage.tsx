@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { AppBar, Box, Dialog, Tab, Tabs } from '@mui/material';
 import { JournalContent } from '@/components/JournalDialog';
 import InventoryTab from '@/pages/task/inventoryTab';
@@ -13,17 +13,22 @@ export type GamePageTab = 'journal' | 'items';
 export default function GamePage({
   open,
   handleClose,
-  initialTab = 'journal'
+  initialTab = 'journal',
+  underCard
 }: {
   open: boolean;
   handleClose: () => void;
   initialTab?: GamePageTab;
+  /** The current task card, pre-rendered underneath while swiping back. */
+  underCard?: ReactNode;
 }) {
   const [tab, setTab] = useState<GamePageTab>(initialTab);
 
   return (
-    <Dialog open={open} onClose={handleClose} fullScreen data-testid="game-page">
-      <SwipeCard onSwipeRight={handleClose} onSwipeLeft={handleClose}>
+    // No open/close transition: the swipe itself is the transition, and the
+    // view underneath is already rendered, so nothing should fade or flash.
+    <Dialog open={open} onClose={handleClose} fullScreen transitionDuration={0} data-testid="game-page">
+      <SwipeCard onSwipeRight={handleClose} onSwipeLeft={handleClose} underRight={underCard}>
         <GamePageBody tab={tab} setTab={setTab} />
       </SwipeCard>
     </Dialog>
