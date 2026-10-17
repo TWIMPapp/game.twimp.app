@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { AppBar, Box, Dialog, Tab, Tabs } from '@mui/material';
+import { AppBar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Tab, Tabs } from '@mui/material';
 import { JournalContent } from '@/components/JournalDialog';
 import InventoryTab from '@/pages/task/inventoryTab';
 import SwipeCard from '@/components/SwipeCard';
@@ -55,9 +55,34 @@ export function GamePageBody({ tab, setTab }: { tab: GamePageTab; setTab?: (t: G
           <Tab value="items" label="Items" className="cy-tab-items" />
         </Tabs>
       </AppBar>
-      <Box sx={{ pb: 8 }}>
+      <Box sx={{ pb: 2 }}>
         {tab === 'journal' ? <JournalContent /> : <InventoryTab setItems={[]} refreshData={true} />}
       </Box>
+      <LeaveGame />
     </>
+  );
+}
+
+/** Bottom of the game page (both tabs): leave to the home page. Progress is
+ *  kept — local batch/journal and the server session are untouched, so
+ *  Continue on the game's intro page resumes the same card. */
+function LeaveGame() {
+  const [confirm, setConfirm] = useState(false);
+  return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', py: 3, pb: 'calc(24px + env(safe-area-inset-bottom))' }}>
+      <Button variant="outlined" color="inherit" onClick={() => setConfirm(true)} data-testid="leave-game">
+        Leave game
+      </Button>
+      <Dialog open={confirm} onClose={() => setConfirm(false)} data-testid="leave-confirm">
+        <DialogTitle>Are you sure?</DialogTitle>
+        <DialogContent>Your progress is saved — you can continue later from the home page.</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirm(false)}>Stay</Button>
+          <Button onClick={() => window.location.assign('/')} data-testid="leave-confirm-yes">
+            Leave
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }

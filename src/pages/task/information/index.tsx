@@ -8,13 +8,9 @@ import { NextResponse } from '@/typings/NextResponse';
 import QueryParams from '@/typings/QueryParams';
 import { InformationTask, TaskUnion } from '@/typings/Task';
 import { InventoryItem } from '@/typings/inventoryItem';
-import { SpeedDial, SpeedDialAction } from '@mui/material';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import MenuIcon from '@mui/icons-material/Menu';
-import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import GamePage from '@/components/GamePage';
 import SwipeCard from '@/components/SwipeCard';
 import { useGamePage, useSwipeTutorial } from '@/hooks/useGamePage';
@@ -44,11 +40,6 @@ export default function Information({ testTask }: { testTask?: InformationTask }
   const { gamePageOpen, openGamePage, closeGamePage } = useGamePage();
   const { showTutorial, dismissTutorial } = useSwipeTutorial(task?.content);
 
-  const handleOpenSupport = () => {
-    if ((window as any).$crisp) {
-      (window as any).$crisp.push(['do', 'chat:open']);
-    }
-  };
 
   // Sync for local cards (so SwipeCard can reset instantly on 'swapped');
   // falls through to fetchNext() when the batch is exhausted.
@@ -177,28 +168,6 @@ export default function Information({ testTask }: { testTask?: InformationTask }
             <source src={task?.video_url} type="video/mp4" />
           </video>
         )}
-        <SpeedDial
-          className="cy-speeddial"
-          ariaLabel={''}
-          sx={{ position: 'absolute', top: 260, right: 16, zIndex: 99 }}
-          icon={<MenuIcon />}
-          direction="down"
-        >
-          <SpeedDialAction
-            className="cy-speeddial-journal"
-            icon={<MenuBookIcon />}
-            tooltipTitle="Journal & Items"
-            tooltipOpen
-            onClick={openGamePage}
-          />
-          <SpeedDialAction
-            className="cy-speeddial-support"
-            icon={<ContactSupportIcon />}
-            tooltipTitle="Support"
-            tooltipOpen
-            onClick={() => handleOpenSupport()}
-          />
-        </SpeedDial>
 
         {task?.content && (
           <div className="markdown-body mt-72 p-8 pb-80 bg-white dark:bg-gray-800 dark:text-white rounded-tl-3xl rounded-tr-3xl relative">
