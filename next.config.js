@@ -7,12 +7,22 @@ const nextConfig = {
     includePaths: [path.join(__dirname, 'styles')],
   },
   async rewrites() {
-    return [
+    const rules = [
       {
         source: '/v/:id',
         destination: '/trail/:id',
       },
     ];
+    // Local preview only: set PREVIEW_API_PROXY (e.g. http://localhost:3001) at
+    // build time to proxy same-origin /api-proxy/* to a local API, so one
+    // tunnel URL serves both. Unset in production = no rule.
+    if (process.env.PREVIEW_API_PROXY) {
+      rules.push({
+        source: '/api-proxy/:path*',
+        destination: `${process.env.PREVIEW_API_PROXY}/:path*`,
+      });
+    }
+    return rules;
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
