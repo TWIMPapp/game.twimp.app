@@ -12,8 +12,14 @@ export class TaskHandlerService {
   }
 
   public getTaskFromSession<T>(): T | null {
-    const task = sessionStorage.getItem('task');
-    return task ? (JSON.parse(task) as T) : null;
+    // Stored values can be stale/garbage (old builds, manual edits) — never throw.
+    try {
+      const raw = sessionStorage.getItem('task');
+      const task = raw ? JSON.parse(raw) : null;
+      return task && typeof task === 'object' && typeof task.type === 'string' ? (task as T) : null;
+    } catch {
+      return null;
+    }
   }
 
   public setPrevTaskIdInSession(taskId: number): void {
@@ -22,7 +28,8 @@ export class TaskHandlerService {
 
   public getPrevTaskIdFromSession(): number | null {
     const prevTaskId = sessionStorage.getItem('prev_task_id');
-    return prevTaskId ? Number(prevTaskId) : null;
+    const n = prevTaskId ? Number(prevTaskId) : NaN;
+    return Number.isFinite(n) ? n : null;
   }
 
   public clearSession(): void {

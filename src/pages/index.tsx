@@ -53,7 +53,14 @@ export default function Home() {
                     return res.json();
                 })
                 .then(resData => {
-                    setData(resData);
+                    // Tolerate partial / older /list payloads: every list must be an array.
+                    const arr = (v: any) => (Array.isArray(v) ? v : []);
+                    setData({
+                        featured: arr(resData?.featured),
+                        playAgain: arr(resData?.playAgain),
+                        nearYou: arr(resData?.nearYou),
+                        all: arr(resData?.all),
+                    });
                     setError(null);
                 })
                 .catch(() => {

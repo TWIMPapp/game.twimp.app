@@ -37,8 +37,9 @@ const read = (ref?: string, user?: string): StoredBatch | null => {
     const raw = localStorage.getItem(k);
     if (!raw) return null;
     const b = JSON.parse(raw) as StoredBatch;
-    if (!Array.isArray(b.cards) || !b.cards.length) return null;
-    if (b.index < 0 || b.index >= b.cards.length) return null;
+    if (!b || !Array.isArray(b.cards) || !b.cards.length) return null;
+    if (!Number.isInteger(b.index) || b.index < 0 || b.index >= b.cards.length) return null;
+    if (!b.cards.every(c => c && typeof c === 'object' && typeof (c as any).type === 'string')) return null;
     return b;
   } catch {
     return null;
