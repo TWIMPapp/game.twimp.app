@@ -4,6 +4,7 @@ import { TaskTypeRouteMap } from './TaskTypeRouteMap';
 import { stringifyQueryParams } from '@/utils/stringifyQueryParams';
 import { TaskType } from '@/typings/TaskType.enum';
 import { ThemeStyle } from '@/typings/ThemeStyle.enum';
+import { BatchStore } from '@/services/BatchStore';
 
 export class TaskHandlerService {
   public setTaskInSession<T>(task: T): void {
@@ -36,6 +37,13 @@ export class TaskHandlerService {
 
     if (route) {
       this.setTaskInSession(task);
+      // Keep the localStorage batch in step: if we're navigating to a card
+      // that isn't the stored current one (non-batch source), it becomes a
+      // one-card batch so a reload/force-close lands on it.
+      const current = BatchStore.current(params);
+      if (!current || !BatchStore.sameCard(current, task)) {
+        BatchStore.saveFromResponse(params, { task });
+      }
 
       if (task?.id >= 0 && task?.type !== TaskType.Map) {
         this.setPrevTaskIdInSession(task.id);

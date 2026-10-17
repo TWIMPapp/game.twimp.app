@@ -4,6 +4,7 @@ import { InventoryItem } from '@/typings/inventoryItem';
 import { APIService } from '@/services/API';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import { Endpoint } from '@/typings/Endpoint.enum';
+import { BatchStore } from '@/services/BatchStore';
 import { NextResponse } from '@/typings/NextResponse';
 import QueryParams from '@/typings/QueryParams';
 import ItemsDialog from '@/components/ItemsDialog';
@@ -49,7 +50,7 @@ export function BaseTask({ params, testTask, children }: BaseTaskProps) {
       debug: true
     };
     const data = await new APIService(Endpoint.Next).post<NextResponse>(
-      { body },
+      { body, batch: true },
       {
         user_id: params?.user_id ?? '',
         trail_ref: params?.trail_ref ?? ''
@@ -58,6 +59,7 @@ export function BaseTask({ params, testTask, children }: BaseTaskProps) {
 
     if (data) {
       if (data.task) {
+        BatchStore.saveFromResponse(params, data);
         setNextTask(data.task);
 
         if ((data.outcome?.items ?? [])?.length > 0) {

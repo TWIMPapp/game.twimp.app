@@ -18,14 +18,15 @@ import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import GamePage from '@/components/GamePage';
 import SwipeCard from '@/components/SwipeCard';
 import { useGamePage, useSwipeTutorial } from '@/hooks/useGamePage';
+import { useBatchTask } from '@/hooks/useBatchTask';
+import { BatchStore } from '@/services/BatchStore';
 // MapDialog is broken (calls a non-existent /map endpoint) — hidden for now;
 // it can come back as a third tab on the game page.
 
 export default function Information({ testTask }: { testTask?: InformationTask }) {
-  const [task, setTask] = useState<InformationTask>();
+  const { task, params } = useBatchTask<InformationTask>(testTask);
   const [nextTask, setNextTask] = useState<TaskUnion>();
   const [nextTaskLoading, setNextTaskLoading] = useState<boolean>(false);
-  const [params, setParams] = useState<QueryParams>();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [openItems, setOpenItems] = useState<boolean>(false);
   const { gamePageOpen, openGamePage, closeGamePage } = useGamePage();
@@ -39,15 +40,32 @@ export default function Information({ testTask }: { testTask?: InformationTask }
 
   const goToNextTask = async (): Promise<boolean> => {
     if (nextTaskLoading) return true;
+
+    // Batch-next: the next card is already stored locally — no round-trip.
+    // Cards flagged server_call_required are cross-checked in the background
+    // by the page that renders them (useBatchTask), never blocking the swipe.
+    const local = BatchStore.advance(params);
+    if (local) {
+      if ((local.items ?? []).length > 0) {
+        setNextTask(local as TaskUnion);
+        setItems(local.items ?? []);
+        setOpenItems(true);
+      } else {
+        new TaskHandlerService().goToTaskComponent(local as TaskUnion, params as QueryParams);
+      }
+      return true;
+    }
+
     setNextTaskLoading(true);
 
     const body = {
       user_id: params?.user_id,
       trail_ref: params?.trail_ref,
+      batch: true,
       debug: true
     };
     const data = await new APIService(Endpoint.Next).post<NextResponse>(
-      { body },
+      { body, batch: true },
       {
         user_id: params?.user_id ?? '',
         trail_ref: params?.trail_ref ?? ''
@@ -55,6 +73,7 @@ export default function Information({ testTask }: { testTask?: InformationTask }
     );
 
     if (data?.task) {
+      BatchStore.saveFromResponse(params, data);
       setNextTask(data.task);
 
       if ((data.outcome?.items ?? [])?.length > 0) {
@@ -81,28 +100,6 @@ export default function Information({ testTask }: { testTask?: InformationTask }
     }
   };
 
-  useEffect(() => {
-    const fetchData = () => {
-      const _params = Object.fromEntries(
-        new URLSearchParams(window.location.search)
-      ) as unknown as QueryParams;
-
-      if (_params) {
-        setParams(_params);
-        const data = new TaskHandlerService().getTaskFromSession<InformationTask>();
-
-        if (data) {
-          setTask(data);
-        }
-      }
-    };
-
-    if (testTask?.id) {
-      setTask(testTask);
-    } else {
-      fetchData();
-    }
-  }, [testTask]);
 
   // Android Back can restore this page from the bfcache with stale React state
   // (notably nextTaskLoading=true), leaving the Next button stuck spinning.

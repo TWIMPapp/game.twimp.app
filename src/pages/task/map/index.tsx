@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
+import { useBatchTask } from '@/hooks/useBatchTask';
+import { BatchStore } from '@/services/BatchStore';
+
 import { Box } from '@mui/material';
 import { MapTask, Outcome, TaskUnion } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
@@ -45,7 +48,8 @@ const AWTYPost = async (
     accuracy: position?.coords?.accuracy,
     task_id: prevTaskId ?? null,
     user_id: params?.user_id,
-    trail_ref: params?.trail_ref
+    trail_ref: params?.trail_ref,
+    batch: true
   };
 
   return await new APIService(Endpoint.Awty).post<AwtyResponse>(body, {
@@ -66,10 +70,9 @@ const detectTestMode = (): boolean => {
 };
 
 export default function Map({ testTask }: { testTask?: MapTask }) {
-  const [task, setTask] = useState<MapTask>();
+  const { task, params } = useBatchTask<MapTask>(testTask);
   const [nextTask, setNextTask] = useState<TaskUnion>();
   const [awtyResponse, setAwtyResponse] = useState<AwtyResponse>();
-  const [params, setParams] = useState<QueryParams>();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [open, setOpen] = useState<boolean>(false);
   const isAwtyRequestPending = useRef<boolean>(false);
@@ -87,34 +90,13 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
   const [testLocation, setTestLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
-    const fetchData = () => {
-      const _params = Object.fromEntries(
-        new URLSearchParams(window.location.search)
-      ) as unknown as QueryParams;
-
-      if (_params) {
-        setParams(_params);
-        const mapTask = new TaskHandlerService().getTaskFromSession<MapTask>();
-
-        if (mapTask) {
-          setTask(mapTask);
-        }
-      }
-    };
-
-    if (testTask?.id) {
-      setTask(testTask);
-    } else {
-      fetchData();
-    }
-
     // Cleanup function to clear the timeout when the component unmounts
     return () => {
       if (timeoutIdRef.current) {
         clearTimeout(timeoutIdRef.current);
       }
     };
-  }, [testTask]);
+  }, []);
 
   // Whenever the GPS gives us a new reading, ping AWTY. The handler already
   // enforces a 5s cooldown so we won't flood the API even if the position
@@ -176,6 +158,7 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
 
       if (data) {
         if (data.task) {
+          BatchStore.saveFromResponse(params, data);
           setNextTask(data.task);
 
           if ((data.outcome?.items ?? [])?.length > 0) {

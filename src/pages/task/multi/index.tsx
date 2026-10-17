@@ -15,11 +15,13 @@ import { InventoryItem } from '@/typings/inventoryItem';
 import GamePage from '@/components/GamePage';
 import SwipeCard from '@/components/SwipeCard';
 import { useGamePage } from '@/hooks/useGamePage';
+import { useBatchTask } from '@/hooks/useBatchTask';
+import { BatchStore } from '@/services/BatchStore';
+
 
 const Multi = ({ testTask }: { testTask?: QuestionMultiTask }) => {
-  const [task, setTask] = useState<QuestionMultiTask>();
+  const { task, params } = useBatchTask<QuestionMultiTask>(testTask);
   const [nextTask, setNextTask] = useState<TaskUnion>();
-  const [params, setParams] = useState<QueryParams>();
   const [outcome, setOutcome] = useState<Outcome>();
   const [loadingOption, setLoadingOption] = useState<Option>();
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -31,7 +33,8 @@ const Multi = ({ testTask }: { testTask?: QuestionMultiTask }) => {
     const body = {
       answer: option.content,
       user_id: params?.user_id,
-      trail_ref: params?.trail_ref
+      trail_ref: params?.trail_ref,
+      batch: true
     };
 
     const data = await new APIService(Endpoint.Next).post<NextResponse>(body, {
@@ -40,7 +43,14 @@ const Multi = ({ testTask }: { testTask?: QuestionMultiTask }) => {
     });
 
     if (data) {
-      if (data.task) {
+      // A matched-but-negative option comes back with the SAME question as
+      // `task` — stay put and just show the outcome. (Navigating to it would
+      // race a quick follow-up answer and could strand the player behind the
+      // server.)
+      const sameQuestion = !!data.task && String(data.task.id) === String(task?.id);
+      if (data.task && !sameQuestion) {
+        // Correct answer: the new batch replaces the stored one.
+        BatchStore.saveFromResponse(params, data);
         setNextTask(data.task);
 
         if ((data.outcome?.items ?? [])?.length > 0) {
@@ -78,27 +88,6 @@ const Multi = ({ testTask }: { testTask?: QuestionMultiTask }) => {
 
   const { gamePageOpen, openGamePage, closeGamePage } = useGamePage();
 
-  useEffect(() => {
-    const fetchData = () => {
-      const _params = Object.fromEntries(
-        new URLSearchParams(window.location.search)
-      ) as unknown as QueryParams;
-
-      if (_params) {
-        setParams(_params);
-        const data = new TaskHandlerService().getTaskFromSession<QuestionMultiTask>();
-        if (data) {
-          setTask(data);
-        }
-      }
-    };
-
-    if (testTask?.id) {
-      setTask(testTask);
-    } else {
-      fetchData();
-    }
-  }, [testTask]);
 
   return (
     <>

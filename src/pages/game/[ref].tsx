@@ -6,6 +6,7 @@ import { BASE_URL } from '@/constants';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import { TaskUnion } from '@/typings/Task';
 import QueryParams from '@/typings/QueryParams';
+import { BatchStore } from '@/services/BatchStore';
 import { ErrorBus } from '@/services/ErrorBus';
 
 // Intermediary intro page for built-in walk games (e.g. Jasmarina). Shows the
@@ -95,13 +96,17 @@ export default function GameIntro() {
   const handleContinue = () => {
     if (!resumeTask || typeof ref !== 'string') return;
     const params: QueryParams = { trail_ref: ref, user_id: userId() } as QueryParams;
-    new TaskHandlerService().goToTaskComponent(resumeTask, params);
+    // Prefer the locally stored batch position (it can be a few story cards
+    // behind the server, which has already advanced to the batch's end).
+    const local = BatchStore.current(params);
+    new TaskHandlerService().goToTaskComponent((local as TaskUnion) || resumeTask, params);
   };
 
   const handleStart = async () => {
     if (typeof ref !== 'string') return;
     setWorking(true);
     const uid = userId();
+    BatchStore.clear(ref, uid);
     try {
       // Restart wipes the session; /play then returns the fresh start map task.
       await fetch(`${BASE_URL}/next`, {
