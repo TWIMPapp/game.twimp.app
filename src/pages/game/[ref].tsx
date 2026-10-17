@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { patchCachedGame } from '@/services/ListCache';
 import { useRouter } from 'next/router';
 import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import { Game } from '@/types';
@@ -125,6 +126,7 @@ export default function GameIntro() {
       const result = data.body || data;
       if (result?.ok && result.task) {
         sessionStorage.setItem('task', JSON.stringify(result.task));
+        patchCachedGame(uid, ref, { hasSession: true });
         // Show the swipe tutorial on the first story card of this game.
         sessionStorage.setItem('swipe_tutorial_pending', '1');
         router.push(`/task/map?trail_ref=${encodeURIComponent(ref)}&user_id=${encodeURIComponent(uid)}`);

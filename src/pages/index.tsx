@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
@@ -11,6 +11,7 @@ import PageHeader from '@/components/PageHeader';
 import FeaturedCard from '@/components/FeaturedCard';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
 import WelcomeModal from '@/components/WelcomeModal';
+import { readListCache, writeListCache, distanceM } from '@/services/ListCache';
 
 interface CategorizedGames {
     featured: Game[];
@@ -22,6 +23,8 @@ interface CategorizedGames {
 export default function Home() {
     const [data, setData] = useState<CategorizedGames>({ featured: [], playAgain: [], nearYou: [], all: [] });
     const [loading, setLoading] = useState(true);
+    // True once this visit's /list has come back from the server.
+    const fresh = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     const { isAuthenticated } = useAuth();
@@ -41,45 +44,92 @@ export default function Home() {
             localStorage.setItem('twimp_user_id', userId);
         }
 
+        // Tolerate partial / older /list payloads: every list must be an array.
+        const normalise = (resData: any): CategorizedGames => {
+            const arr = (v: any) => (Array.isArray(v) ? v : []);
+            return {
+                featured: arr(resData?.featured),
+                playAgain: arr(resData?.playAgain),
+                nearYou: arr(resData?.nearYou),
+                all: arr(resData?.all),
+            };
+        };
+
+        // Stale-while-revalidate: render the last /list instantly, then
+        // always refetch in the background and apply only if it changed.
+        const cached = readListCache(userId);
+        if (cached) {
+            setData(normalise(cached.data));
+            setLoading(false);
+        }
+        let lastLoc: { lat?: number; lng?: number } = { lat: cached?.lat, lng: cached?.lng };
+        let cancelled = false;
+
         const fetchTrails = (lat?: number, lng?: number) => {
             const params = new URLSearchParams();
             if (lat) params.append('lat', lat.toString());
             if (lng) params.append('lng', lng.toString());
             if (userId) params.append('user_id', userId);
+            if (lat != null) lastLoc = { lat, lng };
 
-            fetch(`${BASE_URL}/list?${params.toString()}`)
+            fetch(`${BASE_URL}/list?${params.toString()}`, { cache: 'no-store' })
                 .then(res => {
                     if (!res.ok) throw new Error('API unavailable');
                     return res.json();
                 })
                 .then(resData => {
-                    // Tolerate partial / older /list payloads: every list must be an array.
-                    const arr = (v: any) => (Array.isArray(v) ? v : []);
-                    setData({
-                        featured: arr(resData?.featured),
-                        playAgain: arr(resData?.playAgain),
-                        nearYou: arr(resData?.nearYou),
-                        all: arr(resData?.all),
-                    });
+                    if (cancelled) return;
+                    fresh.current = true;
+                    const changed = writeListCache(userId!, resData, lat, lng);
+                    if (changed || !cached) setData(normalise(resData));
                     setError(null);
                 })
                 .catch(() => {
-                    setError('Unable to load games. Please check back soon!');
+                    // Keep showing the cached lists if we have them.
+                    if (!cancelled && !readListCache(userId!)) setError('Unable to load games. Please check back soon!');
                 })
-                .finally(() => setLoading(false));
+                .finally(() => { if (!cancelled) setLoading(false); });
         };
 
-        // Try to get location
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => fetchTrails(pos.coords.latitude, pos.coords.longitude),
-                () => fetchTrails() // Fallback if denied
-            );
-        } else {
-            fetchTrails();
-        }
+        const revalidate = () => {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => fetchTrails(pos.coords.latitude, pos.coords.longitude),
+                    () => fetchTrails(), // Fallback if denied
+                    { maximumAge: 60000 }
+                );
+            } else {
+                fetchTrails();
+            }
+        };
+        revalidate();
 
-    }, [router]);
+        // Continue / Play again change as you play: refetch whenever home is
+        // shown again (tab refocus, or Back restoring it from the bfcache).
+        const onVisible = () => { if (document.visibilityState === 'visible') revalidate(); };
+        const onPageShow = (e: PageTransitionEvent) => { if (e.persisted) revalidate(); };
+        document.addEventListener('visibilitychange', onVisible);
+        window.addEventListener('pageshow', onPageShow);
+        // Near-you: if we've moved > 500 m since the lists were computed, refetch.
+        let watchId: number | undefined;
+        if ("geolocation" in navigator) {
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    if (lastLoc.lat != null && distanceM(lastLoc, here) > 500) fetchTrails(here.lat, here.lng);
+                },
+                () => {},
+                { maximumAge: 60000 }
+            );
+        }
+        return () => {
+            cancelled = true;
+            document.removeEventListener('visibilitychange', onVisible);
+            window.removeEventListener('pageshow', onPageShow);
+            if (watchId != null) navigator.geolocation.clearWatch(watchId);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Show welcome modal for new users
     useEffect(() => {
@@ -122,7 +172,11 @@ export default function Home() {
         // immediately without re-fetching. Custom trails keep their existing
         // direct-play flow below.
         if (!game.ref.startsWith('custom-trail-')) {
-            sessionStorage.setItem('intro_game', JSON.stringify(game));
+            // Only stash server-fresh data: a cached copy could carry a stale
+            // hasSession and make the intro offer Start instead of Continue.
+            // Without it the intro fetches /list itself.
+            if (fresh.current) sessionStorage.setItem('intro_game', JSON.stringify(game));
+            else sessionStorage.removeItem('intro_game');
             router.push(`/game/${game.ref}`);
             return;
         }
