@@ -4,6 +4,7 @@ import { Endpoint } from '@/typings/Endpoint.enum';
 import QueryParams from '@/typings/QueryParams';
 import { BASE_URL } from '@/constants';
 import { ErrorBus } from '@/services/ErrorBus';
+import { recordGameResponse } from '@/services/LocalItems';
 
 // Turn an axios error into something a player can read. We've already logged
 // the full error to the console for ourselves above.
@@ -74,6 +75,7 @@ export class APIService {
         }
       });
 
+      try { recordGameResponse(this._endpoint, payload, response.data?.body || response.data); } catch { /* never break the call */ }
       console.group(`[TWIMP-FE] POST ${this._endpoint} - SUCCESS`);
       console.log('Result:', response.data);
       console.groupEnd();

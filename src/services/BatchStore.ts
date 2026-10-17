@@ -11,6 +11,7 @@ import QueryParams from '@/typings/QueryParams';
 import { TaskUnion } from '@/typings/Task';
 import { InventoryItem } from '@/typings/inventoryItem';
 import { BASE_URL } from '@/constants';
+import { recordGameResponse } from '@/services/LocalItems';
 
 export type BatchCard = TaskUnion & {
   position?: number;
@@ -146,6 +147,7 @@ export async function postWithTimeout(path: string, body: any, ms = 8000): Promi
     });
     if (!res.ok) return undefined;
     const data = await res.json();
+    try { recordGameResponse(path, body, data?.body || data); } catch { /* ignore */ }
     return data?.body || data;
   } catch {
     return undefined;

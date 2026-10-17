@@ -34,6 +34,10 @@ export function writeListCache(userId: string, data: any, lat?: number, lng?: nu
       return true;
     }
     localStorage.setItem(KEY, json);
+    // Remember each game's items_enabled for the game page.
+    try {
+      for (const k of Object.keys(data || {})) if (Array.isArray(data[k])) data[k].forEach((g: any) => g?.ref && typeof g.items_enabled === 'boolean' && localStorage.setItem('twimp_trail_meta_v1:' + g.ref, JSON.stringify({ items_enabled: g.items_enabled })));
+    } catch { /* ignore */ }
     return !prev || JSON.stringify(prev.data) !== JSON.stringify(data);
   } catch {
     return true;

@@ -5,6 +5,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { JournalContent } from '@/components/JournalDialog';
 import InventoryTab from '@/pages/task/inventoryTab';
 import SwipeCard from '@/components/SwipeCard';
+import { TrailMeta } from '@/services/LocalItems';
 // import MapTab from '@/pages/task/mapTab'; // TODO: "Map" tab once a map endpoint exists again
 
 export type GamePageTab = 'journal' | 'items';
@@ -66,6 +67,13 @@ export default function GamePage({
  *  player drags right, so the game page is already there when it opens. */
 export function GamePageBody({ tab, setTab }: { tab: GamePageTab; setTab?: (t: GamePageTab) => void }) {
   const [confirm, setConfirm] = useState(false);
+  // Items tab only when the trail has items_enabled (default true).
+  const [itemsEnabled, setItemsEnabled] = useState(true);
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('trail_ref') ?? undefined;
+    setItemsEnabled(TrailMeta.itemsEnabled(ref));
+  }, []);
+  const shown: GamePageTab = !itemsEnabled && tab === 'items' ? 'journal' : tab;
   return (
     <>
       <AppBar
@@ -73,14 +81,14 @@ export function GamePageBody({ tab, setTab }: { tab: GamePageTab; setTab?: (t: G
         data-testid="game-page-tabs"
       >
         <Tabs
-          value={tab}
+          value={shown}
           onChange={(_, v) => (v === 'exit' ? setTab && setConfirm(true) : setTab?.(v))}
           variant="standard"
           textColor="inherit"
           indicatorColor="secondary"
         >
           <Tab value="journal" label="Journal" className="cy-tab-journal" sx={{ flex: 1 }} />
-          <Tab value="items" label="Items" className="cy-tab-items" sx={{ flex: 1 }} />
+          {itemsEnabled && <Tab value="items" label="Items" className="cy-tab-items" sx={{ flex: 1 }} />}
           {/* Exit: compact icon-only tab, never selected; opens the confirm. */}
           <Tab
             value="exit"
@@ -92,7 +100,7 @@ export function GamePageBody({ tab, setTab }: { tab: GamePageTab; setTab?: (t: G
         </Tabs>
       </AppBar>
       <Box sx={{ pb: 2 }}>
-        {tab === 'journal' ? <JournalContent /> : <InventoryTab setItems={[]} refreshData={true} />}
+        {shown === 'journal' ? <JournalContent /> : <InventoryTab setItems={[]} refreshData={true} />}
       </Box>
       <LeaveConfirm open={confirm} onClose={() => setConfirm(false)} />
     </>

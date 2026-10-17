@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { patchCachedGame } from '@/services/ListCache';
+import { LocalItems, TrailMeta } from '@/services/LocalItems';
 import { useRouter } from 'next/router';
 import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import { Game } from '@/types';
@@ -69,6 +70,7 @@ export default function GameIntro() {
         } catch { /* ignore */ }
       }
       setGame(g);
+      if (g) TrailMeta.set(ref, g as any);
 
       // Session state: only call /play when there's a session to inspect — /play
       // on a brand-new game would create one (sets playStart), which we don't
@@ -110,6 +112,7 @@ export default function GameIntro() {
     const uid = userId();
     BatchStore.clear(ref, uid);
     LocalJournal.clear(ref, uid);
+    LocalItems.reset(ref, uid);
     try {
       // Restart wipes the session; /play then returns the fresh start map task.
       await fetch(`${BASE_URL}/next`, {

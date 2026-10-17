@@ -9,6 +9,9 @@ import { Endpoint } from '@/typings/Endpoint.enum';
 import { withTimeout } from '@/services/BatchStore';
 import QueryParams from '@/typings/QueryParams';
 import Loading from '@/components/Loading';
+import { LocalItems } from '@/services/LocalItems';
+import { BatchStore } from '@/services/BatchStore';
+import { TaskHandlerService } from '@/services/TaskHandler';
 
 export const sentimentBorderColour = (sentiment: Sentiment): string => {
   return {
@@ -61,13 +64,33 @@ const InventoryTab = ({
     setJournalOpen(false);
     setLoaded(false);
 
+    const pad = (items: InventoryItem[]) => [...items, ...new Array(Math.max(0, MAX_INVENTORY_SLOTS - items.length)).fill({})];
+
     const fetchData = async () => {
       const _params = Object.fromEntries(
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
+
+      // 1. Local first (written as items are granted): no network.
+      const local = LocalItems.read(_params);
+      if (local && local.length) {
+        setCollectedItems(pad(local));
+        setLoaded(true);
+        return;
+      }
+      // 2. Nothing local on the very first card: nothing to fetch yet.
+      const current: any = BatchStore.current(_params) || new TaskHandlerService().getTaskFromSession();
+      const onFirstTask = !current || current.position === 0 || current.id === -1 || String(current.id) === '0';
+      if (onFirstTask) {
+        setCollectedItems(pad([]));
+        setLoaded(true);
+        return;
+      }
+      // 3. Empty locally and past the first card: ask the server, seed local.
       const data = await withTimeout(ItemsAPI.get<ItemsResponse>(_params));
 
       if (data?.ok) {
+        LocalItems.seed(_params, data?.items ?? []);
         const emptySlotsCount =
           Number(MAX_INVENTORY_SLOTS - (data?.items ?? []).length) > 0
             ? Number(MAX_INVENTORY_SLOTS - (data?.items ?? []).length)

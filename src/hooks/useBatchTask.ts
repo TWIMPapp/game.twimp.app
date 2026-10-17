@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react';
+import { LocalItems } from '@/services/LocalItems';
+
+// A batch card's `items` were granted by its on_arrival: record them once,
+// when the player actually reaches that card.
+const grantCardItems = (p: any, card: any) => {
+  if (Array.isArray(card?.items) && card.items.length) LocalItems.apply(p, `c:${card.position ?? card.id}`, card.items);
+};
 import QueryParams from '@/typings/QueryParams';
 import { TaskUnion } from '@/typings/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
@@ -40,6 +47,7 @@ export function useBatchTask<T extends TaskUnion>(testTask?: T) {
       handler.setTaskInSession(card);
       setTask(card as unknown as T);
       LocalJournal.add(_params, card);
+      grantCardItems(_params, card);
       syncCardInBackground(_params, card, replaced => {
         handler.setTaskInSession(replaced);
         setTask(replaced as unknown as T);
@@ -77,6 +85,7 @@ export function useBatchTask<T extends TaskUnion>(testTask?: T) {
     handler.setTaskInSession(card);
     setTask(card as unknown as T);
     LocalJournal.add(params, card);
+    grantCardItems(params, card);
     syncCardInBackground(params, card, replaced => {
       handler.setTaskInSession(replaced);
       setTask(replaced as unknown as T);
