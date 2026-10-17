@@ -7,6 +7,8 @@ import { AppBar, Box, Dialog, IconButton, Toolbar } from '@mui/material';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import { BatchStore, withTimeout } from '@/services/BatchStore';
+import { LocalJournal } from '@/services/LocalJournal';
+import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -16,25 +18,40 @@ export function JournalContent() {
   const [failed, setFailed] = useState<boolean>(false);
 
   useEffect(() => {
-    setLoaded(false);
-    const fetchData = async () => {
-      const _params = Object.fromEntries(
-        new URLSearchParams(window.location.search)
-      ) as unknown as QueryParams;
-      const data = await withTimeout(new APIService(Endpoint.Journal).get<TaskUnion[]>(_params));
+    const _params = Object.fromEntries(
+      new URLSearchParams(window.location.search)
+    ) as unknown as QueryParams;
 
+    // 1. Local journal: instant, only cards the player has actually seen.
+    const local = LocalJournal.read(_params);
+    if (local.length > 0) {
+      setTasks(local as unknown as TaskUnion[]);
+      setLoaded(true);
+      return;
+    }
+
+    // 2. Nothing local. On the very first card there is nothing to show yet —
+    //    don't ask the server.
+    const current: any = BatchStore.current(_params) || new TaskHandlerService().getTaskFromSession();
+    const onFirstTask = !current || current.position === 0 || current.id === -1 || String(current.id) === '0';
+    if (onFirstTask) {
+      setLoaded(true);
+      return;
+    }
+
+    // 3. New device / cleared data mid-game: fetch from the server (8s cap),
+    //    drop anything the player hasn't reached, seed the local journal.
+    withTimeout(new APIService(Endpoint.Journal).get<TaskUnion[]>(_params)).then(data => {
       if (Array.isArray(data)) {
-        // Batch-next: the server has already advanced to the end of the
-        // current batch, so hide cards the player hasn't swiped to yet.
         const ahead = BatchStore.aheadIds(_params);
-        setTasks(data.filter(t => !ahead.has(String((t as any).id))));
+        const seen = data.filter(t => !ahead.has(String((t as any).id)));
+        seen.forEach(t => LocalJournal.add(_params, t));
+        setTasks(LocalJournal.read(_params) as unknown as TaskUnion[]);
       } else {
         setFailed(true);
       }
       setLoaded(true);
-    };
-
-    fetchData();
+    });
   }, []);
 
   if (!loaded) return <Loading />;

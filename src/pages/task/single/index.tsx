@@ -18,6 +18,7 @@ import SwipeCard from '@/components/SwipeCard';
 import { useGamePage } from '@/hooks/useGamePage';
 import { useBatchTask } from '@/hooks/useBatchTask';
 import { BatchStore } from '@/services/BatchStore';
+import { LocalJournal } from '@/services/LocalJournal';
 
 
 const Single = ({ testTask }: { testTask?: QuestionSingleTask }) => {
@@ -65,6 +66,7 @@ const Single = ({ testTask }: { testTask?: QuestionSingleTask }) => {
       const sameQuestion = !!data.task && String(data.task.id) === String(task?.id);
       if (data.task && !sameQuestion) {
         // Correct answer: the new batch replaces the stored one.
+        LocalJournal.setAnswer(params, BatchStore.current(params) || task, body.answer);
         BatchStore.saveFromResponse(params, data);
         setNextTask(data.task);
 

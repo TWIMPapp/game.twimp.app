@@ -85,7 +85,7 @@ export default function TaskList({ tasks }: Props) {
                 ) : (
                   ''
                 )}
-                {task.content.length > 100 ? (
+                {(task.content ?? '').length > 100 ? (
                   <>
                     {task.content.slice(0, 100)}...
                     <Button
@@ -101,6 +101,11 @@ export default function TaskList({ tasks }: Props) {
                   </>
                 ) : (
                   task.content
+                )}
+                {(task as any).answer ? (
+                  <Typography sx={{ mt: 1, fontWeight: 600 }}>Your answer: {(task as any).answer}</Typography>
+                ) : (
+                  ''
                 )}
               </AccordionDetails>
             </Accordion>

@@ -7,6 +7,7 @@ import { TaskHandlerService } from '@/services/TaskHandler';
 import { TaskUnion } from '@/typings/Task';
 import QueryParams from '@/typings/QueryParams';
 import { BatchStore } from '@/services/BatchStore';
+import { LocalJournal } from '@/services/LocalJournal';
 import { ErrorBus } from '@/services/ErrorBus';
 
 // Intermediary intro page for built-in walk games (e.g. Jasmarina). Shows the
@@ -107,6 +108,7 @@ export default function GameIntro() {
     setWorking(true);
     const uid = userId();
     BatchStore.clear(ref, uid);
+    LocalJournal.clear(ref, uid);
     try {
       // Restart wipes the session; /play then returns the fresh start map task.
       await fetch(`${BASE_URL}/next`, {

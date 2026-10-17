@@ -3,6 +3,7 @@ import QueryParams from '@/typings/QueryParams';
 import { TaskUnion } from '@/typings/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import { TaskTypeRouteMap } from '@/services/TaskHandler/TaskTypeRouteMap';
+import { LocalJournal } from '@/services/LocalJournal';
 import { BatchCard, BatchStore, postWithTimeout, syncCardInBackground } from '@/services/BatchStore';
 
 const RECOVERY_TIMEOUT_MS = 8000;
@@ -38,6 +39,7 @@ export function useBatchTask<T extends TaskUnion>(testTask?: T) {
       }
       handler.setTaskInSession(card);
       setTask(card as unknown as T);
+      LocalJournal.add(_params, card);
       syncCardInBackground(_params, card, replaced => {
         handler.setTaskInSession(replaced);
         setTask(replaced as unknown as T);
@@ -50,6 +52,7 @@ export function useBatchTask<T extends TaskUnion>(testTask?: T) {
     const session = handler.getTaskFromSession<T>();
     if (session) {
       setTask(session);
+      LocalJournal.add(_params, session);
       return;
     }
 
