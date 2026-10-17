@@ -16,7 +16,9 @@ const IGNORE_SELECTOR = 'input, textarea, select, audio, video, [data-noswipe]';
 
 interface SwipeCardProps {
   children: ReactNode;
-  onSwipeLeft?: () => boolean | void | Promise<boolean | void>;
+  /** Return 'swapped' when the next card was swapped in place synchronously:
+   *  the top card then resets instantly (the under-card is already showing it). */
+  onSwipeLeft?: () => boolean | void | 'swapped' | Promise<boolean | void | 'swapped'>;
   onSwipeRight?: () => void;
   /** Called on any completed swipe (used to dismiss the tutorial). */
   onAnySwipe?: () => void;
@@ -25,6 +27,10 @@ interface SwipeCardProps {
   demo?: boolean;
   /** Called on the first touch while the demo is playing. */
   onDemoTap?: () => void;
+  /** Pre-rendered layer revealed underneath while dragging left (next card). */
+  underLeft?: ReactNode;
+  /** Pre-rendered layer revealed underneath while dragging right (journal). */
+  underRight?: ReactNode;
 }
 
 export default function SwipeCard({
@@ -34,7 +40,9 @@ export default function SwipeCard({
   onAnySwipe,
   className,
   demo,
-  onDemoTap
+  onDemoTap,
+  underLeft,
+  underRight
 }: SwipeCardProps) {
   const [dx, setDx] = useState(0);
   const [animating, setAnimating] = useState(false);
@@ -118,10 +126,19 @@ export default function SwipeCard({
 
     if (passed && v < 0 && onSwipeLeft) {
       onAnySwipe?.();
+      const r = onSwipeLeft();
+      if (r === 'swapped') {
+        // Content already replaced by the next card: drop the transform with
+        // no transition — the under-card and the new top card look the same.
+        setAnimating(false);
+        setOffset(0);
+        return;
+      }
       setAnimating(true);
       setOffset(-w * 1.3);
-      const res = await onSwipeLeft();
+      const res = await r;
       if (res === false) snapBack();
+      else if (res === 'swapped') { setAnimating(false); setOffset(0); }
     } else if (passed && v > 0 && onSwipeRight) {
       onAnySwipe?.();
       onSwipeRight();
@@ -160,6 +177,26 @@ export default function SwipeCard({
       onDragStart={(e) => e.preventDefault()}
       data-testid="swipe-card"
     >
+      {underLeft && (
+        <div
+          aria-hidden
+          className="fixed inset-0 overflow-hidden pointer-events-none bg-white dark:bg-gray-800"
+          style={{ zIndex: 0, visibility: dx < 0 ? 'visible' : 'hidden' }}
+          data-testid="swipe-under-left"
+        >
+          {underLeft}
+        </div>
+      )}
+      {underRight && (
+        <div
+          aria-hidden
+          className="fixed inset-0 overflow-hidden pointer-events-none bg-white dark:bg-gray-800"
+          style={{ zIndex: 0, visibility: dx > 0 ? 'visible' : 'hidden' }}
+          data-testid="swipe-under-right"
+        >
+          {underRight}
+        </div>
+      )}
       {demoOn && (
         <div
           aria-hidden
@@ -180,9 +217,9 @@ export default function SwipeCard({
         </div>
       )}
       <div
-        className={'relative w-full min-h-screen' + (demoOn ? ' swipe-demo-card bg-white dark:bg-gray-800' : '')}
+        className={'relative w-full min-h-screen' + (demoOn ? ' swipe-demo-card' : '') + (demoOn || underLeft || underRight ? ' bg-white dark:bg-gray-800' : '')}
         style={{
-          zIndex: demoOn ? 1 : undefined,
+          zIndex: demoOn || underLeft || underRight ? 1 : undefined,
           transform: dx ? `translateX(${dx}px) rotate(${rotate}deg)` : undefined,
           transformOrigin: '50% 100%',
           transition: animating ? 'transform 300ms ease-out' : 'none',

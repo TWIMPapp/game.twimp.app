@@ -71,5 +71,17 @@ export function useBatchTask<T extends TaskUnion>(testTask?: T) {
       });
   }, [testTask]);
 
-  return { task, setTask, params };
+  // Swap to another card in place (no navigation). Same bookkeeping as show().
+  const swapTo = (card: BatchCard) => {
+    const handler = new TaskHandlerService();
+    handler.setTaskInSession(card);
+    setTask(card as unknown as T);
+    LocalJournal.add(params, card);
+    syncCardInBackground(params, card, replaced => {
+      handler.setTaskInSession(replaced);
+      setTask(replaced as unknown as T);
+    });
+  };
+
+  return { task, setTask, params, swapTo };
 }

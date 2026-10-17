@@ -19,12 +19,24 @@ import GamePage from '@/components/GamePage';
 import SwipeCard from '@/components/SwipeCard';
 import { useGamePage, useSwipeTutorial } from '@/hooks/useGamePage';
 import { useBatchTask } from '@/hooks/useBatchTask';
-import { BatchStore } from '@/services/BatchStore';
+import { BatchCard, BatchStore } from '@/services/BatchStore';
+import { GamePageBody } from '@/components/GamePage';
 // MapDialog is broken (calls a non-existent /map endpoint) — hidden for now;
 // it can come back as a third tab on the game page.
 
 export default function Information({ testTask }: { testTask?: InformationTask }) {
-  const { task, params } = useBatchTask<InformationTask>(testTask);
+  const { task, params, swapTo } = useBatchTask<InformationTask>(testTask);
+  // Next card from the local batch, pre-rendered under the top card.
+  const [peekCard, setPeekCard] = useState<BatchCard | null>(null);
+  useEffect(() => {
+    if (!task || !params) return;
+    const next = BatchStore.peek(params);
+    setPeekCard(next);
+    if (next?.image_url) {
+      const img = new Image();
+      img.src = next.image_url;
+    }
+  }, [task, params]);
   const [nextTask, setNextTask] = useState<TaskUnion>();
   const [nextTaskLoading, setNextTaskLoading] = useState<boolean>(false);
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -38,7 +50,9 @@ export default function Information({ testTask }: { testTask?: InformationTask }
     }
   };
 
-  const goToNextTask = async (): Promise<boolean> => {
+  // Sync for local cards (so SwipeCard can reset instantly on 'swapped');
+  // falls through to fetchNext() when the batch is exhausted.
+  const goToNextTask = (): boolean | 'swapped' | Promise<boolean | 'swapped'> => {
     if (nextTaskLoading) return true;
 
     // Batch-next: the next card is already stored locally — no round-trip.
@@ -46,6 +60,13 @@ export default function Information({ testTask }: { testTask?: InformationTask }
     // by the page that renders them (useBatchTask), never blocking the swipe.
     const local = BatchStore.advance(params);
     if (local) {
+      // Next story card with nothing to announce: swap in place — it is
+      // already rendered underneath, so this is instant (no navigation).
+      if (local.type === 'information' && !(local.items ?? []).length) {
+        swapTo(local);
+        window.scrollTo(0, 0);
+        return 'swapped';
+      }
       if ((local.items ?? []).length > 0) {
         setNextTask(local as TaskUnion);
         setItems(local.items ?? []);
@@ -56,6 +77,10 @@ export default function Information({ testTask }: { testTask?: InformationTask }
       return true;
     }
 
+    return fetchNext();
+  };
+
+  const fetchNext = async (): Promise<boolean | 'swapped'> => {
     setNextTaskLoading(true);
 
     const body = {
@@ -74,6 +99,15 @@ export default function Information({ testTask }: { testTask?: InformationTask }
 
     if (data?.task) {
       BatchStore.saveFromResponse(params, data);
+      if (data.task.type === 'information' && !(data.outcome?.items ?? []).length) {
+        const first = BatchStore.current(params);
+        if (first) {
+          swapTo(first);
+          window.scrollTo(0, 0);
+          setNextTaskLoading(false);
+          return 'swapped';
+        }
+      }
       setNextTask(data.task);
 
       if ((data.outcome?.items ?? [])?.length > 0) {
@@ -120,14 +154,17 @@ export default function Information({ testTask }: { testTask?: InformationTask }
           <Loading />
         </div>
       )}
-      <SwipeCard onSwipeLeft={goToNextTask} onSwipeRight={openGamePage} onAnySwipe={dismissTutorial} demo={showTutorial && !!task} onDemoTap={dismissTutorial}>
+      <SwipeCard
+        underLeft={peekCard ? <CardPreview card={peekCard} /> : undefined}
+        underRight={task ? <GamePageBody tab="journal" key={String(task.id)} /> : undefined}
+        onSwipeLeft={goToNextTask} onSwipeRight={openGamePage} onAnySwipe={dismissTutorial} demo={showTutorial && !!task} onDemoTap={dismissTutorial}>
       <div
         className={task?.image_url ? 'bg-cover bg-center bg-no-repeat absolute h-80 w-full' : ''}
         style={{ backgroundImage: task?.image_url ? 'url(' + task.image_url + ')' : undefined }}
       >
-        {/* video tag to play a video by url */}
         {task?.video_url && (
           <video
+            key={task.video_url}
             className="absolute w-full top-0"
             autoPlay
             loop
@@ -167,6 +204,7 @@ export default function Information({ testTask }: { testTask?: InformationTask }
           <div className="markdown-body mt-72 p-8 pb-80 bg-white dark:bg-gray-800 dark:text-white rounded-tl-3xl rounded-tr-3xl relative">
             {task.audio_url && (
               <audio
+                key={task.audio_url}
                 controls
                 controlsList="nodownload nofullscreen"
                 className="cy-audio-player w-full mb-4"
@@ -189,5 +227,26 @@ export default function Information({ testTask }: { testTask?: InformationTask }
       )}
       {gamePageOpen && <GamePage open={gamePageOpen} handleClose={closeGamePage} />}
     </>
+  );
+}
+
+// Static look-alike of the next card, shown underneath while dragging left.
+// Same layout as the live information card (image band, rounded content
+// sheet); for map/question cards it shows their image + text as a preview.
+function CardPreview({ card }: { card: BatchCard }) {
+  const c: any = card;
+  return (
+    <div className="relative w-full min-h-screen" data-testid="card-preview" data-card-id={String(c.id)}>
+      <div
+        className={c.image_url ? 'bg-cover bg-center bg-no-repeat absolute h-80 w-full' : ''}
+        style={{ backgroundImage: c.image_url ? 'url(' + c.image_url + ')' : undefined }}
+      >
+        {c.content && (
+          <div className="markdown-body mt-72 p-8 pb-80 bg-white dark:bg-gray-800 dark:text-white rounded-tl-3xl rounded-tr-3xl relative">
+            <Markdown remarkPlugins={[remarkGfm]}>{c.content}</Markdown>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

@@ -88,6 +88,12 @@ export const BatchStore = {
     return b ? b.cards[b.index] : null;
   },
 
+  /** The next stored card without advancing (for pre-rendering). */
+  peek(params?: QueryParams): BatchCard | null {
+    const b = read(params?.trail_ref, params?.user_id);
+    return b && b.index < b.cards.length - 1 ? b.cards[b.index + 1] : null;
+  },
+
   /** Move to the next stored card, if there is one. Returns it (or null). */
   advance(params?: QueryParams): BatchCard | null {
     const b = read(params?.trail_ref, params?.user_id);
