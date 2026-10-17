@@ -104,6 +104,12 @@ export const BatchStore = {
     write(params?.trail_ref, params?.user_id, b);
   },
 
+  /** Ids of stored cards the player hasn't reached yet (server already sent them). */
+  aheadIds(params?: QueryParams): Set<string> {
+    const b = read(params?.trail_ref, params?.user_id);
+    return new Set(b ? b.cards.slice(b.index + 1).map(c => String((c as any).id)) : []);
+  },
+
   clear(ref?: string, user?: string) {
     const k = keyFor(ref, user);
     if (k) localStorage.removeItem(k);
@@ -113,6 +119,11 @@ export const BatchStore = {
     return stable(stripBatchMeta(a)) === stable(stripBatchMeta(b));
   },
 };
+
+/** Resolve to undefined if `p` hasn't settled within `ms`. */
+export function withTimeout<T>(p: Promise<T>, ms = 8000): Promise<T | undefined> {
+  return Promise.race([p, new Promise<undefined>(r => setTimeout(() => r(undefined), ms))]);
+}
 
 /** POST helper with a hard timeout so nothing can spin forever. */
 export async function postWithTimeout(path: string, body: any, ms = 8000): Promise<any | undefined> {

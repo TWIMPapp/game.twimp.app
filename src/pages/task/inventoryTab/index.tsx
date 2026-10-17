@@ -6,6 +6,7 @@ import JournalImage from '../../../assets/images/journal.jpg';
 // import JournalDialog from '@/components/JournalDialog';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
+import { withTimeout } from '@/services/BatchStore';
 import QueryParams from '@/typings/QueryParams';
 import Loading from '@/components/Loading';
 
@@ -64,16 +65,19 @@ const InventoryTab = ({
       const _params = Object.fromEntries(
         new URLSearchParams(window.location.search)
       ) as unknown as QueryParams;
-      const data = await ItemsAPI.get<ItemsResponse>(_params);
+      const data = await withTimeout(ItemsAPI.get<ItemsResponse>(_params));
 
       if (data?.ok) {
         const emptySlotsCount =
           Number(MAX_INVENTORY_SLOTS - (data?.items ?? []).length) > 0
             ? Number(MAX_INVENTORY_SLOTS - (data?.items ?? []).length)
             : 0;
-        setCollectedItems([...data?.items, ...new Array(emptySlotsCount).fill({})]);
-        setLoaded(true);
+        setCollectedItems([...(data?.items ?? []), ...new Array(emptySlotsCount).fill({})]);
+      } else {
+        // Failed / timed out: show empty slots rather than spin forever.
+        setCollectedItems(new Array(MAX_INVENTORY_SLOTS).fill({}));
       }
+      setLoaded(true);
     };
 
     if (setItems.length === 0) {

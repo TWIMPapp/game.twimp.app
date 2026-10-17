@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { AppBar, Box, Dialog, IconButton, Tab, Tabs, Toolbar, Typography } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { AppBar, Box, Dialog, Tab, Tabs } from '@mui/material';
 import { JournalContent } from '@/components/JournalDialog';
 import InventoryTab from '@/pages/task/inventoryTab';
 import SwipeCard from '@/components/SwipeCard';
@@ -9,8 +8,8 @@ import SwipeCard from '@/components/SwipeCard';
 export type GamePageTab = 'journal' | 'items';
 
 // Full-screen "game page" opened by swiping right on a card (or the back
-// gesture). Tabs: Journal (default) and Items (the old inventory).
-// Close with the X or by swiping left.
+// gesture). Tabs: Journal (default) and Items. No header and no close button:
+// swipe right (or left) to return to the card.
 export default function GamePage({
   open,
   handleClose,
@@ -24,26 +23,11 @@ export default function GamePage({
 
   return (
     <Dialog open={open} onClose={handleClose} fullScreen data-testid="game-page">
-      <SwipeCard
-        onSwipeLeft={() => {
-          handleClose();
-        }}
-      >
-        <AppBar sx={{ position: 'sticky', top: 0, paddingTop: '30px' }}>
-          <Toolbar>
-            <IconButton
-              className="cy-game-page-close"
-              edge="start"
-              sx={{ color: '#fff' }}
-              onClick={handleClose}
-              aria-label="close"
-            >
-              <CloseIcon />
-            </IconButton>
-            <Typography sx={{ ml: 1, flex: 1 }} variant="h6">
-              {tab === 'journal' ? 'Journal' : 'Items'}
-            </Typography>
-          </Toolbar>
+      <SwipeCard onSwipeRight={handleClose} onSwipeLeft={handleClose}>
+        <AppBar
+          sx={{ position: 'sticky', top: 0, paddingTop: 'env(safe-area-inset-top)' }}
+          data-testid="game-page-tabs"
+        >
           <Tabs
             value={tab}
             onChange={(_, v) => setTab(v)}
