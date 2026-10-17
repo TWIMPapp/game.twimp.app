@@ -88,14 +88,14 @@ export const TrailMeta = {
     if (!ref || typeof meta?.items_enabled !== 'boolean') return;
     try { localStorage.setItem(META_PREFIX + ref, JSON.stringify({ items_enabled: meta.items_enabled })); } catch { /* ignore */ }
   },
-  /** Default true (matches the API: absent = enabled). */
+  /** Only an explicit true (as sent by the API) shows Items; unknown = hidden. */
   itemsEnabled(ref?: string): boolean {
-    if (!ref || typeof window === 'undefined') return true;
+    if (!ref || typeof window === 'undefined') return false;
     try {
       const v = JSON.parse(localStorage.getItem(META_PREFIX + ref) || 'null');
-      return v?.items_enabled !== false;
+      return v?.items_enabled === true;
     } catch {
-      return true;
+      return false;
     }
   },
 };

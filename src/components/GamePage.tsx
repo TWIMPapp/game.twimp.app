@@ -67,8 +67,8 @@ export default function GamePage({
  *  player drags right, so the game page is already there when it opens. */
 export function GamePageBody({ tab, setTab }: { tab: GamePageTab; setTab?: (t: GamePageTab) => void }) {
   const [confirm, setConfirm] = useState(false);
-  // Items tab only when the trail has items_enabled (default true).
-  const [itemsEnabled, setItemsEnabled] = useState(true);
+  // Items tab only when the trail has items_enabled === true (unknown = hidden).
+  const [itemsEnabled, setItemsEnabled] = useState(false);
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get('trail_ref') ?? undefined;
     setItemsEnabled(TrailMeta.itemsEnabled(ref));
