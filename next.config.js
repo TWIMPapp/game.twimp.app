@@ -3,6 +3,9 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  // Local preview builds into a side directory so the running server keeps
+  // serving until the new build succeeds (see /workspace/twimp/preview.sh).
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   sassOptions: {
     includePaths: [path.join(__dirname, 'styles')],
   },

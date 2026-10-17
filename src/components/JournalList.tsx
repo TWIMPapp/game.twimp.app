@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { JournalEntry } from '@/services/LocalJournal';
 
-// Journal: entries grouped by stop, oldest first, auto-scrolled to the latest.
+// Journal: entries grouped by stop, newest first (no auto-scroll).
 // Deliberately styled as a notebook (warm paper background, compact tiles,
 // small type) so it can't be mistaken for a full-size game card.
 
@@ -44,26 +44,12 @@ export function groupJournal(entries: JournalEntry[]): Group[] {
   return groups;
 }
 
-export default function JournalList({ entries, autoScroll = true }: { entries: JournalEntry[]; autoScroll?: boolean }) {
+export default function JournalList({ entries }: { entries: JournalEntry[] }) {
   const [open, setOpen] = useState<string | null>(null);
-  const endRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Scroll only the journal's own scroll container (the game-page dialog);
-    // never the window — the journal is also pre-rendered under the card.
-    if (!autoScroll) return;
-    let el: HTMLElement | null = endRef.current?.parentElement ?? null;
-    while (el) {
-      const oy = getComputedStyle(el).overflowY;
-      if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight) {
-        el.scrollTop = el.scrollHeight;
-        return;
-      }
-      el = el.parentElement;
-    }
-  }, [autoScroll, entries.length]);
-
-  const groups = groupJournal(entries);
+  // Newest first: latest stop at the top, latest card first within it.
+  const groups = groupJournal(entries)
+    .reverse()
+    .map(g => ({ ...g, entries: [...g.entries].reverse() }));
 
   return (
     <div className="journal-list px-3 pt-3 pb-6" style={{ background: '#f6f1e7', minHeight: 'calc(100vh - 48px)' }} data-testid="journal-list">
@@ -90,7 +76,8 @@ export default function JournalList({ entries, autoScroll = true }: { entries: J
                 >
                   <button
                     type="button"
-                    className="relative block w-full text-left"
+                    className="relative block w-full text-left select-none"
+                    style={{ touchAction: 'pan-y', WebkitTouchCallout: 'none' } as any}
                     onClick={() => setOpen(isOpen ? null : id)}
                     aria-expanded={isOpen}
                   >
@@ -99,8 +86,16 @@ export default function JournalList({ entries, autoScroll = true }: { entries: J
                         src={e.image_url}
                         alt=""
                         loading="lazy"
-                        className="block w-full object-cover"
-                        style={{ maxHeight: 180, aspectRatio: '16 / 9' }}
+                        draggable={false}
+                        className="block w-full object-cover select-none"
+                        style={{
+                          maxHeight: 180,
+                          aspectRatio: '16 / 9',
+                          // Let swipes pass through: no native image drag / callout.
+                          pointerEvents: 'none',
+                          WebkitUserDrag: 'none',
+                          WebkitTouchCallout: 'none'
+                        } as any}
                       />
                     ) : (
                       <div className="w-full" style={{ height: 72, background: 'linear-gradient(135deg,#d8cdb8,#bfb197)' }} />
@@ -132,7 +127,6 @@ export default function JournalList({ entries, autoScroll = true }: { entries: J
           </div>
         </section>
       ))}
-      <div ref={endRef} />
     </div>
   );
 }

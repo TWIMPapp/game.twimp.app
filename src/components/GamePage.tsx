@@ -27,8 +27,15 @@ export default function GamePage({
   return (
     // No open/close transition: the swipe itself is the transition, and the
     // view underneath is already rendered, so nothing should fade or flash.
-    <Dialog open={open} onClose={handleClose} fullScreen transitionDuration={0} data-testid="game-page">
-      <SwipeCard onSwipeRight={handleClose} onSwipeLeft={handleClose} underRight={underCard}>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullScreen
+      transitionDuration={0}
+      data-testid="game-page"
+    >
+      {/* Left or right swipe returns to the card (revealed underneath). */}
+      <SwipeCard onSwipeRight={handleClose} onSwipeLeft={handleClose} underRight={underCard} underLeft={underCard}>
         <GamePageBody tab={tab} setTab={setTab} />
       </SwipeCard>
     </Dialog>
