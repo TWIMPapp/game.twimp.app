@@ -37,7 +37,7 @@ export class TaskHandlerService {
     if (route) {
       this.setTaskInSession(task);
 
-      if (task?.id >= 0 && task?.type !== TaskType.Map) {
+      if (task?.id >= 0 && task?.type !== TaskType.Map && task?.type !== TaskType.Tracker) {
         this.setPrevTaskIdInSession(task.id);
       }
 
