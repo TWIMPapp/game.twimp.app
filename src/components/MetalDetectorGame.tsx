@@ -1,3 +1,4 @@
+// TODO: Remove dead metal detector card - random treasures within ~50m, beeps faster when closer, 60-second timer per wave, GPS accuracy setting wrongly in thousands of kilometres instead of metres, never talks to trail engine, unused by all trails/drafts/prototyper. Remove once current trail is out.
 import { useEffect, useRef, useState } from 'react';
 import { Position } from '@/hooks/useGeolocation';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
