@@ -7,6 +7,7 @@ import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import { Outcome, TaskUnion, TrackerTask } from '@/typings/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
+import { syncTaskPageWithServer } from '@/services/ServerSync';
 import QueryParams from '@/typings/QueryParams';
 import ItemsDialog from '@/components/ItemsDialog';
 import { InventoryItem } from '@/typings/inventoryItem';
@@ -49,9 +50,18 @@ export default function Tracker({ testTask }: { testTask?: TrackerTask }) {
 
   useEffect(() => {
     if (testTask) { setTask(testTask); return; }
-    setParams(Object.fromEntries(new URLSearchParams(window.location.search)) as unknown as QueryParams);
+    const p = Object.fromEntries(new URLSearchParams(window.location.search)) as unknown as QueryParams;
     const t = new TaskHandlerService().getTaskFromSession<TrackerTask>();
     if (t) setTask(t);
+    // Don't trust the saved card: load the server's current card. If it's a
+    // tracker, use it (fresh target); otherwise the server is elsewhere and we
+    // navigate there. Only start /awty pings once we know we belong here.
+    syncTaskPageWithServer(p).then((r) => {
+      if (!r) { setParams(p); return; }
+      if (r.changed && r.task.type !== 'tracker') return;
+      setTask(r.task as TrackerTask);
+      setParams(p);
+    }).catch(() => setParams(p));
   }, [testTask]);
 
   const maxRange = task?.max_range_m && task.max_range_m > 0 ? task.max_range_m : TRACKER_DEFAULT_RANGE_M;

@@ -11,6 +11,7 @@ import QueryParams from '@/typings/QueryParams';
 import { BatchStore } from '@/services/BatchStore';
 import { LocalJournal } from '@/services/LocalJournal';
 import { ErrorBus } from '@/services/ErrorBus';
+import { reconcileWithServer } from '@/services/ServerSync';
 
 // Intermediary intro page for built-in walk games (e.g. Jasmarina). Shows the
 // hero image, the full trail description, and the play buttons. Sits between
@@ -102,8 +103,11 @@ export default function GameIntro() {
     const params: QueryParams = { trail_ref: ref, user_id: userId() } as QueryParams;
     // Prefer the locally stored batch position (it can be a few story cards
     // behind the server, which has already advanced to the batch's end).
-    const local = BatchStore.current(params);
-    new TaskHandlerService().goToTaskComponent((local as TaskUnion) || resumeTask, params);
+    // Use the local batch position only if it agrees with the server (it can be
+    // a few story cards behind the server's batch end); otherwise the server wins.
+    reconcileWithServer(params)
+      .then((r) => new TaskHandlerService().goToTaskComponent(r ? r.task : resumeTask, params))
+      .catch(() => new TaskHandlerService().goToTaskComponent(resumeTask, params));
   };
 
   const handleStart = async () => {

@@ -97,13 +97,13 @@ const Single = ({ testTask }: { testTask?: QuestionSingleTask }) => {
     <>
       {/* Question cards: swipe right opens the game page; no swipe-left (answer to progress). */}
       <SwipeCard onSwipeRight={openGamePage}>
-      {task?.image_url && (
+      {task && (
         <div
           className="bg-cover bg-center bg-no-repeat absolute h-60 w-full"
-          style={{ backgroundImage: 'url(' + task.image_url + ')' }}
+          style={task.image_url ? { backgroundImage: 'url(' + task.image_url + ')' } : undefined}
         >
           {task?.content ? (
-            <div className="markdown-body mt-52 pb-80 bg-white dark:bg-gray-800 dark:text-white rounded-tl-3xl rounded-tr-3xl relative">
+            <div className={`markdown-body ${task.image_url ? 'mt-52' : 'mt-6'} pb-80 bg-white dark:bg-gray-800 dark:text-white rounded-tl-3xl rounded-tr-3xl relative`}>
               <div className="pl-6 pr-6 pb-6">
                 <div className="max-h-64">
                   <Question question={task.content} />

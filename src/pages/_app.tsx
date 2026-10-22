@@ -8,6 +8,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { SessionProvider } from 'next-auth/react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import QueryParams from '@/typings/QueryParams';
+import { syncTaskPageWithServer } from '@/services/ServerSync';
 
 import '@/styles/globals.scss';
 
@@ -42,6 +43,15 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     };
 
     fetchData();
+
+    // Server is the source of truth for where the player is: on any /task/*
+    // load (incl. a home-screen app relaunch) re-route if the local card is stale.
+    // The tracker page handles this itself (it also needs the fresh card).
+    const path = window.location.pathname;
+    if (path.startsWith('/task/') && !path.startsWith('/task/tracker')) {
+      const p = Object.fromEntries(new URLSearchParams(window.location.search)) as unknown as QueryParams;
+      syncTaskPageWithServer(p).catch(() => {});
+    }
 
     // Register service worker for PWA
     if ('serviceWorker' in navigator) {
