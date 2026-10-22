@@ -110,6 +110,17 @@ export interface AdventureAntsTask extends Task {
   obstacles: Position[];
 }
 
+export interface TrackerTask extends Task {
+  type: TaskType.Tracker;
+  title?: string;
+  max_range_m?: number;
+  messages?: { within: number; message: string }[];
+  out_of_range_message?: string;
+  colors?: { background?: string; signal?: string; text?: string };
+  beep_url?: string;
+  target?: { lat: number; lng: number };
+}
+
 export type TaskUnion =
   | QuestionMultiTask
   | QuestionSingleTask
@@ -120,4 +131,5 @@ export type TaskUnion =
   | EvadeTask
   | MetalDetectorTask
   | HuntTask
-  | AdventureAntsTask;
+  | AdventureAntsTask
+  | TrackerTask;

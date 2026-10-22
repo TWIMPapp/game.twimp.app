@@ -52,7 +52,7 @@ export class TaskHandlerService {
         BatchStore.saveFromResponse(params, { task });
       }
 
-      if (task?.id >= 0 && task?.type !== TaskType.Map) {
+      if (task?.id >= 0 && task?.type !== TaskType.Map && task?.type !== TaskType.Tracker) {
         this.setPrevTaskIdInSession(task.id);
       }
 

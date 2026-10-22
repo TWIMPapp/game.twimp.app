@@ -59,7 +59,7 @@ export default function TaskList({ tasks }: Props) {
     setSelectedTask(null);
   };
 
-  const reversedTasksWithoutMapTasks = tasks.filter((task) => task.type !== 'map').reverse();
+  const reversedTasksWithoutMapTasks = tasks.filter((task) => task.type !== 'map' && task.type !== 'tracker').reverse();
 
   return (
     <>
