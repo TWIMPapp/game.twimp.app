@@ -15,7 +15,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { getDistanceInMeters } from '@/utils/geo';
 import {
   TRACKER_DEFAULT_COLORS, TRACKER_DEFAULT_RANGE_M,
-  trackerBeep, trackerLitRings, trackerMessage, trackerSignal
+  createSmoother, trackerBeep, trackerLitRings, trackerMessage, trackerSignal
 } from '@/utils/tracker';
 
 const AWTY_INTERVAL = 5000;
@@ -67,14 +67,22 @@ export default function Tracker({ testTask }: { testTask?: TrackerTask }) {
   const maxRange = task?.max_range_m && task.max_range_m > 0 ? task.max_range_m : TRACKER_DEFAULT_RANGE_M;
   const colors = { ...TRACKER_DEFAULT_COLORS, ...(task?.colors || {}) };
 
-  const gpsDistance = position && task?.target
-    ? getDistanceInMeters(position.lat, position.lng, task.target.lat, task.target.lng)
-    : null;
+  // Smoothed distance (see createSmoother): fed once per GPS fix, reset when the target changes.
+  const smoother = useRef(createSmoother((a, b) => getDistanceInMeters(a.lat, a.lng, b.lat, b.lng)));
+  const [gpsDistance, setGpsDistance] = useState<number | null>(null);
+  const targetKey = task?.target ? `${task.target.lat},${task.target.lng}` : '';
+  useEffect(() => { smoother.current.reset(); setGpsDistance(null); }, [targetKey]);
+  useEffect(() => {
+    if (!position || !task?.target) return;
+    smoother.current.add({ lat: position.lat, lng: position.lng, acc: position.accuracy ?? 10, t: Date.now() });
+    setGpsDistance(smoother.current.smoothDist(task.target));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [position, targetKey]);
   const distance = isTestMode && testDistance != null ? testDistance : gpsDistance;
   const signal = distance == null ? 0 : trackerSignal(distance, maxRange);
   const lit = trackerLitRings(signal, RINGS);
   const message = distance == null
-    ? (error ? 'Tracker can’t find your location. Check location is switched on for this site.' : 'Searching for signal…')
+    ? (error ? 'No location: GPS is off or blocked for this site.' : 'Waiting for GPS…')
     : trackerMessage(distance, task?.messages, task?.out_of_range_message);
 
   // Same arrival loop as the map page: every GPS update pings /awty (5s cooldown).
