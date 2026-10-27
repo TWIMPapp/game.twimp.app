@@ -269,7 +269,7 @@ function LeaveConfirm({ open, onClose }: { open: boolean; onClose: () => void })
       <DialogContent>Your progress is saved — you can continue later from the home page.</DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Stay</Button>
-        <Button color="error" onClick={() => window.location.assign('/')}>
+        <Button color="error" onClick={() => window.location.assign('/')} data-testid="leave-confirm-yes">
           Leave Game
         </Button>
       </DialogActions>
