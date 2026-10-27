@@ -9,6 +9,8 @@ import { Outcome, TaskUnion, TrackerTask } from '@/typings/Task';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import { syncTaskPageWithServer } from '@/services/ServerSync';
 import QueryParams from '@/typings/QueryParams';
+import { IconButton } from '@mui/material';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import ItemsDialog from '@/components/ItemsDialog';
 import GamePage from '@/components/GamePage';
 import SwipeCard from '@/components/SwipeCard';
@@ -181,18 +183,23 @@ export default function Tracker({ testTask }: { testTask?: TrackerTask }) {
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
           padding: '72px 20px 32px', zIndex: 900, fontFamily: 'inherit', textAlign: 'center' }}>
           <style>{`@keyframes twimpTrackerPing{from{transform:scale(.2);opacity:.9}to{transform:scale(1);opacity:0}}`}</style>
-          <button
+          <IconButton
             onClick={openGamePage}
-            aria-label="Open journal"
-            style={{
-              position: 'absolute', top: 20, left: 16,
-              background: 'transparent', color: colors.text,
-              border: `1.5px solid ${colors.text}`, borderRadius: 999,
-              padding: '6px 14px', fontSize: 14, opacity: 0.85
+            sx={{
+              position: 'fixed',
+              bottom: 16,
+              left: 16,
+              backgroundColor: 'white',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)'
+              },
+              zIndex: 999
             }}
+            aria-label="open journal"
           >
-            ← Journal
-          </button>
+            <MenuBookIcon />
+          </IconButton>
       <div>
         {task.title && <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>{task.title}</h1>}
         {task.content && <p style={{ fontSize: 17, marginTop: 8, opacity: 0.9 }}>{task.content}</p>}

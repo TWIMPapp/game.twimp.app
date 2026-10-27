@@ -1,18 +1,19 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AppBar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Tab, Tabs } from '@mui/material';
+import { AppBar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Tab, Tabs } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { JournalContent } from '@/components/JournalDialog';
 import InventoryTab from '@/pages/task/inventoryTab';
-import SwipeCard from '@/components/SwipeCard';
+import SwipeCard, { SwipeCardHandle } from '@/components/SwipeCard';
 import { TrailMeta } from '@/services/LocalItems';
 // import MapTab from '@/pages/task/mapTab'; // TODO: "Map" tab once a map endpoint exists again
 
 export type GamePageTab = 'journal' | 'items';
 
 // Full-screen "game page" opened by swiping right on a card (or the back
-// gesture). Tabs: Journal (default), Items, and an exit icon (Leave game).
-// No header and no close button: swipe right (or left) to return to the card.
+// gesture). Tabs: Journal (default), Items, and a right-arrow icon to return
+// to the game (same as swipe), plus a fixed bottom "Leave Game" button.
 //
 // Rendered as normal page content (portal into <body>, with the card page's
 // #__next hidden while open) rather than a fixed MUI Dialog: a fixed Dialog
@@ -34,13 +35,20 @@ export default function GamePage({
 }) {
   const [tab, setTab] = useState<GamePageTab>(initialTab);
   const [mounted, setMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const swipeRef = useRef<SwipeCardHandle | null>(null);
+  const savedAppStateRef = useRef<{ prevDisplay: string; scrollY: number } | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    if (!open) return;
+    if (!open) {
+      setClosing(false);
+      return;
+    }
     const app = document.getElementById('__next');
     const scrollY = window.scrollY;
     const prev = app?.style.display ?? '';
+    savedAppStateRef.current = { prevDisplay: prev, scrollY };
     if (app) app.style.display = 'none';
     window.scrollTo(0, 0);
     return () => {
@@ -49,14 +57,79 @@ export default function GamePage({
     };
   }, [open]);
 
+  const revealUnderlyingApp = useCallback(() => {
+    if (underCard) return;
+    const app = document.getElementById('__next');
+    const saved = savedAppStateRef.current;
+    if (app && saved) {
+      app.style.display = saved.prevDisplay;
+      window.scrollTo(0, saved.scrollY);
+    }
+    setClosing(true);
+  }, [underCard]);
+
+  const handleActiveTaskClick = useCallback(() => {
+    revealUnderlyingApp();
+    swipeRef.current?.triggerSwipe('left', handleClose);
+  }, [revealUnderlyingApp, handleClose]);
+
+  const handleSwipeLeft = useCallback(() => {
+    revealUnderlyingApp();
+    return new Promise<boolean>((resolve) => {
+      window.setTimeout(() => {
+        handleClose();
+        resolve(true);
+      }, 260);
+    });
+  }, [revealUnderlyingApp, handleClose]);
+
+  const handleSwipeRight = useCallback(() => {
+    if (underCard) {
+      handleClose();
+      return;
+    }
+    revealUnderlyingApp();
+    return new Promise<boolean>((resolve) => {
+      window.setTimeout(() => {
+        handleClose();
+        resolve(true);
+      }, 260);
+    });
+  }, [underCard, revealUnderlyingApp, handleClose]);
+
   if (!open || !mounted) return null;
   // No open/close transition: the swipe itself is the transition, and the
   // view underneath is already rendered, so nothing should fade or flash.
   return createPortal(
-    <Box data-testid="game-page" sx={{ minHeight: '100vh', bgcolor: 'background.paper', color: 'text.primary' }}>
+    <Box
+      data-testid="game-page"
+      sx={
+        closing && !underCard
+          ? {
+              position: 'fixed',
+              inset: 0,
+              zIndex: 1300,
+              bgcolor: 'transparent',
+              color: 'text.primary',
+              overflow: 'hidden',
+              pointerEvents: 'none'
+            }
+          : {
+              minHeight: '100vh',
+              bgcolor: 'background.paper',
+              color: 'text.primary'
+            }
+      }
+    >
       {/* Left or right swipe returns to the card (revealed underneath). */}
-      <SwipeCard onSwipeRight={handleClose} onSwipeLeft={handleClose} underRight={underCard} underLeft={underCard}>
-        <GamePageBody tab={tab} setTab={setTab} />
+      <SwipeCard
+        ref={swipeRef}
+        onSwipeRight={handleSwipeRight}
+        onSwipeLeft={handleSwipeLeft}
+        underRight={underCard}
+        underLeft={underCard}
+      >
+        <GamePageBody tab={tab} setTab={setTab} onActiveTaskClick={handleActiveTaskClick} />
       </SwipeCard>
     </Box>,
     document.body
@@ -65,7 +138,15 @@ export default function GamePage({
 
 /** Tabs + content. Also rendered (Journal tab) underneath a card while the
  *  player drags right, so the game page is already there when it opens. */
-export function GamePageBody({ tab, setTab }: { tab: GamePageTab; setTab?: (t: GamePageTab) => void }) {
+export function GamePageBody({
+  tab,
+  setTab,
+  onActiveTaskClick
+}: {
+  tab: GamePageTab;
+  setTab?: (t: GamePageTab) => void;
+  onActiveTaskClick?: () => void;
+}) {
   const [confirm, setConfirm] = useState(false);
   // Items tab only when the trail has items_enabled === true (unknown = hidden).
   const [itemsEnabled, setItemsEnabled] = useState(false);
@@ -80,35 +161,106 @@ export function GamePageBody({ tab, setTab }: { tab: GamePageTab; setTab?: (t: G
         sx={{ position: 'sticky', top: 0, paddingTop: 'env(safe-area-inset-top)' }}
         data-testid="game-page-tabs"
       >
-        <Tabs
-          value={shown}
-          onChange={(_, v) => (v === 'exit' ? setTab && setConfirm(true) : setTab?.(v))}
-          variant="standard"
-          textColor="inherit"
-          indicatorColor="secondary"
-        >
-          <Tab value="journal" label="Journal" className="cy-tab-journal" sx={{ flex: 1 }} />
-          {itemsEnabled && <Tab value="items" label="Items" className="cy-tab-items" sx={{ flex: 1 }} />}
-          {/* Exit: compact icon-only tab, never selected; opens the confirm. */}
-          <Tab
-            value="exit"
-            icon={<LogoutIcon />}
-            aria-label="Leave game"
-            data-testid="leave-game"
-            sx={{ minWidth: 56, width: 56, px: 1, flex: '0 0 auto' }}
-          />
-        </Tabs>
+        <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
+          <Tabs
+            value={shown}
+            onChange={(_, v) => {
+              setTab?.(v);
+            }}
+            variant="fullWidth"
+            textColor="inherit"
+            indicatorColor="secondary"
+            sx={{ flex: 1, width: '100%' }}
+          >
+            <Tab
+              value="journal"
+              label="Journal"
+              className="cy-tab-journal"
+              sx={{ flex: 1, maxWidth: 'none' }}
+            />
+            {itemsEnabled && (
+              <Tab
+                value="items"
+                label="Items"
+                className="cy-tab-items"
+                sx={{ flex: 1, maxWidth: 'none' }}
+              />
+            )}
+          </Tabs>
+          {/* Right arrow: same as swipe, animates back to the main game screen. */}
+          <IconButton
+            onClick={() => onActiveTaskClick?.()}
+            aria-label="Return to game"
+            data-testid="return-to-game"
+            data-noswipe
+            color="inherit"
+            sx={{
+              position: 'absolute',
+              right: 4,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 48,
+              height: 48,
+              zIndex: 1
+            }}
+          >
+            <ArrowForwardIcon />
+          </IconButton>
+        </Box>
       </AppBar>
-      <Box sx={{ pb: 2 }}>
-        {shown === 'journal' ? <JournalContent /> : <InventoryTab setItems={[]} refreshData={true} />}
+      <Box sx={{ pb: 10 }}>
+        {shown === 'journal' ? (
+          <JournalContent onActiveTaskClick={onActiveTaskClick} />
+        ) : (
+          <InventoryTab setItems={[]} refreshData={true} />
+        )}
+      </Box>
+      {/* Fixed Leave Game footer — unaffected by vertical scroll */}
+      <Box
+        sx={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1200,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          px: 2,
+          pt: 1.5,
+          pb: 'calc(14px + env(safe-area-inset-bottom, 0px))',
+          background: 'linear-gradient(to top, rgba(246, 241, 231, 0.98) 65%, rgba(246, 241, 231, 0))',
+          pointerEvents: 'none'
+        }}
+        data-testid="leave-game-bar"
+      >
+        <Button
+          variant="contained"
+          color="error"
+          startIcon={<LogoutIcon />}
+          onClick={() => setConfirm(true)}
+          data-testid="leave-game"
+          data-noswipe
+          sx={{
+            pointerEvents: 'auto',
+            borderRadius: '999px',
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 3,
+            py: 0.9,
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)'
+          }}
+        >
+          Leave Game
+        </Button>
       </Box>
       <LeaveConfirm open={confirm} onClose={() => setConfirm(false)} />
     </>
   );
 }
 
-/** Leave game confirm (from the exit tab). Progress is kept — local
- *  batch/journal and the server session are untouched, so Continue on the
+/** Leave game confirm (from the fixed Leave Game button). Progress is kept —
+ *  local batch/journal and the server session are untouched, so Continue on the
  *  game's intro page resumes the same card. */
 function LeaveConfirm({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
@@ -117,8 +269,8 @@ function LeaveConfirm({ open, onClose }: { open: boolean; onClose: () => void })
       <DialogContent>Your progress is saved — you can continue later from the home page.</DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Stay</Button>
-        <Button onClick={() => window.location.assign('/')} data-testid="leave-confirm-yes">
-          Leave
+        <Button color="error" onClick={() => window.location.assign('/')}>
+          Leave Game
         </Button>
       </DialogActions>
     </Dialog>

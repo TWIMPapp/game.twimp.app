@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 
 import Loading from './Loading';
 import { TaskUnion } from '../typings/Task';
-import TaskList from './TaskList';
 import { AppBar, Box, Dialog, IconButton, Toolbar } from '@mui/material';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
@@ -13,7 +12,7 @@ import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
 import CloseIcon from '@mui/icons-material/Close';
 
-export function JournalContent() {
+export function JournalContent({ onActiveTaskClick }: { onActiveTaskClick?: () => void } = {}) {
   // Seed synchronously from the local journal so the first paint already has
   // content (no spinner frame when the game page opens).
   const initialLocal = () => {
@@ -79,15 +78,17 @@ export function JournalContent() {
       </Box>
     );
   return tasks?.length > 0 ? (
-    <JournalList entries={tasks as any} />
+    <JournalList entries={tasks as any} onActiveTaskClick={onActiveTaskClick} />
   ) : (
     <Box
       sx={{
         display: 'flex',
         width: '100%',
-        minHeight: '50vh',
+        minHeight: 'calc(100vh - 48px)',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        bgcolor: '#f6f1e7',
+        color: '#3b3226'
       }}
     >
       Nothing to see here just yet 👀
@@ -117,7 +118,7 @@ export default function JournalDialog({
           </IconButton>
         </Toolbar>
       </AppBar>
-      <JournalContent />
+      <JournalContent onActiveTaskClick={handleClose} />
     </Dialog>
   );
 }

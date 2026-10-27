@@ -44,7 +44,13 @@ export function groupJournal(entries: JournalEntry[]): Group[] {
   return groups;
 }
 
-export default function JournalList({ entries }: { entries: JournalEntry[] }) {
+export default function JournalList({
+  entries,
+  onActiveTaskClick
+}: {
+  entries: JournalEntry[];
+  onActiveTaskClick?: () => void;
+}) {
   const [open, setOpen] = useState<string | null>(null);
   // Newest first: latest stop at the top, latest card first within it.
   const groups = groupJournal(entries)
@@ -52,8 +58,8 @@ export default function JournalList({ entries }: { entries: JournalEntry[] }) {
     .map(g => ({ ...g, entries: [...g.entries].reverse() }));
 
   return (
-    <div className="journal-list px-3 pt-3 pb-6" style={{ background: '#f6f1e7', minHeight: 'calc(100vh - 48px)' }} data-testid="journal-list">
-      {groups.map(g => (
+    <div className="journal-list px-3 pt-3 pb-24" style={{ background: '#f6f1e7', minHeight: 'calc(100vh - 48px)' }} data-testid="journal-list">
+      {groups.map((g, gIdx) => (
         <section key={g.key} className="mb-5">
           <h3
             className="text-xs font-bold uppercase tracking-wider mb-2 px-1"
@@ -66,6 +72,7 @@ export default function JournalList({ entries }: { entries: JournalEntry[] }) {
             {g.entries.map((e, i) => {
               const id = `${g.key}-${e.position ?? e.id}`;
               const n = indexInStep(e) ?? i + 1;
+              const isTopEntry = gIdx === 0 && i === 0;
               const isOpen = open === id;
               return (
                 <div
@@ -73,13 +80,20 @@ export default function JournalList({ entries }: { entries: JournalEntry[] }) {
                   className="rounded-lg overflow-hidden shadow-sm bg-white"
                   style={{ border: '1px solid #e4dccb' }}
                   data-testid="journal-entry"
+                  data-active-task={isTopEntry ? 'true' : undefined}
                 >
                   <button
                     type="button"
-                    className="relative block w-full text-left select-none"
+                    className="relative block w-full text-left select-none cursor-pointer"
                     style={{ touchAction: 'pan-y', WebkitTouchCallout: 'none' } as any}
-                    onClick={() => setOpen(isOpen ? null : id)}
-                    aria-expanded={isOpen}
+                    onClick={() => {
+                      if (isTopEntry && onActiveTaskClick) {
+                        onActiveTaskClick();
+                        return;
+                      }
+                      setOpen(isOpen ? null : id);
+                    }}
+                    aria-expanded={isTopEntry && onActiveTaskClick ? undefined : isOpen}
                   >
                     {e.image_url ? (
                       <img

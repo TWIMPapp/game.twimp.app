@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 // Tinder-style horizontal swipe wrapper for story cards.
 //  - Only horizontal-dominant drags count (|dx| > |dy| * 1.5).
@@ -14,12 +14,17 @@ const FLICK_VELOCITY = 0.6; // px per ms
 const DIRECTION_RATIO = 1.5;
 const IGNORE_SELECTOR = 'input, textarea, select, audio, video, [data-noswipe]';
 
+export interface SwipeCardHandle {
+  /** Programmatically animate a swipe in the given direction and invoke its callback (or onDone). */
+  triggerSwipe: (direction?: 'left' | 'right', onDone?: () => void) => void;
+}
+
 interface SwipeCardProps {
   children: ReactNode;
   /** Return 'swapped' when the next card was swapped in place synchronously:
    *  the top card then resets instantly (the under-card is already showing it). */
   onSwipeLeft?: () => boolean | void | 'swapped' | Promise<boolean | void | 'swapped'>;
-  onSwipeRight?: () => void;
+  onSwipeRight?: () => boolean | void | Promise<boolean | void>;
   /** Called on any completed swipe (used to dismiss the tutorial). */
   onAnySwipe?: () => void;
   className?: string;
@@ -33,17 +38,20 @@ interface SwipeCardProps {
   underRight?: ReactNode;
 }
 
-export default function SwipeCard({
-  children,
-  onSwipeLeft,
-  onSwipeRight,
-  onAnySwipe,
-  className,
-  demo,
-  onDemoTap,
-  underLeft,
-  underRight
-}: SwipeCardProps) {
+const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function SwipeCard(
+  {
+    children,
+    onSwipeLeft,
+    onSwipeRight,
+    onAnySwipe,
+    className,
+    demo,
+    onDemoTap,
+    underLeft,
+    underRight
+  }: SwipeCardProps,
+  ref
+) {
   const [dx, setDx] = useState(0);
   const [animating, setAnimating] = useState(false);
   const start = useRef<{ x: number; y: number; t: number; id: number } | null>(null);
@@ -73,6 +81,29 @@ export default function SwipeCard({
     setAnimating(true);
     setOffset(0);
   };
+
+  useImperativeHandle(ref, () => ({
+    triggerSwipe: (direction: 'left' | 'right' = 'left', onDone?: () => void) => {
+      if (animating && dxRef.current !== 0) return;
+      const w = typeof window !== 'undefined' ? window.innerWidth : 400;
+      const targetDx = direction === 'left' ? -w * 1.3 : w * 1.3;
+      onAnySwipe?.();
+      setAnimating(true);
+      setOffset(targetDx);
+      window.setTimeout(() => {
+        if (onDone) {
+          onDone();
+        } else {
+          const cb = direction === 'left' ? onSwipeLeft : onSwipeRight;
+          cb?.();
+        }
+        window.setTimeout(() => {
+          setAnimating(false);
+          setOffset(0);
+        }, 50);
+      }, 260);
+    }
+  }));
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (demo) onDemoTap?.();
@@ -155,8 +186,15 @@ export default function SwipeCard({
           }, 50);
         }, 260);
       } else {
-        onSwipeRight();
-        snapBack();
+        const r = onSwipeRight();
+        if (r && typeof (r as Promise<unknown>).then === 'function') {
+          setAnimating(true);
+          setOffset(w * 1.3);
+          const res = await r;
+          if (res === false) snapBack();
+        } else {
+          snapBack();
+        }
       }
     } else {
       snapBack();
@@ -232,10 +270,14 @@ export default function SwipeCard({
         </div>
       )}
       <div
-        className={'relative w-full min-h-screen' + (demoOn ? ' swipe-demo-card' : '') + (demoOn || underLeft || underRight ? ' bg-white dark:bg-gray-800' : '')}
+        className={
+          'relative w-full min-h-screen' +
+          (demoOn ? ' swipe-demo-card' : '') +
+          (demoOn || underLeft || underRight || dx !== 0 || animating ? ' bg-white dark:bg-gray-800' : '')
+        }
         style={{
-          zIndex: demoOn || underLeft || underRight ? 1 : undefined,
-          transform: dx ? `translateX(${dx}px) rotate(${rotate}deg)` : undefined,
+          zIndex: demoOn || underLeft || underRight || dx !== 0 || animating ? 1 : undefined,
+          transform: dx ? `translateX(${dx}px) rotate(${rotate}deg)` : animating ? 'translateX(0px) rotate(0deg)' : undefined,
           transformOrigin: '50% 100%',
           transition: animating ? 'transform 300ms ease-out' : 'none',
           userSelect: dx ? 'none' : undefined
@@ -246,4 +288,6 @@ export default function SwipeCard({
       </div>
     </div>
   );
-}
+});
+
+export default SwipeCard;

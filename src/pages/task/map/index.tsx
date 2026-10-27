@@ -1,34 +1,29 @@
 import { useEffect, useState, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { APIService } from '@/services/API';
 import { Endpoint } from '@/typings/Endpoint.enum';
 import { useBatchTask } from '@/hooks/useBatchTask';
 import { BatchStore } from '@/services/BatchStore';
 
-import { Box, IconButton } from '@mui/material';
+import { IconButton } from '@mui/material';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
 import GamePage from '@/components/GamePage';
 import { useGamePage } from '@/hooks/useGamePage';
 import { MapTask, Outcome, TaskUnion } from '@/typings/Task';
-import { Colour } from '@/typings/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
-import MapComponent from '@/components/Map';
 import { InventoryItem } from '@/typings/inventoryItem';
 import ItemsDialog from '@/components/ItemsDialog';
-import { TaskType } from '@/typings/TaskType.enum';
+import Loading from '@/components/Loading';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
-const AWTY_INTERVAL = 5000;
+const RotatingTaskMap = dynamic(() => import('@/components/RotatingTaskMap'), {
+  ssr: false
+});
 
-const MarkerColourMap: Record<Colour, string> = {
-  [Colour.Green]: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-  [Colour.Red]: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-  [Colour.Yellow]: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
-  [Colour.Blue]: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-  [Colour.Purple]: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png',
-  [Colour.Pink]: 'https://maps.google.com/mapfiles/ms/icons/pink-dot.png',
-  [Colour.Orange]: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png'
-};
+const AWTY_INTERVAL = 5000;
+const MAX_GPS_ACCURACY_M = 25;
 
 interface AwtyResponse {
   ok: boolean;
@@ -62,10 +57,8 @@ const AWTYPost = async (
 };
 
 // Dev-only convenience: when on localhost or visited with ?testMode=1, the
-// blue dot becomes a draggable Google Maps marker. Drag it to a pin to
+// blue dot becomes a draggable marker. Drag it to a pin to
 // simulate walking there — fires AWTY exactly as a real GPS update would.
-// Lets you walk a whole trail end-to-end from a desk in minutes instead of
-// putting on shoes.
 const detectTestMode = (): boolean => {
   if (typeof window === 'undefined') return false;
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return true;
@@ -78,24 +71,22 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
   const [awtyResponse, setAwtyResponse] = useState<AwtyResponse>();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [open, setOpen] = useState<boolean>(false);
+  const [recenterSignal, setRecenterSignal] = useState<number>(0);
   const isAwtyRequestPending = useRef<boolean>(false);
   const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
   // Live GPS — feeds the blue dot, the recenter button, and the AWTY pings
-  // that progress the game. Without this hook userLocation is always null,
-  // /awty never fires, and the trail can't be played in the field.
+  // that progress the game.
   const { position: userPosition } = useGeolocation();
+  const recentAccuraciesRef = useRef<number[]>([]);
 
   // Test mode: the user-location marker is draggable. testLocation overrides
-  // the real GPS reading once the player drags. Seeded from the first marker
-  // on the current map task so there's always something to grab onto, even
-  // when desktop GPS returns nothing.
+  // the real GPS reading once the player drags.
   const [isTestMode] = useState<boolean>(detectTestMode);
   const [testLocation, setTestLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { gamePageOpen, openGamePage, closeGamePage } = useGamePage();
   const bannerSwipeStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    // Cleanup function to clear the timeout when the component unmounts
     return () => {
       if (timeoutIdRef.current) {
         clearTimeout(timeoutIdRef.current);
@@ -103,22 +94,33 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
     };
   }, []);
 
-  // Whenever the GPS gives us a new reading, ping AWTY. The handler already
-  // enforces a 5s cooldown so we won't flood the API even if the position
-  // updates every second. In test mode we don't auto-ping on the real GPS
-  // reading — the player drives explicitly via dragging.
   useEffect(() => {
-    if (isTestMode) return;
-    if (!userPosition || !params) return;
-    handleOnPlayerMove(userPosition.lat, userPosition.lng, userPosition.accuracy ?? 10);
-    // handleOnPlayerMove is a closure over params; intentionally re-fires on every
-    // position change (the cooldown ref dedupes API calls).
+    if (!userPosition) return;
+    const acc =
+      typeof userPosition.accuracy === 'number' && Number.isFinite(userPosition.accuracy)
+        ? userPosition.accuracy
+        : 10;
+    const history = recentAccuraciesRef.current;
+    const isFirstFix = history.length === 0;
+    const avgAcc = isFirstFix
+      ? acc
+      : history.reduce((sum, a) => sum + a, 0) / history.length;
+
+    history.push(Math.min(acc, MAX_GPS_ACCURACY_M));
+    if (history.length > 10) {
+      history.shift();
+    }
+
+    if (!isFirstFix && (acc > MAX_GPS_ACCURACY_M || acc > avgAcc * 2)) {
+      return;
+    }
+
+    if (!isTestMode && params) {
+      handleOnPlayerMove(userPosition.lat, userPosition.lng, acc);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPosition, params, isTestMode]);
 
-  // Seed testLocation from whichever is best available: a real GPS reading
-  // (so the marker starts wherever your laptop thinks you are), or the first
-  // pin on the current map task (so you can drag onto it immediately).
   useEffect(() => {
     if (!isTestMode || testLocation) return;
     if (userPosition) {
@@ -127,7 +129,6 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
     }
     const firstMarker = task?.markers?.[0];
     if (firstMarker && typeof firstMarker === 'object' && 'lat' in firstMarker) {
-      // Drop the marker ~30m south-west of the first pin so it's clearly off-pin.
       setTestLocation({ lat: firstMarker.lat - 0.0003, lng: firstMarker.lng - 0.0003 });
     }
   }, [isTestMode, testLocation, userPosition, task]);
@@ -140,19 +141,14 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
   };
 
   const handleOnPlayerMove = async (lat: number, lng: number, accuracy: number = 10) => {
-    // In test mode, every drag updates the marker's home position so the
-    // next drag begins where the last one left off.
     if (isTestMode) setTestLocation({ lat, lng });
 
-    // Check if a request is already pending or in cooldown
     if (isAwtyRequestPending.current) {
       return;
     }
 
-    // Mark as pending
     isAwtyRequestPending.current = true;
 
-    // Create a position-like object for the API
     const position = {
       coords: { latitude: lat, longitude: lng, accuracy, altitude: null, altitudeAccuracy: null, heading: null, speed: null },
       timestamp: Date.now()
@@ -173,89 +169,144 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
             new TaskHandlerService().goToTaskComponent(data.task, params as QueryParams);
           }
         } else {
-          // Update awtyResponse immediately if no task
           setAwtyResponse(data);
         }
       }
     } catch (error) {
-        console.error("Error during AWTY post:", error);
-        // Optional: handle error state if needed
+      console.error('Error during AWTY post:', error);
     } finally {
-        // Start cooldown timer and store its ID
-        timeoutIdRef.current = setTimeout(() => {
-          isAwtyRequestPending.current = false;
-        }, AWTY_INTERVAL);
+      timeoutIdRef.current = setTimeout(() => {
+        isAwtyRequestPending.current = false;
+      }, AWTY_INTERVAL);
     }
   };
 
+  const handleCenterOnLocation = () => {
+    setRecenterSignal((s) => s + 1);
+  };
+
+  const activeUserLocation = isTestMode
+    ? testLocation
+    : userPosition
+      ? { lat: userPosition.lat, lng: userPosition.lng }
+      : null;
+
   return (
-    <>
-      {task?.content ? (
-        <Box
-          onPointerDown={(e) => {
-            bannerSwipeStart.current = { x: e.clientX, y: e.clientY };
-          }}
-          onPointerUp={(e) => {
-            const s = bannerSwipeStart.current;
-            bannerSwipeStart.current = null;
-            if (!s) return;
-            const dx = e.clientX - s.x;
-            const dy = e.clientY - s.y;
-            if (dx > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) openGamePage();
-          }}
-          className="animate__animated animate__bounce rounded-3xl bg-white shadow-md p-8 dark:bg-gray-800 dark:text-white"
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100dvh',
+        width: '100vw',
+        overflow: 'hidden',
+        position: 'relative'
+      }}
+    >
+      {/* Top section: Full rotating map */}
+      <div style={{ flex: 1, position: 'relative', minHeight: 0, width: '100%' }}>
+        {task ? (
+          <RotatingTaskMap
+            taskMarkers={task?.markers ?? []}
+            userLocation={activeUserLocation}
+            userAccuracy={userPosition?.accuracy ?? 10}
+            onPlayerMove={handleOnPlayerMove}
+            testMode={isTestMode}
+            showMarkerLabels
+            recenterSignal={recenterSignal}
+          />
+        ) : (
+          <Loading />
+        )}
+      </div>
+
+      {/* Bottom section: White panel with Journal button (left), Message (middle), Centre on location button (right) */}
+      <div
+        data-testid="map-bottom-panel"
+        style={{
+          backgroundColor: '#ffffff',
+          color: '#0f172a',
+          boxShadow: '0 -2px 12px rgba(0, 0, 0, 0.12)',
+          paddingTop: '12px',
+          paddingLeft: '12px',
+          paddingRight: '12px',
+          paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          zIndex: 1000,
+          touchAction: 'pan-y'
+        }}
+        onPointerDown={(e) => {
+          bannerSwipeStart.current = { x: e.clientX, y: e.clientY };
+        }}
+        onPointerUp={(e) => {
+          const s = bannerSwipeStart.current;
+          bannerSwipeStart.current = null;
+          if (!s) return;
+          const dx = e.clientX - s.x;
+          const dy = e.clientY - s.y;
+          if (dx > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) openGamePage();
+        }}
+      >
+        <IconButton
+          onClick={openGamePage}
+          aria-label="open journal"
+          data-testid="open-journal"
           sx={{
-            position: 'absolute',
-            width: 'calc(100% - 32px)',
-            margin: '0 16px',
-            top: '80px',
-            zIndex: 999
+            flexShrink: 0,
+            color: '#1e293b',
+            bgcolor: 'rgba(15, 23, 42, 0.06)',
+            '&:hover': { bgcolor: 'rgba(15, 23, 42, 0.12)' },
+            width: 44,
+            height: 44
           }}
         >
-          <div className="text-center">
-            <h2 className="text-2xl" dangerouslySetInnerHTML={{ __html: task?.content }}></h2>
-            {awtyResponse?.message && (
-              <p
-                className="pt-2 block bg-white dark:bg-gray-800 dark:text-white"
-                dangerouslySetInnerHTML={{ __html: awtyResponse?.message ?? '' }}
-              ></p>
-            )}
-          </div>
-        </Box>
-      ) : null}
-      {task && (
-        <MapComponent
-          taskMarkers={task?.markers ?? []}
-          userLocation={
-            isTestMode
-              ? testLocation
-              : userPosition ? { lat: userPosition.lat, lng: userPosition.lng } : null
-          }
-          onPlayerMove={handleOnPlayerMove}
-          testMode={isTestMode}
-          showMarkerLabels
-          fitToMarkers
-        />
-      )}
-      <IconButton
-        onClick={openGamePage}
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          left: 16,
-          backgroundColor: 'white',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.9)'
-          },
-          zIndex: 999
-        }}
-        aria-label="open journal"
-      >
-        <MenuBookIcon />
-      </IconButton>
-      <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
+          <MenuBookIcon />
+        </IconButton>
+
+        <div
+          style={{
+            flex: 1,
+            textAlign: 'center',
+            padding: '0 4px',
+            minWidth: 0
+          }}
+        >
+          {task?.content && (
+            <h2
+              className="text-base font-semibold leading-snug m-0"
+              style={{ color: '#0f172a', wordBreak: 'break-word' }}
+              dangerouslySetInnerHTML={{ __html: task.content }}
+            />
+          )}
+          {awtyResponse?.message && (
+            <p
+              className="text-sm leading-snug m-0 mt-1"
+              style={{ color: '#475569', wordBreak: 'break-word' }}
+              dangerouslySetInnerHTML={{ __html: awtyResponse.message }}
+            />
+          )}
+        </div>
+
+        <IconButton
+          onClick={handleCenterOnLocation}
+          aria-label="center map on my location"
+          data-testid="center-location"
+          sx={{
+            flexShrink: 0,
+            color: '#1e293b',
+            bgcolor: 'rgba(15, 23, 42, 0.06)',
+            '&:hover': { bgcolor: 'rgba(15, 23, 42, 0.12)' },
+            width: 44,
+            height: 44
+          }}
+        >
+          <MyLocationIcon />
+        </IconButton>
+      </div>
+
+      <ItemsDialog items={items} open={open} handleClose={handleClose} />
       {gamePageOpen && <GamePage open={gamePageOpen} handleClose={closeGamePage} />}
-    </>
+    </div>
   );
 }
