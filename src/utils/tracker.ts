@@ -31,10 +31,11 @@ export function trackerMessage(distanceM: number, messages: TrackerMessage[] = [
 /** Beep cadence: null = silent. Interval shortens and pitch rises slightly as signal grows. */
 export function trackerBeep(signal: number): { intervalMs: number; freqHz: number; rate: number } | null {
   if (signal <= 0) return null;
+  const s = Math.max(0, Math.min(1, signal));
   return {
-    intervalMs: Math.round(1600 - 1450 * signal), // 1.6s faint → 0.15s at target
-    freqHz: Math.round(660 + 340 * signal),       // 660Hz → 1000Hz
-    rate: 1 + 0.35 * signal                        // playbackRate for beep_url
+    intervalMs: Math.round(120 + 2080 * Math.pow(1 - s, 1.6)), // 2.2s faint → 0.12s at target (steep acceleration)
+    freqHz: Math.round(440 + 760 * Math.pow(s, 1.3)),          // 440Hz → 1200Hz
+    rate: Number((0.85 + 0.65 * s).toFixed(2))                 // playbackRate for beep_url
   };
 }
 

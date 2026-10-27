@@ -4,7 +4,10 @@ import { Endpoint } from '@/typings/Endpoint.enum';
 import { useBatchTask } from '@/hooks/useBatchTask';
 import { BatchStore } from '@/services/BatchStore';
 
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import GamePage from '@/components/GamePage';
+import { useGamePage } from '@/hooks/useGamePage';
 import { MapTask, Outcome, TaskUnion } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
 import { TaskHandlerService } from '@/services/TaskHandler';
@@ -88,6 +91,8 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
   // when desktop GPS returns nothing.
   const [isTestMode] = useState<boolean>(detectTestMode);
   const [testLocation, setTestLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const { gamePageOpen, openGamePage, closeGamePage } = useGamePage();
+  const bannerSwipeStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     // Cleanup function to clear the timeout when the component unmounts
@@ -187,6 +192,17 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
     <>
       {task?.content ? (
         <Box
+          onPointerDown={(e) => {
+            bannerSwipeStart.current = { x: e.clientX, y: e.clientY };
+          }}
+          onPointerUp={(e) => {
+            const s = bannerSwipeStart.current;
+            bannerSwipeStart.current = null;
+            if (!s) return;
+            const dx = e.clientX - s.x;
+            const dy = e.clientY - s.y;
+            if (dx > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) openGamePage();
+          }}
           className="animate__animated animate__bounce rounded-3xl bg-white shadow-md p-8 dark:bg-gray-800 dark:text-white"
           sx={{
             position: 'absolute',
@@ -221,7 +237,25 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
           fitToMarkers
         />
       )}
+      <IconButton
+        onClick={openGamePage}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          left: 16,
+          backgroundColor: 'white',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.9)'
+          },
+          zIndex: 999
+        }}
+        aria-label="open journal"
+      >
+        <MenuBookIcon />
+      </IconButton>
       <ItemsDialog items={items} open={open} handleClose={handleClose}></ItemsDialog>
+      {gamePageOpen && <GamePage open={gamePageOpen} handleClose={closeGamePage} />}
     </>
   );
 }

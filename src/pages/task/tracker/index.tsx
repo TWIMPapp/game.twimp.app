@@ -10,6 +10,9 @@ import { TaskHandlerService } from '@/services/TaskHandler';
 import { syncTaskPageWithServer } from '@/services/ServerSync';
 import QueryParams from '@/typings/QueryParams';
 import ItemsDialog from '@/components/ItemsDialog';
+import GamePage from '@/components/GamePage';
+import SwipeCard from '@/components/SwipeCard';
+import { useGamePage } from '@/hooks/useGamePage';
 import { InventoryItem } from '@/typings/inventoryItem';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { getDistanceInMeters } from '@/utils/geo';
@@ -41,6 +44,7 @@ export default function Tracker({ testTask }: { testTask?: TrackerTask }) {
   const [isTestMode] = useState<boolean>(detectTestMode);
   const [testDistance, setTestDistance] = useState<number | null>(null);
   const { position, error } = useGeolocation();
+  const { gamePageOpen, openGamePage, closeGamePage } = useGamePage();
 
   const awtyPending = useRef(false);
   const audioCtx = useRef<AudioContext | null>(null);
@@ -171,10 +175,24 @@ export default function Tracker({ testTask }: { testTask?: TrackerTask }) {
   if (!task) return null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: colors.background, color: colors.text,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
-      padding: '72px 20px 32px', zIndex: 900, fontFamily: 'inherit', textAlign: 'center' }}>
-      <style>{`@keyframes twimpTrackerPing{from{transform:scale(.2);opacity:.9}to{transform:scale(1);opacity:0}}`}</style>
+    <>
+      <SwipeCard onSwipeRight={openGamePage}>
+        <div style={{ position: 'fixed', inset: 0, background: colors.background, color: colors.text,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between',
+          padding: '72px 20px 32px', zIndex: 900, fontFamily: 'inherit', textAlign: 'center' }}>
+          <style>{`@keyframes twimpTrackerPing{from{transform:scale(.2);opacity:.9}to{transform:scale(1);opacity:0}}`}</style>
+          <button
+            onClick={openGamePage}
+            aria-label="Open journal"
+            style={{
+              position: 'absolute', top: 20, left: 16,
+              background: 'transparent', color: colors.text,
+              border: `1.5px solid ${colors.text}`, borderRadius: 999,
+              padding: '6px 14px', fontSize: 14, opacity: 0.85
+            }}
+          >
+            ← Journal
+          </button>
       <div>
         {task.title && <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>{task.title}</h1>}
         {task.content && <p style={{ fontSize: 17, marginTop: 8, opacity: 0.9 }}>{task.content}</p>}
@@ -217,7 +235,10 @@ export default function Tracker({ testTask }: { testTask?: TrackerTask }) {
               borderRadius: 999, padding: '8px 20px', fontSize: 15 }}>{muted ? '🔇 Sound off' : '🔊 Sound on'}</button>
         )}
       </div>
-      <ItemsDialog items={items} open={open} handleClose={handleClose} />
-    </div>
+          <ItemsDialog items={items} open={open} handleClose={handleClose} />
+        </div>
+      </SwipeCard>
+      {gamePageOpen && <GamePage open={gamePageOpen} handleClose={closeGamePage} />}
+    </>
   );
 }

@@ -42,6 +42,11 @@ const Single = ({ testTask }: { testTask?: QuestionSingleTask }) => {
 
   const { gamePageOpen, openGamePage, closeGamePage } = useGamePage();
 
+  useEffect(() => {
+    setInput('');
+    setOutcome(undefined);
+  }, [task?.id]);
+
 
   const onValidate = async (answer: string) => {
     setLoading(true);
@@ -111,6 +116,14 @@ const Single = ({ testTask }: { testTask?: QuestionSingleTask }) => {
                   <div className="pt-6 pb-6">
                     <TextField
                       autoFocus
+                      name={`answer-${task?.id ?? 'q'}`}
+                      autoComplete="off"
+                      inputProps={{
+                        autoComplete: 'off',
+                        autoCorrect: 'off',
+                        autoCapitalize: 'off',
+                        spellCheck: false
+                      }}
                       label="Answer"
                       variant="outlined"
                       className="cy-single-input w-full dark:text-white"
