@@ -5,6 +5,8 @@ import 'leaflet/dist/leaflet.css';
 import MarkerIconImg from '@/assets/icons/marker-icon.png';
 import { Marker } from '@/typings/Task';
 import { Colour } from '@/typings/Colour.enum';
+
+const LAST_KNOWN_KEY = 'twimp_last_known_location';
 import { SmoothMapController } from '@/utils/SmoothMapController';
 
 const MarkerColourMap: Record<Colour, string> = {
@@ -226,6 +228,12 @@ export default function RotatingTaskMap({
 
   const getInitialCenter = (): { lat: number; lng: number } => {
     if (userLocation) return { lat: userLocation.lat, lng: userLocation.lng };
+    try {
+      const saved = JSON.parse(localStorage.getItem(LAST_KNOWN_KEY) || 'null');
+      if (saved && typeof saved.lat === 'number' && typeof saved.lng === 'number') {
+        return { lat: saved.lat, lng: saved.lng };
+      }
+    } catch {}
     if (taskMarkers && taskMarkers.length > 0) {
       return { lat: taskMarkers[0].lat, lng: taskMarkers[0].lng };
     }
@@ -427,6 +435,7 @@ export default function RotatingTaskMap({
     } else {
       if (accepted) {
         playerMarkerRef.current.setLatLng([dampedPos.lat, dampedPos.lng]);
+        try { localStorage.setItem(LAST_KNOWN_KEY, JSON.stringify({ lat: dampedPos.lat, lng: dampedPos.lng })); } catch {}
       }
       playerMarkerRef.current.setIcon(
         testMode ? createDraggableTestIcon() : createPlayerDotIcon()

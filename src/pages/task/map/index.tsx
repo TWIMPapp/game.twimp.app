@@ -185,6 +185,9 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
     setRecenterSignal((s) => s + 1);
   };
 
+  // Matches the API's AWTY rejection threshold (GameEngineService: accuracy > 30m)
+  const weakGps = !isTestMode && typeof userPosition?.accuracy === 'number' && userPosition.accuracy > 30;
+
   const activeUserLocation = isTestMode
     ? testLocation
     : userPosition
@@ -290,15 +293,21 @@ export default function Map({ testTask }: { testTask?: MapTask }) {
 
         <IconButton
           onClick={handleCenterOnLocation}
-          aria-label="center map on my location"
+          aria-label={weakGps ? 'weak GPS signal, center map on my location' : 'center map on my location'}
           data-testid="center-location"
+          data-weak-gps={weakGps ? 'true' : 'false'}
           sx={{
             flexShrink: 0,
-            color: '#1e293b',
-            bgcolor: 'rgba(15, 23, 42, 0.06)',
-            '&:hover': { bgcolor: 'rgba(15, 23, 42, 0.12)' },
+            color: weakGps ? '#ffffff' : '#1e293b',
+            bgcolor: weakGps ? '#dc2626' : 'rgba(15, 23, 42, 0.06)',
+            '&:hover': { bgcolor: weakGps ? '#b91c1c' : 'rgba(15, 23, 42, 0.12)' },
             width: 44,
-            height: 44
+            height: 44,
+            animation: weakGps ? 'twimpWeakGpsPulse 1.2s ease-in-out infinite' : 'none',
+            '@keyframes twimpWeakGpsPulse': {
+              '0%, 100%': { opacity: 1, boxShadow: '0 0 0 0 rgba(220, 38, 38, 0.6)' },
+              '50%': { opacity: 0.55, boxShadow: '0 0 0 8px rgba(220, 38, 38, 0)' }
+            }
           }}
         >
           <MyLocationIcon />
