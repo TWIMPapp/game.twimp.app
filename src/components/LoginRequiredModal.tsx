@@ -12,11 +12,12 @@ import {
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { useAuth } from '@/contexts/AuthContext';
+import { rememberPendingClaim } from '@/services/ClaimSessions';
 
 interface LoginRequiredMessageProps {
   open: boolean;
   onClose: () => void;
-  action: 'save' | 'share' | 'publish' | 'create' | 'signin';
+  action: 'save' | 'share' | 'publish' | 'create' | 'signin' | 'finished';
 }
 
 export default function LoginRequiredModal({
@@ -33,7 +34,7 @@ export default function LoginRequiredModal({
   const handleEmailLink = async () => {
     setSending(true);
     setEmailError(null);
-    const result = await requestMagicLink(email.trim());
+    const result = await requestMagicLink(email.trim(), rememberPendingClaim());
     setSending(false);
     if (result.ok) {
       setSent(true);
@@ -48,6 +49,8 @@ export default function LoginRequiredModal({
     publish: 'publish your game',
     create: 'create your own game',
     signin: 'Sign In / Create Account',
+    // PLACEHOLDER copy — Nadia to finalise.
+    finished: 'Enjoyed it? Keep your adventure',
   };
 
   const actionDescription = {
@@ -56,6 +59,8 @@ export default function LoginRequiredModal({
     publish: 'Sign in with your Google or Facebook account to create and share your own games with the Twimp community.',
     create: 'Sign in with your Google or Facebook account to create and share your own games with the Twimp community.',
     signin: 'Sign in to save your progress across devices and access all features.',
+    // PLACEHOLDER copy — Nadia to finalise.
+    finished: 'Sign in to save this adventure to your account and hear when the next Twimp trail opens near you.',
   };
 
   const handleGoogleSignIn = async () => {
@@ -81,7 +86,7 @@ export default function LoginRequiredModal({
       <DialogTitle>
         <Box className="flex items-center gap-2">
           <LockIcon sx={{ color: '#FF2E5B' }} />
-          <span>{action === 'save' || action === 'signin' ? actionText[action] : `Create an Account to ${actionText[action]}`}</span>
+          <span>{action === 'save' || action === 'signin' || action === 'finished' ? actionText[action] : `Create an Account to ${actionText[action]}`}</span>
         </Box>
       </DialogTitle>
       <DialogContent>
