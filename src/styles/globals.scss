@@ -375,3 +375,31 @@ html {
   0%, 20% { opacity: 0; } 25%, 27.7% { opacity: 1; } 30%, 100% { opacity: 0; }
 }
 
+
+// Desktop: render the game like the phone view, centred, with a neutral background either side.
+@media (min-width: 600px) {
+  html,
+  body {
+    background: #e5e7eb;
+  }
+  #__next {
+    max-width: 480px;
+    height: 100%;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    // Makes position:fixed children (bottom panels, buttons) stick to this column, not the window.
+    transform: translateZ(0);
+    background: $twimp-bg;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.12);
+  }
+  .game {
+    width: 100%;
+  }
+  // MUI dialogs and drawers are rendered outside #__next, so keep them in the same column.
+  .MuiModal-root,
+  .MuiDialog-root {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
