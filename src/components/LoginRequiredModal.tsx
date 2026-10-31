@@ -9,10 +9,12 @@ import {
   Box,
   Divider,
   TextField,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { useAuth } from '@/contexts/AuthContext';
-import { rememberPendingClaim } from '@/services/ClaimSessions';
+import { rememberPendingClaim, setPendingConsent } from '@/services/ClaimSessions';
 
 interface LoginRequiredMessageProps {
   open: boolean;
@@ -30,11 +32,16 @@ export default function LoginRequiredModal({
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  // Marketing opt-in: MUST default to unticked (UK GDPR / PECR).
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const consentAt = () => (action === 'finished' && marketingOptIn ? new Date().toISOString() : null);
 
   const handleEmailLink = async () => {
     setSending(true);
     setEmailError(null);
-    const result = await requestMagicLink(email.trim(), rememberPendingClaim());
+    const at = consentAt();
+    setPendingConsent(at);
+    const result = await requestMagicLink(email.trim(), rememberPendingClaim(), at);
     setSending(false);
     if (result.ok) {
       setSent(true);
@@ -60,11 +67,12 @@ export default function LoginRequiredModal({
     create: 'Sign in with your Google or Facebook account to create and share your own games with the Twimp community.',
     signin: 'Sign in to save your progress across devices and access all features.',
     // PLACEHOLDER copy — Nadia to finalise.
-    finished: 'Sign in to save this adventure to your account and hear when the next Twimp trail opens near you.',
+    finished: 'Sign in to save this adventure to your account and play more Twimp trails.',
   };
 
   const handleGoogleSignIn = async () => {
     try {
+      setPendingConsent(consentAt());
       await signIn('google');
       onClose();
     } catch (error) {
@@ -74,6 +82,7 @@ export default function LoginRequiredModal({
 
   const handleFacebookSignIn = async () => {
     try {
+      setPendingConsent(consentAt());
       await signIn('facebook');
       onClose();
     } catch (error) {
@@ -93,6 +102,22 @@ export default function LoginRequiredModal({
         <Typography variant="body2" className="text-gray-600" sx={{ mb: 3 }}>
           {actionDescription[action]}
         </Typography>
+
+        {action === 'finished' && (
+          <FormControlLabel
+            sx={{ mb: 2, alignItems: 'flex-start' }}
+            control={
+              <Checkbox
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                sx={{ pt: 0 }}
+                inputProps={{ 'aria-label': 'Tell me about new Twimp trails' }}
+              />
+            }
+            // PLACEHOLDER copy — Nadia to finalise.
+            label={<Typography variant="body2">Tell me about new Twimp trails</Typography>}
+          />
+        )}
 
         <Box className="flex flex-col gap-4 mb-6">
           <Button

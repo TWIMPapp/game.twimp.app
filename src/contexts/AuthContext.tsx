@@ -27,7 +27,7 @@ interface AuthContextType {
     image?: string;
   } | null;
   signIn: (provider: 'google' | 'facebook') => Promise<void>;
-  requestMagicLink: (email: string, claimId?: string | null) => Promise<{ ok: boolean; message?: string }>;
+  requestMagicLink: (email: string, claimId?: string | null, marketingConsentAt?: string | null) => Promise<{ ok: boolean; message?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -99,14 +99,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleRequestMagicLink = async (
     email: string,
-    claimId?: string | null
+    claimId?: string | null,
+    marketingConsentAt?: string | null
   ): Promise<{ ok: boolean; message?: string }> => {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     try {
       const res = await fetch(`${backendUrl}/api/auth/magic-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, ...(claimId ? { claim_id: claimId } : {}) }),
+        body: JSON.stringify({
+          email,
+          ...(claimId ? { claim_id: claimId } : {}),
+          ...(marketingConsentAt ? { marketing_consent_at: marketingConsentAt } : {}),
+        }),
       });
       const data = await res.json();
       return { ok: !!data?.ok, message: data?.message };

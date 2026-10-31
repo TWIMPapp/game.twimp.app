@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const email = session?.user?.email;
   if (!email) return res.status(401).json({ error: 'Not signed in' });
 
-  const { anon_id } = req.body || {};
+  const { anon_id, marketing_consent_at } = req.body || {};
   if (!anon_id || typeof anon_id !== 'string') return res.status(400).json({ error: 'anon_id required' });
 
   const secret = process.env.CLAIM_SESSIONS_SECRET;
@@ -22,7 +22,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const r = await fetch(`${backendUrl}/api/claim-sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-twimp-internal-secret': secret },
-      body: JSON.stringify({ email, anon_id }),
+      body: JSON.stringify({
+        email,
+        anon_id,
+        ...(typeof marketing_consent_at === 'string' ? { marketing_consent_at } : {}),
+      }),
     });
     const data = await r.json().catch(() => ({}));
     return res.status(r.status).json(data);
