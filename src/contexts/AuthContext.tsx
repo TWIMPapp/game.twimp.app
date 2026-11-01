@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react';
 import { Session } from 'next-auth';
+import { getPendingClaim, rememberPendingClaim, runPendingClaim } from '@/services/ClaimSessions';
 
 declare module 'next-auth' {
   interface Session {
@@ -26,7 +27,7 @@ interface AuthContextType {
     image?: string;
   } | null;
   signIn: (provider: 'google' | 'facebook') => Promise<void>;
-  requestMagicLink: (email: string) => Promise<{ ok: boolean; message?: string }>;
+  requestMagicLink: (email: string, claimId?: string | null, marketingConsentAt?: string | null) => Promise<{ ok: boolean; message?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -68,11 +69,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (res.ok) {
           const userData = await res.json();
-          // Server has canonical twimp_user_id — adopt it locally
+          // Server has canonical twimp_user_id — adopt it locally.
+          // If that replaces a different anonymous id, remember the old one so
+          // its game sessions get moved onto this account (below).
           if (userData.twimp_user_id && userData.twimp_user_id !== localId) {
+            if (localId && !getPendingClaim()) rememberPendingClaim(localId);
             localStorage.setItem('twimp_user_id', userData.twimp_user_id);
           }
         }
+        await runPendingClaim();
       } catch {
         // Silently fail — non-critical
       }
@@ -81,7 +86,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleSignIn = async (provider: 'google' | 'facebook') => {
     try {
-      const callbackUrl = typeof window !== 'undefined' ? window.location.pathname : '/';
+      // Keep the anonymous id so its sessions can be claimed after the redirect.
+      rememberPendingClaim();
+      const callbackUrl =
+        typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/';
       await nextAuthSignIn(provider, { callbackUrl });
     } catch (error) {
       console.error('Sign in error:', error);
@@ -90,14 +98,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleRequestMagicLink = async (
-    email: string
+    email: string,
+    claimId?: string | null,
+    marketingConsentAt?: string | null
   ): Promise<{ ok: boolean; message?: string }> => {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     try {
       const res = await fetch(`${backendUrl}/api/auth/magic-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          ...(claimId ? { claim_id: claimId } : {}),
+          ...(marketingConsentAt ? { marketing_consent_at: marketingConsentAt } : {}),
+        }),
       });
       const data = await res.json();
       return { ok: !!data?.ok, message: data?.message };

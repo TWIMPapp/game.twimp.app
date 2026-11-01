@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { signIn } from 'next-auth/react';
+import { rememberPendingClaim, setPendingConsent } from '@/services/ClaimSessions';
 import { Box, CircularProgress, Typography, Button } from '@mui/material';
 
 // Landing page for the emailed magic link. Exchanges the one-time token for a
@@ -18,6 +19,13 @@ export default function MagicLink() {
       return;
     }
 
+    // The link carries the anonymous id it was requested from, in case this
+    // opened in a different browser (e.g. the mail app) with no localStorage.
+    const claim = router.query.claim;
+    if (typeof claim === 'string') rememberPendingClaim(claim);
+    const mc = router.query.mc;
+    if (typeof mc === 'string') setPendingConsent(mc);
+
     signIn('magic-link', { token, redirect: false })
       .then((res) => {
         if (res?.ok && !res.error) {
@@ -27,7 +35,7 @@ export default function MagicLink() {
         }
       })
       .catch(() => setError(true));
-  }, [router.isReady, router.query.token, router]);
+  }, [router.isReady, router.query.token, router.query.claim, router.query.mc, router]);
 
   return (
     <Box

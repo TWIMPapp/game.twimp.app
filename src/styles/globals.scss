@@ -387,7 +387,8 @@ html {
     height: 100%;
     margin: 0 auto;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     // Makes position:fixed children (bottom panels, buttons) stick to this column, not the window.
     transform: translateZ(0);
     background: $twimp-bg;

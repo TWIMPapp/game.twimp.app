@@ -3,6 +3,8 @@ import { TaskHandlerService } from '@/services/TaskHandler';
 import QueryParams from '@/typings/QueryParams';
 import { FinishTask } from '@/typings/Task';
 import { Button } from '@mui/material';
+import LoginRequiredModal from '@/components/LoginRequiredModal';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -10,6 +12,8 @@ import remarkGfm from 'remark-gfm';
 export default function Finish() {
   const [task, setTask] = useState<FinishTask>();
   const [params, setParams] = useState<QueryParams>();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [showSignIn, setShowSignIn] = useState(false);
 
   useEffect(() => {
     const fetchData = () => {
@@ -49,10 +53,23 @@ export default function Finish() {
               >
                 Finish
               </Button>
+              {!isLoading && !isAuthenticated && (
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  className="cy-finish-signin mt-3"
+                  onClick={() => setShowSignIn(true)}
+                  sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 600 }}
+                >
+                  {/* PLACEHOLDER copy — Nadia to finalise */}
+                  Save this adventure &amp; hear about new trails
+                </Button>
+              )}
             </div>
           )}
         </div>
       )}
+      <LoginRequiredModal open={showSignIn} onClose={() => setShowSignIn(false)} action="finished" />
     </>
   );
 }
