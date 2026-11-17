@@ -13,6 +13,18 @@ export interface Game {
     gradient?: string;
     content_pack?: boolean;
     status?: 'active' | 'featured' | 'pending' | 'inactive';
+    // Partner branding for externally sourced walks (null = none).
+    partner?: GamePartner | null;
+    // Attribution text (route/text source, photo licences) for the intro screen.
+    credits?: string | null;
+}
+
+// Returned by /list per game (partners table via game_config.partner_id).
+export interface GamePartner {
+    name: string;
+    logo_url: string | null;
+    url: string | null;
+    slug: string;
 }
 
 export interface User {

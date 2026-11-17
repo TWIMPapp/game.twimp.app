@@ -12,6 +12,7 @@ import { BatchStore } from '@/services/BatchStore';
 import { LocalJournal } from '@/services/LocalJournal';
 import { ErrorBus } from '@/services/ErrorBus';
 import { reconcileWithServer } from '@/services/ServerSync';
+import { PartnerCredit, CreditsBlock } from '@/components/PartnerPill';
 
 // Intermediary intro page for built-in walk games (e.g. Jasmarina). Shows the
 // hero image, the full trail description, and the play buttons. Sits between
@@ -187,9 +188,11 @@ export default function GameIntro() {
         <Typography variant="h4" sx={{ fontWeight: 800, mb: 2 }}>
           {game.name}
         </Typography>
+        <PartnerCredit partner={game.partner} />
         <Typography variant="body1" sx={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}>
           {game.description}
         </Typography>
+        <CreditsBlock credits={game.credits} />
       </Box>
 
       <Box

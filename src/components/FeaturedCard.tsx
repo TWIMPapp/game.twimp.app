@@ -1,5 +1,6 @@
 import { Card, CardMedia, CardContent, Box, Typography } from '@mui/material';
 import { Game } from '@/types';
+import { PartnerPill } from '@/components/PartnerPill';
 
 interface FeaturedCardProps {
     game: Game;
@@ -27,6 +28,8 @@ export default function FeaturedCard({ game, onClick }: FeaturedCardProps) {
                     }}
                 />
             </Box>
+
+            <PartnerPill partner={game.partner} size="md" />
 
             <CardContent className="relative z-10 mt-auto p-6 flex flex-col justify-end h-full text-white" sx={{ minHeight: '180px' }}>
                 <Typography

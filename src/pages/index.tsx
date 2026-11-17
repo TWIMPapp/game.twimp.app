@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import BottomNav from '@/components/BottomNav';
 import PageHeader from '@/components/PageHeader';
 import FeaturedCard from '@/components/FeaturedCard';
+import { PartnerPill } from '@/components/PartnerPill';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
 import WelcomeModal from '@/components/WelcomeModal';
 import { readListCache, writeListCache, distanceM } from '@/services/ListCache';
@@ -362,6 +363,8 @@ function TrailCard({ game, onPlay, fullWidth = false, isPending = false }: { gam
                     }}
                 />
             </Box>
+
+            <PartnerPill partner={game.partner} size={fullWidth ? 'md' : 'sm'} />
 
             <CardContent className="relative z-10 mt-auto p-5 flex flex-col justify-end h-full text-white">
                 <Typography
