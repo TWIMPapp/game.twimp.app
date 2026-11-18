@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { Box, Typography } from '@mui/material';
 import { Game } from '@/types';
 import { PartnerPill, visiblePartner } from '@/components/PartnerPill';
@@ -7,7 +8,7 @@ import { PartnerPill, visiblePartner } from '@/components/PartnerPill';
 //   ┌──────────────────────────────────────┐
 //   │ [partner logo / "with X"]            │  top-left, only for non-Twimp partners
 //   │                                      │
-//   │ FREE ADVENTURE                       │  small label above the title
+//   │ [label slot: empty for now]          │  optional, e.g. a price later
 //   │ Trail title that can wrap   [0.4 mi] │  title bottom-left, distance bottom-right
 //   └──────────────────────────────────────┘
 //
@@ -21,8 +22,11 @@ const PILL_CLEARANCE = 68;
 
 interface CardOverlayProps {
     game: Game;
-    /** Status label above the title (e.g. "Free Adventure"); omit for none. */
-    label?: string;
+    /**
+     * Optional small label above the title (bottom-left), e.g. a price later.
+     * No card passes one yet; when empty the slot takes no space.
+     */
+    label?: ReactNode;
     /** Distance badge text (e.g. "0.4 mi"); omit for none. */
     distance?: string | null;
     titleVariant?: 'h5' | 'h6';
@@ -50,15 +54,22 @@ export function CardOverlay({ game, label, distance, titleVariant = 'h6', titleS
                 }}
             >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                    {label && (
-                        <Typography
-                            data-testid="card-label"
-                            component="div"
-                            sx={{ opacity: 0.9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '10px', lineHeight: 1.4, mb: 0.5 }}
-                        >
-                            {label}
-                        </Typography>
-                    )}
+                    <Box
+                        data-slot="card-label"
+                        sx={{
+                            opacity: 0.9,
+                            fontWeight: 600,
+                            letterSpacing: '0.06em',
+                            fontSize: '11px',
+                            lineHeight: 1.4,
+                            mb: 0.5,
+                            overflowWrap: 'anywhere',
+                            // Empty slot: no height, no margin, so the title sits at the bottom.
+                            '&:empty': { display: 'none' },
+                        }}
+                    >
+                        {label}
+                    </Box>
                     <Typography
                         data-testid="card-title"
                         variant={titleVariant}

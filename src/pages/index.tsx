@@ -341,7 +341,6 @@ function TrailCard({ game, onPlay, isPending = false }: { game: Game, onPlay: (g
     const distance = !isPending && game.distanceInMiles !== null && game.distanceInMiles !== undefined
         ? `${game.distanceInMiles.toFixed(1)} mi`
         : null;
-    const label = isPending ? 'COMING SOON' : (game.isFree ? 'Free Adventure' : 'Premium Experience');
     return (
         <Card
             className={`h-full flex flex-col shadow-sm hover:shadow-xl transition-all duration-500 rounded-[28px] overflow-hidden border-none relative group ${isPending ? 'cursor-default' : 'cursor-pointer'}`}
@@ -368,7 +367,7 @@ function TrailCard({ game, onPlay, isPending = false }: { game: Game, onPlay: (g
                 />
             </Box>
 
-            <CardOverlay game={game} label={label} distance={distance} />
+            <CardOverlay game={game} distance={distance} />
         </Card>
     );
 }
