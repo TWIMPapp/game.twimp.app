@@ -4,7 +4,7 @@ import { GamePartner } from '@/types';
 
 // Partner branding for externally sourced walks (partners table via /list).
 //
-// PartnerPill: small white pill for the top-left of a home card image.
+// PartnerPill: small white pill for the top-left of a home card image (placed by CardOverlay).
 //   - logo_url set and loads → the logo on a white pill (alt = partner name)
 //   - otherwise               → text "with <name>" on the same pill
 // PartnerCredit: "In partnership with [logo] Name" line for the intro screen,
@@ -45,11 +45,10 @@ export function PartnerPill({ partner: raw, size = 'sm' }: { partner?: GamePartn
     <Box
       data-testid="partner-pill"
       sx={{
-        position: 'absolute',
-        top: 12,
-        left: 12,
-        zIndex: 20,
-        maxWidth: 'calc(100% - 24px)',
+        // Positioned by its container (CardOverlay's top row); shrinks to fit.
+        maxWidth: '100%',
+        minWidth: 0,
+        overflow: 'hidden',
         backgroundColor: 'rgba(255,255,255,0.95)',
         borderRadius: '999px',
         boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
