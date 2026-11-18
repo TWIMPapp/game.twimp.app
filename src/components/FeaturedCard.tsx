@@ -1,6 +1,6 @@
-import { Card, CardMedia, CardContent, Box, Typography } from '@mui/material';
+import { Card, CardMedia, Box } from '@mui/material';
 import { Game } from '@/types';
-import { PartnerPill } from '@/components/PartnerPill';
+import { CardOverlay } from '@/components/CardOverlay';
 
 interface FeaturedCardProps {
     game: Game;
@@ -8,9 +8,14 @@ interface FeaturedCardProps {
 }
 
 export default function FeaturedCard({ game, onClick }: FeaturedCardProps) {
+    // Same corners as TrailCard: partner top-left, title bottom-left, distance
+    // bottom-right (same visibility rule as TrailCard; featured games are never pending).
+    const distance = game.distanceInMiles !== null && game.distanceInMiles !== undefined
+        ? `${game.distanceInMiles.toFixed(1)} mi`
+        : null;
     return (
         <Card
-            className="mb-6 rounded-[28px] overflow-hidden shadow-lg border-none cursor-pointer group relative"
+            className="mb-6 rounded-[28px] overflow-hidden shadow-lg border-none cursor-pointer group relative flex flex-col"
             onClick={onClick}
             sx={{ minHeight: '180px' }}
         >
@@ -29,17 +34,7 @@ export default function FeaturedCard({ game, onClick }: FeaturedCardProps) {
                 />
             </Box>
 
-            <PartnerPill partner={game.partner} size="md" />
-
-            <CardContent className="relative z-10 mt-auto p-6 flex flex-col justify-end h-full text-white" sx={{ minHeight: '180px' }}>
-                <Typography
-                    variant="h5"
-                    className="font-extrabold mb-1"
-                    sx={{ fontFamily: "'Noto Sans', sans-serif" }}
-                >
-                    {game.name}
-                </Typography>
-            </CardContent>
+            <CardOverlay game={game} distance={distance} titleVariant="h5" titleSize="1.5rem" padding={3} />
         </Card>
     );
 }

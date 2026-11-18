@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import BottomNav from '@/components/BottomNav';
 import PageHeader from '@/components/PageHeader';
 import FeaturedCard from '@/components/FeaturedCard';
-import { PartnerPill } from '@/components/PartnerPill';
+import { CardOverlay } from '@/components/CardOverlay';
 import LoginRequiredModal from '@/components/LoginRequiredModal';
 import WelcomeModal from '@/components/WelcomeModal';
 import { readListCache, writeListCache, distanceM } from '@/services/ListCache';
@@ -293,7 +293,7 @@ export default function Home() {
                             <Typography variant="h6" className="font-bold text-gray-800 mb-4 px-1">Play again</Typography>
                             <Grid container spacing={2} className="mb-8">
                                 {nonFeaturedPlayAgain.map((game) => (
-                                    <Grid item key={game.ref} xs={6}>
+                                    <Grid item key={game.ref} xs={12}>
                                         <TrailCard game={game} onPlay={handlePlay} isPending={isPending(game.ref)} />
                                     </Grid>
                                 ))}
@@ -308,8 +308,8 @@ export default function Home() {
                             </Typography>
                             <Grid container spacing={3}>
                                 {(nonFeaturedNearYou.length > 0 ? nonFeaturedNearYou : nonFeaturedGames).map((game) => (
-                                    <Grid item key={game.ref} xs={12} sm={6}>
-                                        <TrailCard game={game} onPlay={handlePlay} fullWidth isPending={isPending(game.ref)} />
+                                    <Grid item key={game.ref} xs={12}>
+                                        <TrailCard game={game} onPlay={handlePlay} isPending={isPending(game.ref)} />
                                     </Grid>
                                 ))}
                             </Grid>
@@ -336,14 +336,18 @@ export default function Home() {
     );
 }
 
-function TrailCard({ game, onPlay, fullWidth = false, isPending = false }: { game: Game, onPlay: (g: Game) => void, fullWidth?: boolean, isPending?: boolean }) {
+function TrailCard({ game, onPlay, isPending = false }: { game: Game, onPlay: (g: Game) => void, isPending?: boolean }) {
+    // Distance: same rule as before (hidden for pending games and when unknown).
+    const distance = !isPending && game.distanceInMiles !== null && game.distanceInMiles !== undefined
+        ? `${game.distanceInMiles.toFixed(1)} mi`
+        : null;
+    const label = isPending ? 'COMING SOON' : (game.isFree ? 'Free Adventure' : 'Premium Experience');
     return (
         <Card
             className={`h-full flex flex-col shadow-sm hover:shadow-xl transition-all duration-500 rounded-[28px] overflow-hidden border-none relative group ${isPending ? 'cursor-default' : 'cursor-pointer'}`}
             onClick={() => !isPending && onPlay(game)}
             sx={{
-                aspectRatio: fullWidth ? 'unset' : '1/1',
-                minHeight: fullWidth ? '180px' : 'unset',
+                minHeight: '180px',
                 backgroundColor: 'white',
                 opacity: isPending ? 0.8 : 1
             }}
@@ -364,27 +368,7 @@ function TrailCard({ game, onPlay, fullWidth = false, isPending = false }: { gam
                 />
             </Box>
 
-            <PartnerPill partner={game.partner} size={fullWidth ? 'md' : 'sm'} />
-
-            <CardContent className="relative z-10 mt-auto p-5 flex flex-col justify-end h-full text-white">
-                <Typography
-                    variant="h6"
-                    className="font-bold leading-tight mb-1"
-                    sx={{ fontFamily: "'Noto Sans', sans-serif", fontSize: fullWidth ? '1.3rem' : '1.1rem' }}
-                >
-                    {game.name}
-                </Typography>
-                <Box className="flex items-center justify-between mt-1">
-                    <Typography variant="caption" className="opacity-90 font-semibold tracking-wide uppercase text-[10px]">
-                        {isPending ? 'COMING SOON' : (game.isFree ? 'Free Adventure' : 'Premium Experience')}
-                    </Typography>
-                    {!isPending && game.distanceInMiles !== null && game.distanceInMiles !== undefined && (
-                        <Typography variant="caption" className="opacity-90 font-medium bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
-                            {game.distanceInMiles.toFixed(1)} mi
-                        </Typography>
-                    )}
-                </Box>
-            </CardContent>
+            <CardOverlay game={game} label={label} distance={distance} />
         </Card>
     );
 }

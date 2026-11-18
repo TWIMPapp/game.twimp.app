@@ -10,6 +10,17 @@ import { GamePartner } from '@/types';
 // PartnerCredit: "In partnership with [logo] Name" line for the intro screen,
 //   linking to the partner's site when there is a url.
 
+/**
+ * The partner to show, or null. Twimp's own trails are not "partner" walks, so a
+ * partner whose slug or name is 'twimp' (any case) counts as no partner.
+ */
+export function visiblePartner(partner?: GamePartner | null): GamePartner | null {
+  if (!partner?.name || !partner.name.trim()) return null;
+  const isTwimp = (v?: string | null) => (v || '').trim().toLowerCase() === 'twimp';
+  if (isTwimp(partner.slug) || isTwimp(partner.name)) return null;
+  return partner;
+}
+
 /** Logo image that reports a load failure so callers can fall back to text. */
 function PartnerLogo({ partner, height, onError }: { partner: GamePartner; height: number; onError: () => void }) {
   return (
@@ -23,9 +34,10 @@ function PartnerLogo({ partner, height, onError }: { partner: GamePartner; heigh
   );
 }
 
-export function PartnerPill({ partner, size = 'sm' }: { partner?: GamePartner | null; size?: 'sm' | 'md' }) {
+export function PartnerPill({ partner: raw, size = 'sm' }: { partner?: GamePartner | null; size?: 'sm' | 'md' }) {
   const [logoFailed, setLogoFailed] = useState(false);
-  if (!partner?.name) return null;
+  const partner = visiblePartner(raw);
+  if (!partner) return null;
   const showLogo = !!partner.logo_url && !logoFailed;
   const logoHeight = size === 'md' ? 32 : 24;
 
@@ -70,9 +82,10 @@ export function PartnerPill({ partner, size = 'sm' }: { partner?: GamePartner | 
   );
 }
 
-export function PartnerCredit({ partner }: { partner?: GamePartner | null }) {
+export function PartnerCredit({ partner: raw }: { partner?: GamePartner | null }) {
   const [logoFailed, setLogoFailed] = useState(false);
-  if (!partner?.name) return null;
+  const partner = visiblePartner(raw);
+  if (!partner) return null;
   const showLogo = !!partner.logo_url && !logoFailed;
 
   // Caption on its own line, then [logo] Name, so it never wraps mid-row on a phone.
